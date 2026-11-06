@@ -342,14 +342,3 @@ release notes.
 ## License
 
 This project is released under the MIT license. See [LICENSE](LICENSE). You are free to use, modify, and distribute this template for any purpose.
-
-------------------------------------------------------------------------
-
-```{=html}
-<p align="center">
-```
-`<strong>`{=html}N-Ops`</strong>`{=html}`<br>`{=html} One platform.
-Complete infrastructure control.
-```{=html}
-</p>
-```
