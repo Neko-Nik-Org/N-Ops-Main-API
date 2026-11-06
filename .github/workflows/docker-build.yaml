@@ -39,5 +39,5 @@ jobs:
           sbom: true
           provenance: true
           tags: |
-            neko7nik/rust-api-template:latest
-            neko7nik/rust-api-template:${{ steps.tag.outputs.TAG }}
+            neko7nik/n-ops-main-api:latest
+            neko7nik/n-ops-main-api:${{ steps.tag.outputs.TAG }}
