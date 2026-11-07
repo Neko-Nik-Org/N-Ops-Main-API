@@ -61,8 +61,15 @@ Neko Nik Keys Suite Command Center Secrets and Configuration Management Jobs and
 - Remote file manager and editor and creator from UI any file in that system
 
 - Simple secure notes
+    - First release will have simple note creation and management
+    - Sharing internally within the organization (Read-only)
+    - Sharing externally via link with optional expiration and password protection
+    - Non-encrypted storage with password (on set - encrypt the note with the password)
+        - If password is not provided, store as plain text (Means mostly not so important)
 
 - Connect to PGSQL and execute stuff ?
+
+- Link to GitHub account (for integration with repositories and actions)
 
 - Jobs - Durable task queues and rollouts with pause/stop/kill support
 	- Per-device FIFO execution queues
