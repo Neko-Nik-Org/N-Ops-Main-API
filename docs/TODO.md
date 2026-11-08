@@ -7,7 +7,9 @@ Neko Nik Keys Suite Command Center Secrets and Configuration Management Jobs and
 
 - Secrets, environment variables and configuration with staging seperation and project seperation
 	- Centralized secrets vault per org
-	- Environment-variable management by (project -> environment -> service -> envs/files)
+	- Environment-variable management
+        - project (limited) -> service (unlimited) -> envs/files (limited)
+        - ENV's / Files will have tagging support, so that no need to have explicit environment references
 	- Configuration file management
 	- Fully Encrypted secret storage with AES-256-GCM (Authenticated Encryption with Associated Data)
 	- Secret reveal permissions for users [RBAC]
