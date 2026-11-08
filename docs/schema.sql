@@ -19,6 +19,7 @@ CREATE TABLE organization (
     -- Limits for secret keys/stores within the organization (SS - Secret Store)
     ss_project_limit INT,   -- Total number of projects allowed in the organization
     ss_keys_limit INT,      -- Total number of secret keys allowed per project
+    ss_file_limit INT,      -- Total number of secret files allowed per project
 
     -- Additional limits can be added here as needed
 
@@ -46,12 +47,23 @@ CREATE TABLE user_role (
     role_name VARCHAR(100) NOT NULL,
     role_description TEXT NOT NULL,
 
-    permissions TEXT[] NOT NULL,  -- e.g., ['user:create', 'user:delete']
+    -- Each role will have Tags associated with it for scoping users, Ref: 'role_tag' table
+    -- if not, user accociated with this role will have unrestricted access to all tags
+    permissions TEXT[] NOT NULL,    -- e.g., ['user:create', 'user:delete', 'server:read']
 
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     UNIQUE (role_name, organization_id)  -- Unique role name per organization
+);
+
+
+-- Role-Tag Many-to-Many relationship (User Role restricted by tags)
+CREATE TABLE role_tag (
+    role_id BIGINT NOT NULL REFERENCES user_role(role_id) ON DELETE CASCADE,
+    tag_id BIGINT NOT NULL REFERENCES resource_tag(tag_id) ON DELETE CASCADE,
+
+    PRIMARY KEY (role_id, tag_id)  -- Composite primary key to ensure uniqueness
 );
 
 
