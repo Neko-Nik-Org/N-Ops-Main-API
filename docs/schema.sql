@@ -116,8 +116,5 @@ CREATE TABLE resource_tag (
     tag_name VARCHAR(50) NOT NULL,
     tag_description TEXT NOT NULL,
 
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
-
     UNIQUE (tag_name, organization_id)  -- Unique tag name per organization
 );
