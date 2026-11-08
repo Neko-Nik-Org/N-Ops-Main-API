@@ -147,8 +147,8 @@ Side panel will have
         - Add a server or add a single tag
     - Postgres management (CRUD + Connect and execute simple queries)
 
--  Secrets & config (should have versioning)
-    - Keys vault
+- Vault - (Secrets & config) (should have versioning)
+    - Keys Store
     - Secure Notes
     - Config files (Simple file storage)
 
