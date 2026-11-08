@@ -11,7 +11,7 @@ Neko Nik Keys Suite Command Center Secrets and Configuration Management Jobs and
 	- Centralized secrets vault per org
 	- Environment-variable management by (project -> environment -> service -> envs/files)
 	- Configuration file management
-	- Fully Encrypted secret storage with Argon2-secured keys
+	- Fully Encrypted secret storage with AES-256-GCM (Authenticated Encryption with Associated Data)
 	- Secret reveal permissions for users [RBAC]
 	- Secret versioning + history + Rollback + generate new
 	- Secret access audit logs
@@ -36,13 +36,13 @@ Neko Nik Keys Suite Command Center Secrets and Configuration Management Jobs and
 	- Support Docker Compose secrets
 	- Support deployment rollback
 
-
 - SSH and remote command execution full support from UI with Audit logs
 	- Server grouping and bulk targeting
 	- Agent-side execution history
 	- User name based access like from allowed user names list only they can access [RBAC]
 	- Explicit confirmation for dangerous operations
 	- Approval workflows for sensitive changes
+    - https://xtermjs.org - Pseudo terminal in the browser (PTY)
 
 - Health, system metrics and monitoring + extentions support (like postfix mailq)
 	- Call health check every x seconds last-seen status + custom Alerts
@@ -59,6 +59,8 @@ Neko Nik Keys Suite Command Center Secrets and Configuration Management Jobs and
 	- Sensitive-data redaction
 
 - Remote file manager and editor and creator from UI any file in that system
+    - Transfer files from local to remote and vice versa
+    - Transfer files from one remote system to another
 
 - Simple secure notes
     - First release will have simple note creation and management
@@ -131,13 +133,57 @@ Pricing plan
 ---
 
 Side panel will have
-- Servers
-- Secreat Keys
-- Monitoring
+
+- Servers (Single view)
+    - CRUD - Servers by tag
+    - SSH into server
+    - View server details
+    - Docker containers management
+    - Normal system services management
+    - File management (local -> remote and vice versa + remote -> remote + remote editing + copy from Secrets config files)
+
+- Tasks / Tools
+    - Remote execution
+    - File transfer
+    - Job management (CRUD for jobs, view job status, cancel/pause/resume jobs)
+        - Add a server or add a single tag
+    - Postgres management (CRUD + Connect and execute simple queries)
+
+-  Secrets & config (should have versioning)
+    - Keys vault
+    - Secure Notes
+    - Config files (Simple file storage)
+
+- Monitoring & Alerts
+    - Infrastructure metrics
+        - View and filter metrics
+        - Export/Download metrics
+    - Custom metrics (all custom, user-defined)
+        - View and filter custom metrics
+        - Export/Download custom metrics
+        - Add new custom metrics
+        - Show graphs, visualizations and trends
+    - Alert rules (CRUD)
+        - Configure alerts and notifications
+
 - Logs
-- Backups
-- Admin
+    - Audit Logs (Read-only)
+    - Service Logs (all custom, user-defined)
+        - View and filter service logs
+        - Export/Download service logs
+        - Add new service logs
+
 - Approvals (Admin)
+    - Requests from any user within the organization (CRUD) (Basic users, will see their own requests)
+    - Approve or reject requests (RU) (Admins only, see all requests that are linked to them only)
+
+- Admin
+    - Organization (RU)
+    - Users (CRUD)
+    - API Keys (CRUD) (Use same roles no need to make new)
+    - Roles (CRUD)
+    - Tags (CRUD)
+        - View and manage organization tags
 
 
 ---
