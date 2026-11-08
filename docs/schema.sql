@@ -26,6 +26,35 @@ CREATE TABLE organization (
 );
 
 
+-- Tag for categorizing resources within an organization
+CREATE TABLE resource_tag (
+    tag_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    organization_id UUID NOT NULL REFERENCES organization(organization_id) ON DELETE CASCADE,
+
+    tag_name VARCHAR(50) NOT NULL,
+    tag_description TEXT NOT NULL,
+
+    UNIQUE (tag_name, organization_id)  -- Unique tag name per organization
+);
+
+
+-- Roles within an organization
+CREATE TABLE user_role (
+    role_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    organization_id UUID NOT NULL REFERENCES organization(organization_id) ON DELETE CASCADE,
+
+    role_name VARCHAR(100) NOT NULL,
+    role_description TEXT NOT NULL,
+
+    permissions TEXT[] NOT NULL,  -- e.g., ['user:create', 'user:delete']
+
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+
+    UNIQUE (role_name, organization_id)  -- Unique role name per organization
+);
+
+
 -- Application users within an organization
 CREATE TABLE app_user (
     user_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -88,33 +117,4 @@ CREATE TABLE api_key (
     expires_at TIMESTAMPTZ,  -- Expiration date for the API key (optional)
 
     UNIQUE (key_name, organization_id)  -- Unique key name per organization
-);
-
-
--- Roles within an organization
-CREATE TABLE user_role (
-    role_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    organization_id UUID NOT NULL REFERENCES organization(organization_id) ON DELETE CASCADE,
-
-    role_name VARCHAR(100) NOT NULL,
-    role_description TEXT NOT NULL,
-
-    permissions TEXT[] NOT NULL,  -- e.g., ['user:create', 'user:delete']
-
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
-
-    UNIQUE (role_name, organization_id)  -- Unique role name per organization
-);
-
-
--- Tag for categorizing resources within an organization
-CREATE TABLE resource_tag (
-    tag_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    organization_id UUID NOT NULL REFERENCES organization(organization_id) ON DELETE CASCADE,
-
-    tag_name VARCHAR(50) NOT NULL,
-    tag_description TEXT NOT NULL,
-
-    UNIQUE (tag_name, organization_id)  -- Unique tag name per organization
 );
