@@ -45,6 +45,12 @@ CREATE TABLE app_user (
     -- Role assigned to the user within the organization
     role_id BIGINT NOT NULL REFERENCES user_role(role_id) ON DELETE CASCADE,
 
+    -- Geographic or IP-based restrictions for this user (Allowed if either IP or Geo matches)
+    has_ip_restriction BOOLEAN DEFAULT FALSE NOT NULL,  -- Is IP restriction enabled for this user
+    has_geo_restriction BOOLEAN DEFAULT FALSE NOT NULL,  -- Is geographic restriction enabled for this user
+    allowed_ips TEXT[] NOT NULL,  -- List of allowed IP addresses for this user
+    allowed_geo_locations TEXT[] NOT NULL,  -- List of allowed geographic locations for this user
+
     has_totp_2fa BOOLEAN DEFAULT FALSE NOT NULL,  -- Is TOTP 2FA enabled for this user
     has_email_2fa BOOLEAN DEFAULT FALSE NOT NULL,  -- Is Email 2FA enabled for this user
     -- Other 2FA methods (Can use same table structure to manage WebAuthn/FIDO2)
@@ -55,6 +61,33 @@ CREATE TABLE app_user (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     UNIQUE (display_name, organization_id)  -- Unique display name per organization
+);
+
+
+-- API keys for an organization
+CREATE TABLE api_key (
+    api_key_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, -- Lookup ID for the API key
+    organization_id UUID NOT NULL REFERENCES organization(organization_id) ON DELETE CASCADE,
+
+    key_name VARCHAR(100) NOT NULL,
+    key_description TEXT NOT NULL,  -- Description of the API key
+
+    -- Example: '{api_key_id}_{actual_api_key_value}' so that its easy to do lookups and verify the key
+    key_value TEXT NOT NULL,  -- HMAC-SHA-256 of the API key value
+
+    -- Only has 'Keys vault' & 'Config files' resource permissions (No other resource management allowed programmatically)
+    resource_permissions TEXT[] NOT NULL,  -- Resource-specific permissions for the API key
+
+    -- Associated resource tag for the API key (Only one tag can be associated per API key)
+    resource_tag BIGINT NOT NULL REFERENCES resource_tag(tag_id) ON DELETE CASCADE,
+
+    is_active BOOLEAN DEFAULT TRUE NOT NULL,
+
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    expires_at TIMESTAMPTZ,  -- Expiration date for the API key (optional)
+
+    UNIQUE (key_name, organization_id)  -- Unique key name per organization
 );
 
 
@@ -72,4 +105,19 @@ CREATE TABLE user_role (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     UNIQUE (role_name, organization_id)  -- Unique role name per organization
+);
+
+
+-- Tag for categorizing resources within an organization
+CREATE TABLE resource_tag (
+    tag_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    organization_id UUID NOT NULL REFERENCES organization(organization_id) ON DELETE CASCADE,
+
+    tag_name VARCHAR(50) NOT NULL,
+    tag_description TEXT NOT NULL,
+
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+
+    UNIQUE (tag_name, organization_id)  -- Unique tag name per organization
 );
