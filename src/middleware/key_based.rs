@@ -22,7 +22,7 @@ pub async fn auth_check<B>(req: ServiceRequest, next: Next<B>) -> Result<Service
     // Fetch the API Key from the Header
     let api_key: Option<String> = req
         .headers()
-        .get("x-api-key")
+        .get("x-nops-api-key")
         .and_then(|hv| hv.to_str().ok())
         .map(|s| s.to_string());
 

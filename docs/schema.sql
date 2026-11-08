@@ -8,6 +8,7 @@ CREATE TABLE organization (
 
     -- Metadata about the organization (not indexed)
     organization_info JSONB NOT NULL,
+    encryption_key TEXT NOT NULL,  -- AES-256-GCM encryption key (Encrypted with Master Key from environment)
 
     is_active BOOLEAN DEFAULT TRUE NOT NULL,
 
@@ -28,6 +29,8 @@ CREATE TABLE organization (
 -- Application users within an organization
 CREATE TABLE app_user (
     user_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    organization_id UUID NOT NULL REFERENCES organization(organization_id) ON DELETE CASCADE,
+
     user_name VARCHAR(100) NOT NULL UNIQUE,  -- e.g., 'john_doe'
     primary_email VARCHAR(254) UNIQUE NOT NULL,
     display_name VARCHAR(100) NOT NULL,
@@ -42,7 +45,6 @@ CREATE TABLE app_user (
     -- Role assigned to the user within the organization
     role_id BIGINT NOT NULL REFERENCES user_role(role_id) ON DELETE CASCADE,
 
-    organization_id UUID NOT NULL REFERENCES organization(organization_id) ON DELETE CASCADE,
     has_totp_2fa BOOLEAN DEFAULT FALSE NOT NULL,  -- Is TOTP 2FA enabled for this user
     has_email_2fa BOOLEAN DEFAULT FALSE NOT NULL,  -- Is Email 2FA enabled for this user
     -- Other 2FA methods (Can use same table structure to manage WebAuthn/FIDO2)
@@ -59,10 +61,10 @@ CREATE TABLE app_user (
 -- Roles within an organization
 CREATE TABLE user_role (
     role_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    organization_id UUID NOT NULL REFERENCES organization(organization_id) ON DELETE CASCADE,
+
     role_name VARCHAR(100) NOT NULL,
     role_description TEXT NOT NULL,
-
-    organization_id UUID NOT NULL REFERENCES organization(organization_id) ON DELETE CASCADE,
 
     permissions TEXT[] NOT NULL,  -- e.g., ['user:create', 'user:delete']
 

@@ -1,5 +1,3 @@
-Neko Nik Keys Suite Command Center Secrets and Configuration Management Jobs and orchestration
-
 # N-Ops
 
 Neko Nik Keys Suite Command Center Secrets and Configuration Management Jobs and orchestration

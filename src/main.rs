@@ -39,6 +39,7 @@ async fn main() -> std::io::Result<()> {
             )
             .service(
                 actix_scope("/health")
+                // .service(health::full_health_check)  // Perform one full health check for all components and DB's
                 .service(health::db_health_check)
                 .service(health::api_health_check)
                 .service(health::redis_cache_health_check)
@@ -60,14 +61,28 @@ async fn main() -> std::io::Result<()> {
             )
             .service(
                 actix_scope("/auth")
+                // .service(auth::user_login)   // Login endpoint for users (3 Hours session, refreshable)
+                // Send/Re-send 2FA code for login
+                // Verify 2FA code for login
                 .service(auth::create_session_handler)
                 .service(
                     actix_scope("")
                     .wrap(from_fn(middleware::user_session::auth_check))
+                    // Logout
+                    // Refresh session if user is active and the session is still valid
+                    // Check session validity
                     .service(auth::delete_session_handler)
                     .service(auth::get_session_handler)
                 )
             )
+            // .service(
+            //     actix_scope("/user")
+            //     .wrap(from_fn(middleware::user_session::auth_check))
+            //     .service(user::get_ui_details) // Get UI details JSON
+            //     .service(user::set_ui_details) // Replace UI details JSON
+            //     .service(user::get_user_details) // Get user details JSON
+            //     .service(user::set_user_details) // Replace user details JSON
+            // )
     })
     .bind(("0.0.0.0", 8686))?
     .workers(env_var("API_WORKERS_COUNT").unwrap_or("4".to_string()).parse().unwrap())
