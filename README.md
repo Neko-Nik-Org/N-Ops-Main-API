@@ -341,4 +341,4 @@ release notes.
 
 ## License
 
-This project is released under the MIT license. See [LICENSE](LICENSE). You are free to use, modify, and distribute this template for any purpose.
+This project is released under the GNU General Public License v3.0 license. See [LICENSE](LICENSE) for details.
