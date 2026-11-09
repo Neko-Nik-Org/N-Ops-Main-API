@@ -96,3 +96,15 @@ pub async fn verify_session(session_user: web::ReqData<SessionUser>) -> ApiRespo
 
     Ok(HttpResponse::Ok().body(format!("Hello, {}", session_user.user_name)))
 }
+
+
+#[delete("/logout")]
+pub async fn user_logout(state: web::Data<AppState>, session_user: web::ReqData<SessionUser>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+
+    // Delete the user session from Redis
+    let session_key = format!("session:{}", session_user.session_id);
+    delete_redis_cache(&state.redis_cache, &session_key).await?;
+
+    Ok(HttpResponse::NoContent().finish())
+}
