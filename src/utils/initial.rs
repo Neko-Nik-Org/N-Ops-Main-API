@@ -207,10 +207,12 @@ impl ApiSettings {
             .expect("ALLOWED_ORIGINS must be set as a comma-separated list of allowed origins or '*' for allowing all origins");
 
         let self_api_key = env_var("SELF_API_KEY").expect("SELF_API_KEY must be set");
+        let master_encryption_key = env_var("MASTER_ENCRYPTION_KEY").expect("MASTER_ENCRYPTION_KEY must be set");
 
         ApiSettings {
             allowed_origins,
-            self_api_key
+            self_api_key,
+            master_encryption_key
         }
     }
 }
