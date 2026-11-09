@@ -13,6 +13,7 @@ uuid = { version = "1.0", features = ["v4", "serde"] }
 reqwest = { version = "0.13", features = ["json"] }
 serde = { version = "1.0", features = ["derive"] }
 moka = { version = "0.12", features = ["future"] }
+chrono = { version = "0.4", features = ["serde"] }
 pg_row_derive = { path = "crates/pg_row_derive" }
 postgres-native-tls = "0.5"
 tracing-appender = "0.2"
@@ -21,10 +22,13 @@ actix-cors = "0.7"
 native-tls = "0.2"
 serde_json = "1.0"
 deadpool = "0.13"
+aes-gcm = "0.10"
 thiserror = "2"
 tracing = "0.1"
 bcrypt = "0.18"
 base64 = "0.23"
+cidr = "0.3.1"
+rand = "0.10"
 tokio = "1"
 
 

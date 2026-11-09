@@ -13,16 +13,16 @@ CREATE TABLE organization (
     is_active BOOLEAN DEFAULT TRUE NOT NULL,
 
     -- Limits for the organization
-    user_limit INT,     -- Total number of users allowed in the organization
-    server_limit INT,   -- Total number of servers allowed in the organization
+    user_limit INT NOT NULL,     -- Total number of users allowed in the organization
+    server_limit INT NOT NULL,   -- Total number of servers allowed in the organization
 
     -- Limits for secret keys/stores within the organization (SS - Secret Store)
-    ss_project_limit INT,   -- Total number of projects allowed in the organization
-    ss_keys_limit INT,      -- Total number of secret keys allowed per project
-    ss_file_limit INT,      -- Total number of secret files allowed per project
+    ss_project_limit INT NOT NULL,   -- Total number of projects allowed in the organization
+    ss_keys_limit INT NOT NULL,      -- Total number of secret keys allowed per project
+    ss_file_limit INT NOT NULL,      -- Total number of secret files allowed per project
 
     -- Notes limit
-    user_notes_limit INT,   -- Total number of notes allowed per user
+    user_notes_limit INT NOT NULL,   -- Total number of notes allowed per user
 
     -- Additional limits can be added here as needed
 
@@ -103,6 +103,7 @@ CREATE TABLE app_user (
 
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    last_login_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     UNIQUE (display_name, organization_id)  -- Unique display name per organization
 );

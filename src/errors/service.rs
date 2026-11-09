@@ -37,6 +37,9 @@ pub enum ServiceError {
     #[error("Unprocessable entity: {0}")]
     Unprocessable(String),
 
+    #[error("Authorization failed: {0}")]
+    Unauthorized(String),
+
     #[error("Not found: {0}")]
     NotFound(String),
 

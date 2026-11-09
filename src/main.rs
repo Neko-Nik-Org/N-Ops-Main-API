@@ -61,18 +61,15 @@ async fn main() -> std::io::Result<()> {
             )
             .service(
                 actix_scope("/auth")
-                // .service(auth::user_login)   // Login endpoint for users (3 Hours session, refreshable)
-                // Send/Re-send 2FA code for login
-                // Verify 2FA code for login
-                .service(auth::create_session_handler)
+                .service(auth::user_login)
+                // .service(auth::resend_otp)
+                // .service(auth::verify_otp)
                 .service(
                     actix_scope("")
                     .wrap(from_fn(middleware::user_session::auth_check))
-                    // Logout
-                    // Refresh session if user is active and the session is still valid
-                    // Check session validity
-                    .service(auth::delete_session_handler)
-                    .service(auth::get_session_handler)
+                    // .service(auth::user_logout)
+                    // .service(auth::verify_session)
+                    // .service(auth::refresh_session)
                 )
             )
             // .service(

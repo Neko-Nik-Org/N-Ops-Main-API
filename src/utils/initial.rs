@@ -44,6 +44,7 @@ pub struct RmqSettings {
 pub struct ApiSettings {
     pub allowed_origins: Vec<String>,
     pub self_api_key: String,
+    pub master_encryption_key: String,
     // Additional API settings can be added here as needed
 }
 

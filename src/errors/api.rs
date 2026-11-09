@@ -26,6 +26,7 @@ impl ResponseError for ServiceError {
             ServiceError::BadRequest(_) => StatusCode::BAD_REQUEST,
             ServiceError::NotFound(_) => StatusCode::NOT_FOUND,
             ServiceError::Unprocessable(_) => StatusCode::UNPROCESSABLE_ENTITY,
+            ServiceError::Unauthorized(_) => StatusCode::UNAUTHORIZED,
             ServiceError::PreconditionFailed(_) => StatusCode::PRECONDITION_FAILED,
             ServiceError::Gone(_) => StatusCode::GONE,
         }
@@ -47,6 +48,7 @@ impl ResponseError for ServiceError {
             | ServiceError::NotFound(message)
             | ServiceError::Unprocessable(message)
             | ServiceError::PreconditionFailed(message)
+            | ServiceError::Unauthorized(message)
             | ServiceError::Gone(message) => message.as_str(),
 
             // Hidden internal errors

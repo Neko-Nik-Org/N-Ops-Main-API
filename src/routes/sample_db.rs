@@ -14,8 +14,6 @@ pub async fn create_note_handler(session_user: web::ReqData<SessionUser>, body: 
     let session_user = session_user.into_inner();
     let notes_body = body.into_inner(); 
 
-    tracing::debug!("{} is creating a new note.", session_user);
-
     add_new_notes(&state.pg_pool, vec![notes_body]).await?;
 
     Ok(HttpResponse::Ok().json("Note created successfully!"))
