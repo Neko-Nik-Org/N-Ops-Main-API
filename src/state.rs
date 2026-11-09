@@ -7,7 +7,6 @@ use redis::aio::MultiplexedConnection;
 use deadpool_postgres::Pool as PgPool;
 use actix_web::web::Data as webData;
 use crate::features::notes::Notes;
-use crate::utils::logging;
 use std::time::Duration;
 use std::sync::LazyLock;
 

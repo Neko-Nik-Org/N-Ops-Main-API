@@ -78,10 +78,10 @@ async fn main() -> std::io::Result<()> {
             // .service(
             //     actix_scope("/user")
             //     .wrap(from_fn(middleware::user_session::auth_check))
-            //     .service(user::get_ui_details) // Get UI details JSON
-            //     .service(user::set_ui_details) // Replace UI details JSON
-            //     .service(user::get_user_details) // Get user details JSON
-            //     .service(user::set_user_details) // Replace user details JSON
+            //     .service(users::get_ui_details) // Get UI details JSON
+            //     .service(users::set_ui_details) // Replace UI details JSON
+            //     .service(users::get_user_details) // Get user details JSON
+            //     .service(users::set_user_details) // Replace user details JSON
             // )
     })
     .bind(("0.0.0.0", 8686))?

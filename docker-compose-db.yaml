@@ -1,7 +1,7 @@
 services:
-  redis:
-    image: redis:latest
-    container_name: rust-api-redis
+  n-ops-redis:
+    image: redis:8
+    container_name: n-ops-redis
 
     logging:
       driver: "json-file"
@@ -9,16 +9,39 @@ services:
         max-size: "10m"
         max-file: "3"
 
-    ports:
-      - "127.0.0.1:6379:6379"
+    networks:
+      - n-ops-network
+
+    restart: always
+  
+  n-ops-pgsql:
+    image: postgres:18
+    container_name: n-ops-pgsql
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    environment:
+      POSTGRES_USER: nops
+      POSTGRES_PASSWORD: nops.app
+      POSTGRES_DB: n_ops
+    
+    volumes:
+      - /data/n-ops/pgsql-db:/var/lib/postgresql
 
     networks:
-      - nik-api-network
+      - n-ops-network
+
+    # ports:  # If you want to expose PostgreSQL to external connections
+    #   - 5432:5432
 
     restart: always
 
 networks:
-  nik-api-network:
+  n-ops-network:
     external: true
 
-# Do : docker network create nik-api-network
+# Do : docker network create n-ops-network

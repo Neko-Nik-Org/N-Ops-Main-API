@@ -21,6 +21,9 @@ CREATE TABLE organization (
     ss_keys_limit INT,      -- Total number of secret keys allowed per project
     ss_file_limit INT,      -- Total number of secret files allowed per project
 
+    -- Notes limit
+    user_notes_limit INT,   -- Total number of notes allowed per user
+
     -- Additional limits can be added here as needed
 
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
