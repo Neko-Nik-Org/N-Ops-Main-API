@@ -1,3 +1,5 @@
+<p align="center"><img src=".github/assets/banner.png" alt="N-Ops: open-source infrastructure control plane" width="100%"></p>
+
 # N-Ops Main API
 
 **Open-source infrastructure control plane by Neko Nik, in partnership with YSPL.**
