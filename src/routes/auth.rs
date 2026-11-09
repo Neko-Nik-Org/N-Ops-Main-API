@@ -9,6 +9,8 @@ use crate::state::AppState;
 
 #[post("/login")]
 pub async fn user_login(request: HttpRequest, login_request: web::Json<LoginReqDto>, state: web::Data<AppState>) -> ApiResponse {
+    let login_request = login_request.into_inner();
+
     // Extract the CloudFlare Turnstile token from the request headers
     let turnstile_token = request
         .headers()
@@ -22,8 +24,6 @@ pub async fn user_login(request: HttpRequest, login_request: web::Json<LoginReqD
         .get("x-real-ip")
         .and_then(|value| value.to_str().ok())
         .unwrap_or_default();
-
-    let login_request = login_request.into_inner();
 
     // Validate everything
     if turnstile_token.is_empty() || login_request.user_name.is_empty() || login_request.password.is_empty() || client_ip.is_empty() {
@@ -88,12 +88,11 @@ pub async fn user_login(request: HttpRequest, login_request: web::Json<LoginReqD
 }
 
 
-#[get("/session")]
-pub async fn get_session_handler(session_user: web::ReqData<SessionUser>) -> ApiResponse {
-    // Get SessionUser from request data
+#[get("/verify")]
+pub async fn verify_session(session_user: web::ReqData<SessionUser>) -> ApiResponse {
     let session_user = session_user.into_inner();
 
-    // TODO: Fetch fresh info to UI?
+    // Simple verification endpoint to check if the session is valid
 
     Ok(HttpResponse::Ok().body(format!("Hello, {}", session_user.user_name)))
 }
