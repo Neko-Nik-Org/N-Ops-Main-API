@@ -40,10 +40,10 @@ pub async fn user_login(request: HttpRequest, login_request: web::Json<LoginReqD
     if auth_info.has_email_2fa || auth_info.has_totp_2fa {
         // Generate a new temporary auth token for 2FA validation
         let new_token = uuid::Uuid::new_v4().to_string();
-        let temporary_auth_token = format!("session:temp:{}", new_token);
+        let temp_session_key = format!("session:temp:{}", new_token);
 
         // Store the temporary auth token in Redis with a 15-minute TTL
-        set_redis_cache(&state.redis_cache, &temporary_auth_token, &auth_info, 15 * 60).await?;
+        set_redis_cache(&state.redis_cache, &temp_session_key, &auth_info, 15 * 60).await?;
 
         return Ok(HttpResponse::Ok().json(serde_json::json!({
             "message": "2FA validation required",
@@ -63,10 +63,28 @@ pub async fn user_login(request: HttpRequest, login_request: web::Json<LoginReqD
 
     // Generate a Session struct
     let user_session = SessionUser::new(auth_info, login_request.remember_me);
+    let session_key = format!("session:{}", user_session.session_id);
 
-    // 3 Hours per session
+    // Store the user session in Redis with a 3-hour TTL
+    set_redis_cache(&state.redis_cache, &session_key, &user_session, 3 * 60 * 60).await?;
 
-    Ok(HttpResponse::NotImplemented().body("Session creation not fully implemented"))
+    // Return the session creation response
+    Ok(HttpResponse::Ok().json(serde_json::json!({
+        "message": "Session created successfully",
+        "is_2fa_required": false,
+        "session_id": user_session.session_id,
+        "data": {
+            "user_id": user_session.user_id,
+            "organization_id": user_session.organization_id,
+            "permissions": user_session.permissions,
+            "tags": user_session.tags,
+            "user_name": user_session.user_name,
+            "display_name": user_session.display_name,
+            "organization_name": user_session.organization_name,
+            "primary_email": user_session.primary_email,
+            "is_email_verified": user_session.is_email_verified
+        }
+    })))
 }
 
 
