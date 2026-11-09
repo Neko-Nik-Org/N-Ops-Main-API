@@ -38,13 +38,17 @@ pub async fn user_login(request: HttpRequest, login_request: web::Json<LoginReqD
 
     // If 2FA is enabled for the user, do not create the session, require 2FA validation first
     if auth_info.has_email_2fa || auth_info.has_totp_2fa {
-        // Send a Temporary Auth token for unverified user session (15 Minutes TTL)
+        // Generate a new temporary auth token for 2FA validation
+        let new_token = uuid::Uuid::new_v4().to_string();
+        let temporary_auth_token = format!("session:temp:{}", new_token);
 
-        // 
+        // Store the temporary auth token in Redis with a 15-minute TTL
+        set_redis_cache(&state.redis_cache, &temporary_auth_token, &auth_info, 15 * 60).await?;
 
         return Ok(HttpResponse::Ok().json(serde_json::json!({
             "message": "2FA validation required",
             "is_2fa_required": true,
+            "temporary_auth_token": new_token,
             "data": {
                 "display_name": auth_info.display_name,
                 "organization_name": auth_info.organization_name,
@@ -56,6 +60,9 @@ pub async fn user_login(request: HttpRequest, login_request: web::Json<LoginReqD
             }
         })));
     }
+
+    // Generate a Session struct
+    let user_session = SessionUser::new(auth_info, login_request.remember_me);
 
     // 3 Hours per session
 

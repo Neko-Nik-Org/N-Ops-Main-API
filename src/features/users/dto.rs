@@ -7,7 +7,7 @@ use uuid::Uuid;
 type ChronoUtc = chrono::DateTime<chrono::Utc>;
 
 
-#[derive(RowFrom)]
+#[derive(RowFrom, Serialize, Deserialize)]
 pub struct AuthInfoDbDto {
     pub user_id: i64,
     pub organization_id: Uuid,
