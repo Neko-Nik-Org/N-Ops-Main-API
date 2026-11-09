@@ -15,10 +15,15 @@ pub struct AuthInfoDbDto {
     // Security and access information
     pub password_hash: String,
     pub encryption_key: String,
+
     pub has_ip_restriction: bool,
     pub has_geo_restriction: bool,
     pub allowed_ips: Vec<String>,
     pub allowed_geo_locations: Vec<String>,
+
+    pub has_totp_2fa: bool,
+    pub has_email_2fa: bool,
+
     pub permissions: Vec<String>,
     pub tags: Vec<String>,
 

@@ -34,7 +34,28 @@ pub async fn user_login(request: HttpRequest, login_request: web::Json<LoginReqD
     verify_turnstile_response(turnstile_token).await?;
 
     // Create a new user session
-    let session = create_user_session(&state, &login_request, client_ip).await?;
+    let auth_info = create_user_session(&state, &login_request, client_ip).await?;
+
+    // If 2FA is enabled for the user, do not create the session, require 2FA validation first
+    if auth_info.has_email_2fa || auth_info.has_totp_2fa {
+        // Send a Temporary Auth token for unverified user session (15 Minutes TTL)
+
+        // 
+
+        return Ok(HttpResponse::Ok().json(serde_json::json!({
+            "message": "2FA validation required",
+            "is_2fa_required": true,
+            "data": {
+                "display_name": auth_info.display_name,
+                "organization_name": auth_info.organization_name,
+                "primary_email": auth_info.primary_email,
+                "is_email_verified": auth_info.is_email_verified,
+                "has_email_2fa": auth_info.has_email_2fa,
+                "has_totp_2fa": auth_info.has_totp_2fa,
+                "last_login_at": auth_info.last_login_at
+            }
+        })));
+    }
 
     // 3 Hours per session
 

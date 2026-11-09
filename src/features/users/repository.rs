@@ -1,7 +1,7 @@
 use deadpool_postgres::Pool as PgPool;
 use super::dto::AuthInfoDbDto;
 use crate::errors::PgResult;
-use uuid::Uuid;
+use std::net::IpAddr;
 
 
 
@@ -23,6 +23,8 @@ pub async fn get_user_auth_info(db_pool: &PgPool, user_name: &str) -> PgResult<O
                 u.has_geo_restriction,
                 u.allowed_ips,
                 u.allowed_geo_locations,
+                u.has_totp_2fa,
+                u.has_email_2fa,
 
                 r.permissions,
 
@@ -78,4 +80,25 @@ pub async fn get_user_auth_info(db_pool: &PgPool, user_name: &str) -> PgResult<O
         .await?;
 
     Ok(row.map(AuthInfoDbDto::from))
+}
+
+
+pub async fn get_ip_location(db_pool: &PgPool, client_ip: &str) -> PgResult<(String, String)> {
+    let client = db_pool.get().await?;
+
+    let row = client
+        .query_one(
+            r#"
+            SELECT country_iso_code, country_name
+            FROM ip_geo_locations
+            WHERE network >>= $1
+            "#,
+            &[&client_ip.parse::<IpAddr>().ok()],
+        )
+        .await?;
+
+    let country_iso_code = row.get::<&str, String>("country_iso_code");
+    let country_name = row.get::<&str, String>("country_name");
+
+    Ok((country_iso_code, country_name))
 }
