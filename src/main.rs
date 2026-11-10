@@ -1,5 +1,5 @@
+use routes::{health, sample_db, auth, users};
 use actix_web::web::scope as actix_scope;
-use routes::{health, sample_db, auth};
 use actix_web::middleware::from_fn;
 use actix_web::{App, HttpServer};
 use std::env::var as env_var;
@@ -72,14 +72,14 @@ async fn main() -> std::io::Result<()> {
                     .service(auth::user_logout)
                 )
             )
-            // .service(
-            //     actix_scope("/user")
-            //     .wrap(from_fn(middleware::user_session::auth_check))
-            //     .service(users::get_ui_details) // Get UI details JSON
-            //     .service(users::set_ui_details) // Replace UI details JSON
-            //     .service(users::get_user_details) // Get user details JSON
-            //     .service(users::set_user_details) // Replace user details JSON
-            // )
+            .service(
+                actix_scope("/user")
+                .wrap(from_fn(middleware::user_session::auth_check))
+                .service(users::get_ui_info)
+                .service(users::set_ui_info)
+                .service(users::get_user_details)
+                .service(users::set_user_details)
+            )
     })
     .bind(("0.0.0.0", 8686))?
     .workers(env_var("API_WORKERS_COUNT").unwrap_or("4".to_string()).parse().unwrap())

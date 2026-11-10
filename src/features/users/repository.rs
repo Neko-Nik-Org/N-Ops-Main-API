@@ -1,4 +1,5 @@
 use deadpool_postgres::Pool as PgPool;
+use serde_json::Value as JsonValue;
 use super::dto::AuthInfoDbDto;
 use crate::errors::PgResult;
 use std::net::IpAddr;
@@ -101,4 +102,76 @@ pub async fn get_ip_location(db_pool: &PgPool, client_ip: &str) -> PgResult<(Str
     let country_name = row.get::<&str, String>("country_name");
 
     Ok((country_iso_code, country_name))
+}
+
+
+pub async fn fetch_user_ui_info(db_pool: &PgPool, user_id: i64) -> PgResult<JsonValue> {
+    let client = db_pool.get().await?;
+
+    let row = client
+        .query_one(
+            r#"
+            SELECT ui_info
+            FROM app_user
+            WHERE user_id = $1
+            "#,
+            &[&user_id],
+        )
+        .await?;
+
+    Ok(row.get("ui_info"))
+}
+
+
+pub async fn reset_user_ui_info(db_pool: &PgPool, user_id: i64, ui_info: &JsonValue) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            UPDATE app_user
+            SET ui_info = $1
+            WHERE user_id = $2
+            "#,
+            &[ui_info, &user_id],
+        )
+        .await?;
+
+    Ok(result)
+}
+
+
+pub async fn fetch_user_details(db_pool: &PgPool, user_id: i64) -> PgResult<JsonValue> {
+    let client = db_pool.get().await?;
+
+    let row = client
+        .query_one(
+            r#"
+            SELECT user_details
+            FROM app_user
+            WHERE user_id = $1
+            "#,
+            &[&user_id],
+        )
+        .await?;
+
+    Ok(row.get("user_details"))
+}
+
+
+pub async fn reset_user_details(db_pool: &PgPool, user_id: i64, user_details: &JsonValue) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            UPDATE app_user
+            SET user_details = $1
+            WHERE user_id = $2
+            "#,
+            &[user_details, &user_id],
+        )
+        .await?;
+
+    Ok(result)
 }
