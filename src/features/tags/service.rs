@@ -36,3 +36,19 @@ pub async fn update_tag_data(state: &AppState, session_user: &SessionUser, tag_d
 
     Ok(())
 }
+
+
+/// Delete an existing tag using the provided tag ID
+pub async fn delete_tag(state: &AppState, session_user: &SessionUser, tag_id: i64) -> ServiceResult<()> {
+    let result = repository::delete_tag(
+        &state.pg_pool,
+        session_user.organization_id,
+        tag_id
+    ).await?;
+
+    if result == 0 {
+        return Err(ServiceError::Unprocessable("Failed to delete tag".into()));
+    }
+
+    Ok(())
+}

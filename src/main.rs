@@ -85,7 +85,7 @@ async fn main() -> std::io::Result<()> {
                 .wrap(from_fn(middleware::user_session::auth_check))
                 .service(tags::create_tag)
                 .service(tags::update_tag)
-                // .service(tags::delete_tag)    // Delete Any Tag
+                .service(tags::delete_tag)
                 // .service(tags::list_tags) // List All Tags
                 // .service(tags::get_tag) // Get Any Tag info
             )

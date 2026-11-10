@@ -37,3 +37,20 @@ pub async fn update_tag_data(db_pool: &PgPool, organization_id: uuid::Uuid, tag_
 
     Ok(result)
 }
+
+
+pub async fn delete_tag(db_pool: &PgPool, organization_id: uuid::Uuid, tag_id: i64) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            DELETE FROM resource_tag
+            WHERE organization_id = $1 AND tag_id = $2
+            "#,
+            &[&organization_id, &tag_id],
+        )
+        .await?;
+
+    Ok(result)
+}
