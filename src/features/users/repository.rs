@@ -1,6 +1,6 @@
+use super::dto::{AuthInfoDbDto, OrgInfoDbDto};
 use deadpool_postgres::Pool as PgPool;
 use serde_json::Value as JsonValue;
-use super::dto::AuthInfoDbDto;
 use crate::errors::PgResult;
 use std::net::IpAddr;
 
@@ -174,4 +174,32 @@ pub async fn reset_user_details(db_pool: &PgPool, user_id: i64, user_details: &J
         .await?;
 
     Ok(result)
+}
+
+
+pub async fn fetch_org_info(db_pool: &PgPool, organization_id: uuid::Uuid) -> PgResult<OrgInfoDbDto> {
+    let client = db_pool.get().await?;
+
+    let row = client
+        .query_one(
+            r#"
+            SELECT
+                organization_id,
+                organization_name,
+                organization_info,
+                user_limit,
+                server_limit,
+                ss_project_limit,
+                ss_keys_limit,
+                ss_file_limit,
+                user_notes_limit,
+                created_at
+            FROM organization
+            WHERE organization_id = $1
+            "#,
+            &[&organization_id],
+        )
+        .await?;
+
+    Ok(OrgInfoDbDto::from(row))
 }

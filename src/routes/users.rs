@@ -1,4 +1,4 @@
-use crate::features::users::{SessionUser, fetch_user_ui_info, fetch_user_details, reset_user_details, reset_user_ui_info};
+use crate::features::users::{SessionUser, fetch_user_ui_info, fetch_user_details, reset_user_details, reset_user_ui_info, fetch_org_info};
 use crate::errors::{ApiResponse, ServiceError};
 use actix_web::{get, post, web, HttpResponse};
 use crate::state::AppState;
@@ -54,4 +54,15 @@ pub async fn set_user_details(session_user: web::ReqData<SessionUser>, data: web
     }
 
     Ok(HttpResponse::Accepted().finish())
+}
+
+
+#[get("/org-info")]
+pub async fn get_org_info(session_user: web::ReqData<SessionUser>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+
+    // Fetch the organization info for the session user
+    let org_info = fetch_org_info(&state.pg_pool, session_user.organization_id).await?;
+
+    Ok(HttpResponse::Ok().json(org_info))
 }

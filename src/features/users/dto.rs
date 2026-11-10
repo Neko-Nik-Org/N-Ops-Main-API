@@ -54,3 +54,18 @@ pub struct LoginReqDto {
     pub password: String,    // Base64 encoded password
     pub remember_me: bool,   // Indicates if the user can refresh the session
 }
+
+
+#[derive(RowFrom, Serialize)]
+pub struct OrgInfoDbDto {
+    pub organization_id: Uuid,
+    pub organization_name: String,
+    pub organization_info: JsonValue,
+    pub user_limit: i32,
+    pub server_limit: i32,
+    pub ss_project_limit: i32,
+    pub ss_keys_limit: i32,
+    pub ss_file_limit: i32,
+    pub user_notes_limit: i32,
+    pub created_at: ChronoUtc,
+}

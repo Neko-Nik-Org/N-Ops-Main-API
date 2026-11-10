@@ -12,4 +12,5 @@ pub use repository::{
     reset_user_ui_info,
     fetch_user_details,
     reset_user_details,
+    fetch_org_info
 };

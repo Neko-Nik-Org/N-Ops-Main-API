@@ -70,7 +70,7 @@ async fn main() -> std::io::Result<()> {
                 .wrap(from_fn(middleware::user_session::auth_check))
                 .service(users::get_ui_info)
                 .service(users::set_ui_info)
-                // .service(users::get_org_info)   // Get Organization Info for the User (including limits and all)
+                .service(users::get_org_info)
                 .service(users::get_user_details)
                 .service(users::set_user_details)
             )
