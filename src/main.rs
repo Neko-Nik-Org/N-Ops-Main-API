@@ -86,7 +86,7 @@ async fn main() -> std::io::Result<()> {
                 .service(tags::create_tag)
                 .service(tags::update_tag)
                 .service(tags::delete_tag)
-                // .service(tags::list_tags) // List All Tags
+                .service(tags::list_tags)
                 .service(tags::get_tag)
             )
             // .service(

@@ -73,3 +73,21 @@ pub async fn get_tag(db_pool: &PgPool, organization_id: uuid::Uuid, tag_id: i64)
 
     Ok(row.map(ResourceTag::from))
 }
+
+
+pub async fn list_all_tags(db_pool: &PgPool, organization_id: uuid::Uuid) -> PgResult<Vec<ResourceTag>> {
+    let client = db_pool.get().await?;
+
+    let rows = client
+        .query(
+            r#"
+            SELECT tag_id, organization_id, tag_name, tag_description
+            FROM resource_tag
+            WHERE organization_id = $1
+            "#,
+            &[&organization_id],
+        )
+        .await?;
+
+    Ok(ResourceTag::from_rows(rows))
+}

@@ -63,11 +63,25 @@ pub async fn get_tag(session_user: web::ReqData<SessionUser>, path: web::Path<i6
     let tag_id = path.into_inner();
 
     // Validate that the session user has the required permissions
-    // session_user.has_all_permissions(&["tag:view"])?;
+    // No need to check for "tag:view" permission, this endpoint will be used across all services that require tag information
     session_user.has_tag_permission(tag_id)?;
 
     // Get the tag using the provided data and the session user's context
     let tag = tags::get_tag(&state, &session_user, tag_id).await?;
 
     Ok(HttpResponse::Ok().json(tag))
+}
+
+
+#[get("/list")]
+pub async fn list_tags(session_user: web::ReqData<SessionUser>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+
+    // Validate that the session user has the required permissions
+    session_user.has_all_permissions(&["tag:view"])?;
+
+    // Get the list of all tags for the session user's organization (No tag-specific filtering applied)
+    let tags = tags::list_all_tags(&state, &session_user).await?;
+
+    Ok(HttpResponse::Ok().json(tags))
 }

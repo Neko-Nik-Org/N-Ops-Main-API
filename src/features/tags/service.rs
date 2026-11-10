@@ -67,3 +67,14 @@ pub async fn get_tag(state: &AppState, session_user: &SessionUser, tag_id: i64) 
         Err(ServiceError::NotFound("Tag not found".into()))
     }
 }
+
+
+/// List all tags for the session user's organization
+pub async fn list_all_tags(state: &AppState, session_user: &SessionUser) -> ServiceResult<Vec<ResourceTag>> {
+    let tags = repository::list_all_tags(
+        &state.pg_pool,
+        session_user.organization_id
+    ).await?;
+
+    Ok(tags)
+}
