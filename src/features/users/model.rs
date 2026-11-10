@@ -16,7 +16,7 @@ pub struct SessionUser {
     pub allow_refresh: bool,    // Indicates if the session can be refreshed
     pub encryption_key: String,
     pub permissions: Vec<String>,
-    pub tags: Vec<String>,
+    pub tags: Vec<i64>,
 
     // Basic user information
     pub user_name: String,
@@ -80,6 +80,21 @@ impl SessionUser {
             Ok(())
         } else {
             Err(ServiceError::Forbidden("Insufficient permissions".into()))
+        }
+    }
+
+    /// Check if the session has tag with the specified ID
+    pub fn has_tag_permission(&self, tag_id: i64) -> ServiceResult<()> {
+        // If there are no tags then all tags are considered accessible
+        if self.tags.is_empty() {
+            return Ok(());
+        }
+
+        // Check if the tag is present in the user's accessible tags
+        if self.tags.contains(&tag_id) {
+            Ok(())
+        } else {
+            Err(ServiceError::Forbidden("Insufficient tag access".into()))
         }
     }
 }

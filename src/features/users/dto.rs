@@ -25,7 +25,7 @@ pub struct AuthInfoDbDto {
     pub has_email_2fa: bool,
 
     pub permissions: Vec<String>,
-    pub tags: Vec<String>,
+    pub tags: Vec<i64>,
 
     // Basic user information
     pub user_name: String,

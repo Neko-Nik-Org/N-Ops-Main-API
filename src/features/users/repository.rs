@@ -29,17 +29,17 @@ pub async fn get_user_auth_info(db_pool: &PgPool, user_name: &str) -> PgResult<O
 
                 r.permissions,
 
-                -- Role-associated resource tags
+                -- Role-associated resource tag IDs
                 COALESCE(
                     (
-                        SELECT ARRAY_AGG(t.tag_name ORDER BY t.tag_name)
+                        SELECT ARRAY_AGG(t.tag_id ORDER BY t.tag_id)
                         FROM role_tag rt
                         INNER JOIN resource_tag t
                             ON t.tag_id = rt.tag_id
                             AND t.organization_id = u.organization_id
                         WHERE rt.role_id = r.role_id
                     ),
-                    ARRAY[]::TEXT[]
+                    ARRAY[]::BIGINT[]
                 ) AS tags,
 
                 -- Basic user information
