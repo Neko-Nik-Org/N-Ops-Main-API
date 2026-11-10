@@ -118,7 +118,7 @@ CREATE TABLE api_key (
     key_description TEXT NOT NULL,  -- Description of the API key
 
     -- Example: '{api_key_id}_{actual_api_key_value}' so that its easy to do lookups and verify the key
-    key_value TEXT NOT NULL,  -- HMAC-SHA-256 of the API key value
+    key_value TEXT UNIQUE NOT NULL,  -- HMAC-SHA-256 of the API key value
 
     -- Only has 'Keys vault' & 'Config files' resource permissions (No other resource management allowed programmatically)
     resource_permissions TEXT[] NOT NULL,  -- Resource-specific permissions for the API key
@@ -133,4 +133,69 @@ CREATE TABLE api_key (
     expires_at TIMESTAMPTZ,  -- Expiration date for the API key (optional)
 
     UNIQUE (key_name, organization_id)  -- Unique key name per organization
+);
+
+
+-- Vault Project (SS - Secret Store)
+CREATE TABLE vault_project (
+    project_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    organization_id UUID NOT NULL REFERENCES organization(organization_id) ON DELETE CASCADE,
+
+    project_name VARCHAR(100) NOT NULL,
+    details JSONB NOT NULL,  -- Additional details for the vault project
+
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+
+    UNIQUE (project_name, organization_id)
+);
+
+
+-- Vault Project Service
+CREATE TABLE vault_service (
+    service_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    project_id BIGINT NOT NULL REFERENCES vault_project(project_id) ON DELETE CASCADE,
+
+    service_name VARCHAR(100) NOT NULL,
+    details JSONB NOT NULL,  -- Additional details for the vault project service
+
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+
+    UNIQUE (service_name, project_id)
+);
+
+
+-- Vault Project Service Secret Keys store (Environment variables)
+CREATE TABLE vault_secret_keys (
+    secret_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    service_id BIGINT NOT NULL REFERENCES vault_service(service_id) ON DELETE CASCADE,
+
+    secret_name VARCHAR(100) NOT NULL,
+    current_version BIGINT NOT NULL DEFAULT 1,  -- Current version that is in use
+
+    -- Associated resource tag for the secret key (Only one tag can be associated per secret key)
+    resource_tag BIGINT NOT NULL REFERENCES resource_tag(tag_id) ON DELETE CASCADE,
+
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+
+    -- Unique secret name per service and resource tag combination
+    UNIQUE (secret_name, service_id, resource_tag)
+);
+
+
+-- Vault Project Service Secret Key Versions (Can not edit once created)
+CREATE TABLE vault_secret_key_versions (
+    secret_id BIGINT NOT NULL REFERENCES vault_secret_keys(secret_id) ON DELETE CASCADE,
+    version_number BIGINT NOT NULL,  -- Version number of the secret key
+
+    is_encrypted BOOLEAN NOT NULL DEFAULT TRUE,  -- Indicates if the secret value is encrypted
+    secret_value TEXT NOT NULL,  -- Encrypted AES-256-GCM secret value or plain text if not encrypted
+
+    details JSONB NOT NULL,  -- Additional details like created_by, reason for change, etc.
+
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+
+    PRIMARY KEY (secret_id, version_number)
 );
