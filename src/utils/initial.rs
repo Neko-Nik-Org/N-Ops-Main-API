@@ -3,6 +3,15 @@ use std::env::var as env_var;
 use std::time::Duration;
 
 
+pub const ALL_AVAILABLE_PERMISSIONS: [&str; 4] = [
+    // Resource Tag's
+    "tag:view",
+    "tag:create",
+    "tag:edit",
+    "tag:delete",
+];
+
+
 pub struct PgSettings {
     pub url: String,
     pub conn_timeout: u64,
