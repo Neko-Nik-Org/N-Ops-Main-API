@@ -36,14 +36,10 @@ async fn main() -> std::io::Result<()> {
                 .allow_any_header()
                 .max_age(420)
             )
-            // .service(
-            //     actix_scope("/health")
-            //     .service(health::full_health_check)  // Perform one full health check for all components and DB's
-                // .service(health::db_health_check)    // Merge into one
-                // .service(health::api_health_check)    // Merge into one
-                // .service(health::redis_cache_health_check)    // Merge into one
-                // .service(health::in_mem_cache_health_check)    // Merge into one
-            // )
+            .service(
+                actix_scope("/health")
+                .service(health::full_health_check)
+            )
             // .service(
             //     actix_scope("/internal")
             //     .wrap(from_fn(middleware::key_based::auth_check))

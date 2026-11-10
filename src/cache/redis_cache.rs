@@ -1,6 +1,6 @@
+use crate::errors::{ServiceResult, ServiceError};
 use redis::{Client, aio::MultiplexedConnection};
 use serde::{Serialize, de::DeserializeOwned};
-use crate::errors::ServiceResult;
 use redis::AsyncCommands;
 
 
@@ -54,12 +54,27 @@ pub async fn delete_redis_cache(conn: &MultiplexedConnection, key: &str) -> Serv
 }
 
 
+/// Health check for Redis connection
+pub async fn redis_health_check(conn: &MultiplexedConnection) -> ServiceResult<()> {
+    let mut redis_conn = conn.clone();
+
+    let pong: String = redis::cmd("PING").query_async(&mut redis_conn).await?;
+    if pong != "PONG" {
+        tracing::warn!("Unexpected PING response from Redis: {}", pong);
+        return Err(ServiceError::PreconditionFailed("Redis cache DB health check failed!".into()));
+    }
+
+    Ok(())
+}
+
+
 /// Initialize a Redis connection and verify it with a PING command
 pub async fn init_redis(url: &str) -> MultiplexedConnection {
     let client = Client::open(url).expect("Failed to create Redis client");
 
     let mut conn = client.get_multiplexed_async_connection().await.expect("Failed to connect to Redis");
 
+    // Verify the connection with a PING command
     let pong: String = redis::cmd("PING").query_async(&mut conn).await.expect("Failed to ping Redis");
     if pong != "PONG" {
         tracing::warn!("Unexpected PING response from Redis: {}", pong);

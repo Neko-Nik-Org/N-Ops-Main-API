@@ -21,6 +21,6 @@ WORKDIR /app
 COPY --from=build /app/target/release/rust-api .
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD curl --fail --silent http://127.0.0.1:8686/health/api || exit 1
+    CMD curl --fail --silent http://127.0.0.1:8686/health/service || exit 1
 
 CMD ["/app/rust-api"]
