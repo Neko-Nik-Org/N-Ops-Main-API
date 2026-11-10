@@ -15,7 +15,7 @@ struct RedisCacheHealthCheck {
 
 // Health check endpoint
 #[get("/api")]
-async fn api_health_check() -> HttpResponse {
+async fn api_health_check(state: web::Data<AppState>) -> HttpResponse {
     HttpResponse::Ok().body("Server is running!")
 }
 

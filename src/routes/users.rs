@@ -31,7 +31,7 @@ pub async fn set_ui_info(session_user: web::ReqData<SessionUser>, data: web::Jso
 }
 
 
-#[get("/user-details")]
+#[get("/details")]
 pub async fn get_user_details(session_user: web::ReqData<SessionUser>, state: web::Data<AppState>) -> ApiResponse {
     let session_user = session_user.into_inner();
 
@@ -42,7 +42,7 @@ pub async fn get_user_details(session_user: web::ReqData<SessionUser>, state: we
 }
 
 
-#[post("/user-details")]
+#[post("/details")]
 pub async fn set_user_details(session_user: web::ReqData<SessionUser>, data: web::Json<serde_json::Value>, state: web::Data<AppState>) -> ApiResponse {
     let session_user = session_user.into_inner();
     let user_details = data.into_inner(); 
