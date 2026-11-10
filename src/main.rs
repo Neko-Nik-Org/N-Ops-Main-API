@@ -87,7 +87,7 @@ async fn main() -> std::io::Result<()> {
                 .service(tags::update_tag)
                 .service(tags::delete_tag)
                 // .service(tags::list_tags) // List All Tags
-                // .service(tags::get_tag) // Get Any Tag info
+                .service(tags::get_tag)
             )
             // .service(
             //     actix_scope("/api-keys")

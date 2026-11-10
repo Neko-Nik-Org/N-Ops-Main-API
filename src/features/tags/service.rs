@@ -1,6 +1,7 @@
 use super::dto::{CreateResourceTagDto, EditResourceTagDto};
 use crate::errors::{ServiceError, ServiceResult};
 use crate::features::users::SessionUser;
+use super::model::ResourceTag;
 use crate::state::AppState;
 use super::repository;
 
@@ -51,4 +52,18 @@ pub async fn delete_tag(state: &AppState, session_user: &SessionUser, tag_id: i6
     }
 
     Ok(())
+}
+
+
+/// Get an existing tag using the provided tag ID
+pub async fn get_tag(state: &AppState, session_user: &SessionUser, tag_id: i64) -> ServiceResult<ResourceTag> {
+    if let Some(tag) = repository::get_tag(
+        &state.pg_pool,
+        session_user.organization_id,
+        tag_id
+    ).await? {
+        Ok(tag)
+    } else {
+        Err(ServiceError::NotFound("Tag not found".into()))
+    }
 }

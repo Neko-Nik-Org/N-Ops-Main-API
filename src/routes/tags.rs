@@ -1,4 +1,4 @@
-use actix_web::{HttpResponse, delete, post, put, web};
+use actix_web::{HttpResponse, delete, get, post, put, web};
 use crate::features::users::SessionUser;
 use crate::errors::ApiResponse;
 use crate::state::AppState;
@@ -54,4 +54,20 @@ pub async fn delete_tag(session_user: web::ReqData<SessionUser>, path: web::Path
     tags::delete_tag(&state, &session_user, tag_id).await?;
 
     Ok(HttpResponse::Ok().finish())
+}
+
+
+#[get("/get/{tag_id}")]
+pub async fn get_tag(session_user: web::ReqData<SessionUser>, path: web::Path<i64>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let tag_id = path.into_inner();
+
+    // Validate that the session user has the required permissions
+    // session_user.has_all_permissions(&["tag:view"])?;
+    session_user.has_tag_permission(tag_id)?;
+
+    // Get the tag using the provided data and the session user's context
+    let tag = tags::get_tag(&state, &session_user, tag_id).await?;
+
+    Ok(HttpResponse::Ok().json(tag))
 }

@@ -1,5 +1,6 @@
 use super::dto::{CreateResourceTagDto, EditResourceTagDto};
 use deadpool_postgres::Pool as PgPool;
+use super::model::ResourceTag;
 use crate::errors::PgResult;
 
 
@@ -53,4 +54,22 @@ pub async fn delete_tag(db_pool: &PgPool, organization_id: uuid::Uuid, tag_id: i
         .await?;
 
     Ok(result)
+}
+
+
+pub async fn get_tag(db_pool: &PgPool, organization_id: uuid::Uuid, tag_id: i64) -> PgResult<Option<ResourceTag>> {
+    let client = db_pool.get().await?;
+
+    let row = client
+        .query_opt(
+            r#"
+            SELECT tag_id, organization_id, tag_name, tag_description
+            FROM resource_tag
+            WHERE organization_id = $1 AND tag_id = $2
+            "#,
+            &[&organization_id, &tag_id],
+        )
+        .await?;
+
+    Ok(row.map(ResourceTag::from))
 }
