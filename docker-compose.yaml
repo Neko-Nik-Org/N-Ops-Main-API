@@ -1,7 +1,7 @@
 services:
-  rust-api-template:
-    image: neko7nik/rust-api-template:latest
-    container_name: rust-api-template
+  n-ops-main-api:
+    image: neko7nik/n-ops-main-api:latest
+    container_name: n-ops-main-api
 
     logging:
       driver: "json-file"
