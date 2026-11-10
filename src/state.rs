@@ -6,7 +6,6 @@ use crate::tasks::start_background_jobs;
 use redis::aio::MultiplexedConnection;
 use deadpool_postgres::Pool as PgPool;
 use actix_web::web::Data as webData;
-use crate::features::notes::Notes;
 use std::time::Duration;
 use std::sync::LazyLock;
 
@@ -22,7 +21,6 @@ pub struct AppState {
 pub struct InMemCache {
     pub string_based: AppCache<String>,
     pub number_based: AppCache<u64>,
-    pub notes_based: AppCache<Notes>,
 }
 
 
@@ -48,7 +46,6 @@ fn init_in_mem_cache(cache_size: u64, expiration_time: Duration) -> InMemCache {
     InMemCache {
         string_based: moka_builder(cache_size, expiration_time),
         number_based: moka_builder(cache_size, expiration_time),
-        notes_based: moka_builder(cache_size, expiration_time)
     }
 }
 

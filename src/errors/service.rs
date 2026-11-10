@@ -40,6 +40,9 @@ pub enum ServiceError {
     #[error("Authorization failed: {0}")]
     Unauthorized(String),
 
+    #[error("Forbidden: {0}")]
+    Forbidden(String),
+
     #[error("Not found: {0}")]
     NotFound(String),
 

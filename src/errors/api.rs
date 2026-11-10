@@ -28,6 +28,7 @@ impl ResponseError for ServiceError {
             ServiceError::Unprocessable(_) => StatusCode::UNPROCESSABLE_ENTITY,
             ServiceError::Unauthorized(_) => StatusCode::UNAUTHORIZED,
             ServiceError::PreconditionFailed(_) => StatusCode::PRECONDITION_FAILED,
+            ServiceError::Forbidden(_) => StatusCode::FORBIDDEN,
             ServiceError::Gone(_) => StatusCode::GONE,
         }
     }
@@ -49,6 +50,7 @@ impl ResponseError for ServiceError {
             | ServiceError::Unprocessable(message)
             | ServiceError::PreconditionFailed(message)
             | ServiceError::Unauthorized(message)
+            | ServiceError::Forbidden(message)
             | ServiceError::Gone(message) => message.as_str(),
 
             // Hidden internal errors

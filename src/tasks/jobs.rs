@@ -1,11 +1,10 @@
-use crate::database::notes::delete_old_notes;
+use crate::features::api_keys::clean_expired_api_keys;
 use deadpool_postgres::Pool as PgPool;
 use std::future::Future;
 use std::time::Duration;
 
 
-const ORPHANED_FILE_CLEANUP_INTERVAL: u64 = 3 * 60 * 60;
-const FILE_LOCK_CLEANUP_INTERVAL: u64 = 3 * 60 * 60;
+const API_KEYS_CLEANUP_INTERVAL: u64 = 3 * 60 * 60;
 
 
 async fn run_every<F, Fut, E>(seconds: u64, mut job: F)
@@ -26,31 +25,11 @@ async fn run_every<F, Fut, E>(seconds: u64, mut job: F)
 }
 
 
-pub async fn remove_expired_file_locks(pg_pool: PgPool) {
-    tracing::info!("Starting remove_expired_file_locks job");
+pub async fn clean_expired_api_keys_job(pg_pool: PgPool) {
+    tracing::info!("Starting clean_expired_api_keys job");
 
-    run_every(FILE_LOCK_CLEANUP_INTERVAL, || {
-        delete_old_notes(&pg_pool)
-    })
-    .await;
-}
-
-
-pub async fn delete_orphaned_files(pg_pool: PgPool) {
-    tracing::info!("Starting delete_orphaned_files job");
-
-    run_every(ORPHANED_FILE_CLEANUP_INTERVAL, || {
-        delete_old_notes(&pg_pool)
-    })
-    .await;
-}
-
-
-pub async fn delete_trash_after_30_days(pg_pool: PgPool) {
-    tracing::info!("Starting delete_trash_after_30_days job");
-
-    run_every(ORPHANED_FILE_CLEANUP_INTERVAL, || {
-        delete_old_notes(&pg_pool)
+    run_every(API_KEYS_CLEANUP_INTERVAL, || {
+        clean_expired_api_keys(&pg_pool)
     })
     .await;
 }

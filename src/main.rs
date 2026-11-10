@@ -1,4 +1,4 @@
-use routes::{health, auth, users};
+use routes::{health, auth, users, tags};
 use actix_web::web::scope as actix_scope;
 use actix_web::middleware::from_fn;
 use actix_web::{App, HttpServer};
@@ -31,7 +31,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(app_state.clone())
             .wrap(Cors::default()
                 .allowed_origin_fn(state::cors_allowed_origin_fn)
-                .allowed_methods(["GET", "POST", "DELETE"])
+                .allowed_methods(["GET", "POST", "PUT", "DELETE"])
                 .supports_credentials()
                 .allow_any_header()
                 .max_age(420)
@@ -80,15 +80,15 @@ async fn main() -> std::io::Result<()> {
             //     .service(users::list_users) // List All Users
             //     .service(users::get_user) // Get Any User info
             // )
-            // .service(
-            //     actix_scope("/tag")
-            //     .wrap(from_fn(middleware::user_session::auth_check))
-            //     .service(tags::create_tag)    // Create Any Tag
-            //     .service(tags::update_tag)    // Update Any Tag's Details
-            //     .service(tags::delete_tag)    // Delete Any Tag
-            //     .service(tags::list_tags) // List All Tags
-            //     .service(tags::get_tag) // Get Any Tag info
-            // )
+            .service(
+                actix_scope("/tag")
+                .wrap(from_fn(middleware::user_session::auth_check))
+                .service(tags::create_tag)
+                .service(tags::update_tag)
+                // .service(tags::delete_tag)    // Delete Any Tag
+                // .service(tags::list_tags) // List All Tags
+                // .service(tags::get_tag) // Get Any Tag info
+            )
             // .service(
             //     actix_scope("/api-keys")
             //     .wrap(from_fn(middleware::user_session::auth_check))

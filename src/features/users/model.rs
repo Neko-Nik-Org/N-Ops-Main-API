@@ -1,6 +1,8 @@
+use crate::errors::{ServiceError, ServiceResult};
 use serde::{Deserialize, Serialize};
 use super::dto::AuthInfoDbDto;
 use uuid::Uuid;
+
 
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -73,7 +75,11 @@ impl SessionUser {
     }
 
     /// Check if the session has all the required permissions
-    pub fn has_all_permissions(&self, required_permissions: &[&str]) -> bool {
-        required_permissions.iter().all(|&perm| self.permissions.contains(&perm.to_string()))
+    pub fn has_all_permissions(&self, required_permissions: &[&str]) -> ServiceResult<()> {
+        if required_permissions.iter().all(|&perm| self.permissions.contains(&perm.to_string())) {
+            Ok(())
+        } else {
+            Err(ServiceError::Forbidden("Insufficient permissions".into()))
+        }
     }
 }

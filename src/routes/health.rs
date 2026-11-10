@@ -1,4 +1,4 @@
-use crate::database::health_check::health_check as pg_health_check;
+use crate::database::health_check as pg_health_check;
 use crate::errors::{ApiResponse, ServiceError};
 use actix_web::{get, web, HttpResponse};
 use crate::cache::redis_cache;
