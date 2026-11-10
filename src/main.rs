@@ -43,10 +43,7 @@ async fn main() -> std::io::Result<()> {
             // .service(
             //     actix_scope("/internal")
             //     .wrap(from_fn(middleware::key_based::auth_check))
-            //     .service(health::db_health_check)
-            //     .service(health::api_health_check)
-            //     .service(health::redis_cache_health_check)
-            //     .service(health::in_mem_cache_health_check)
+            //     .service(users::internal_get_user) // Example internal endpoint to get user details, not sure if needed
             // )
             .service(
                 actix_scope("/auth")
@@ -106,6 +103,36 @@ async fn main() -> std::io::Result<()> {
             //     .service(user_roles::delete_user_role)    // Delete Any User Role (by user tag permission)
             //     .service(user_roles::list_user_roles) // List All User Roles (by user tag permission)
             //     .service(user_roles::get_user_role) // Get Any User Role info (by user tag permission)
+            // )
+            // .service(
+            //     actix_scope("/vault/project")
+            //     .wrap(from_fn(middleware::user_session::auth_check))
+            //     .service(vault_project::create_project)
+            //     .service(vault_project::update_project)
+            //     .service(vault_project::delete_project)
+            //     .service(vault_project::list_projects)
+            //     .service(vault_project::get_project)
+            // )
+            // .service(
+            //     actix_scope("/vault/project/service")
+            //     .wrap(from_fn(middleware::user_session::auth_check))
+            //     .service(vault_project_service::create_service)
+            //     .service(vault_project_service::update_service)
+            //     .service(vault_project_service::delete_service)
+            //     .service(vault_project_service::list_services)
+            //     .service(vault_project_service::get_service)
+            // )
+            // .service(
+            //     actix_scope("/vault/secret/keys")
+            //     .wrap(from_fn(middleware::user_session::auth_check))
+            //     .service(vault_secret_keys::create_env_key)
+            //     .service(vault_secret_keys::update_env_key) // Create new version of the environment key
+            //     .service(vault_secret_keys::delete_env_key) // Delete the environment key along with all its versions
+            //     .service(vault_secret_keys::set_key_version) // Set the active current_version of the environment key
+            //     .service(vault_secret_keys::get_env_key) // Get the environment key along with its max version count
+            //     .service(vault_secret_keys::list_env_keys) // List all environment keys along with their max version count
+            //     .service(vault_secret_keys::get_key_version) // Get a specific version of the environment key (with bool decode_and_fetch)
+            //     .service(vault_secret_keys::list_key_versions) // List all versions of the environment key
             // )
     })
     .bind(("0.0.0.0", 8686))?
