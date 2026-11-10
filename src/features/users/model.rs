@@ -67,9 +67,13 @@ impl SessionUser {
         }
     }
 
-
     /// Refreshes the session by generating a new session ID
     pub fn refresh(&mut self) {
         self.session_id = Uuid::new_v4();
+    }
+
+    /// Check if the session has all the required permissions
+    pub fn has_all_permissions(&self, required_permissions: &[&str]) -> bool {
+        required_permissions.iter().all(|&perm| self.permissions.contains(&perm.to_string()))
     }
 }

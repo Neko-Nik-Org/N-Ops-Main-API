@@ -113,6 +113,11 @@ pub async fn user_logout(session_user: web::ReqData<SessionUser>, state: web::Da
 pub async fn refresh_session(session_user: web::ReqData<SessionUser>, state: web::Data<AppState>) -> ApiResponse {
     let mut session_user = session_user.into_inner();
 
+    // If the session is not allowed to be refreshed, return an error
+    if !session_user.allow_refresh {
+        return Err(ServiceError::BadRequest("Session cannot be refreshed".into()));
+    }
+
     let old_session_key = format!("session:{}", session_user.session_id);
 
     session_user.refresh(); // Refresh the session ID
