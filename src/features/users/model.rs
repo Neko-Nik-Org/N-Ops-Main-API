@@ -66,4 +66,10 @@ impl SessionUser {
             user_notes_limit: auth_info.user_notes_limit,
         }
     }
+
+
+    /// Refreshes the session by generating a new session ID
+    pub fn refresh(&mut self) {
+        self.session_id = Uuid::new_v4();
+    }
 }

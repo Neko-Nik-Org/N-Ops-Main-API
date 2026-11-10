@@ -90,16 +90,15 @@ pub async fn user_login(request: HttpRequest, login_request: web::Json<LoginReqD
 
 #[get("/verify")]
 pub async fn verify_session(session_user: web::ReqData<SessionUser>) -> ApiResponse {
-    let session_user = session_user.into_inner();
+    let _ = session_user.into_inner();
 
     // Simple verification endpoint to check if the session is valid
-
-    Ok(HttpResponse::Ok().body(format!("Hello, {}", session_user.user_name)))
+    Ok(HttpResponse::NoContent().finish())
 }
 
 
 #[delete("/logout")]
-pub async fn user_logout(state: web::Data<AppState>, session_user: web::ReqData<SessionUser>) -> ApiResponse {
+pub async fn user_logout(session_user: web::ReqData<SessionUser>, state: web::Data<AppState>) -> ApiResponse {
     let session_user = session_user.into_inner();
 
     // Delete the user session from Redis
@@ -107,4 +106,28 @@ pub async fn user_logout(state: web::Data<AppState>, session_user: web::ReqData<
     delete_redis_cache(&state.redis_cache, &session_key).await?;
 
     Ok(HttpResponse::NoContent().finish())
+}
+
+
+#[post("/refresh")]
+pub async fn refresh_session(session_user: web::ReqData<SessionUser>, state: web::Data<AppState>) -> ApiResponse {
+    let mut session_user = session_user.into_inner();
+
+    let old_session_key = format!("session:{}", session_user.session_id);
+
+    session_user.refresh(); // Refresh the session ID
+
+    let new_session_key = format!("session:{}", session_user.session_id);
+
+    // Delete the old session from Redis
+    delete_redis_cache(&state.redis_cache, &old_session_key).await?;
+
+    // Store the refreshed session in Redis with a 3-hour TTL
+    set_redis_cache(&state.redis_cache, &new_session_key, &session_user, 3 * 60 * 60).await?;
+
+    // Return the session creation response
+    Ok(HttpResponse::Ok().json(serde_json::json!({
+        "message": "Session refreshed successfully",
+        "session_id": session_user.session_id
+    })))
 }
