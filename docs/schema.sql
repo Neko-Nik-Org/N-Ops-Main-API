@@ -27,7 +27,6 @@ CREATE TABLE organization (
     -- Limits for secret keys/stores within the organization (SS - Secret Store)
     ss_project_limit INT NOT NULL,   -- Total number of projects allowed in the organization
     ss_keys_limit INT NOT NULL,      -- Total number of secret keys allowed per project
-    ss_file_limit INT NOT NULL,      -- Total number of secret files allowed per project
     ss_notes_limit INT NOT NULL,   -- Total number of notes allowed per project
 
     -- Additional limits can be added here as needed
@@ -231,6 +230,7 @@ CREATE TABLE vault_secure_notes (
     note_title VARCHAR(100) NOT NULL,
     details JSONB NOT NULL,  -- Additional UI metadata for the secure note
 
+    -- TODO: Is tag required for secure notes?
     is_encrypted BOOLEAN NOT NULL DEFAULT TRUE,  -- Indicates if the note content is encrypted
     note_content TEXT NOT NULL,  -- Encrypted or plain text content of the secure note
 

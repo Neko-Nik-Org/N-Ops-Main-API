@@ -51,7 +51,6 @@ pub struct OrgQuotaLimits {
 
     pub ss_project_limit: i32,
     pub ss_keys_limit: i32,
-    pub ss_file_limit: i32,
     pub ss_notes_limit: i32,
 }
 

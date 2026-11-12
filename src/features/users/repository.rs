@@ -181,23 +181,41 @@ pub async fn fetch_org_info(db_pool: &PgPool, organization_id: uuid::Uuid) -> Pg
         .query_one(
             r#"
             SELECT
-                organization_id,
-                organization_name,
-                organization_info,
-                allocated_ai_credit,
-                utilized_ai_credit,
-                allocated_storage_bytes,
-                utilized_storage_bytes,
-                user_limit,
-                server_limit,
-                workflow_limit,
-                ss_project_limit,
-                ss_keys_limit,
-                ss_file_limit,
-                ss_notes_limit,
-                created_at
-            FROM organization
-            WHERE organization_id = $1 AND is_active = TRUE
+                o.organization_id,
+                o.organization_name,
+                o.organization_info,
+
+                o.allocated_ai_credit,
+                o.utilized_ai_credit,
+
+                o.allocated_storage_bytes,
+                o.utilized_storage_bytes,
+
+                o.user_limit,
+                (
+                    SELECT COUNT(*)
+                    FROM app_user au
+                    WHERE au.organization_id = o.organization_id
+                )::INT AS current_user_count,
+
+                o.server_limit,
+                o.workflow_limit,
+
+                o.ss_project_limit,
+                (
+                    SELECT COUNT(*)
+                    FROM vault_project vp
+                    WHERE vp.organization_id = o.organization_id
+                )::INT AS current_ss_project_count,
+
+                o.ss_keys_limit,
+                o.ss_notes_limit,
+
+                o.created_at
+
+            FROM organization o
+            WHERE o.organization_id = $1
+                AND o.is_active = TRUE
             "#,
             &[&organization_id],
         )
@@ -224,7 +242,6 @@ pub async fn fetch_org_quota_limits(db_pool: &PgPool, organization_id: uuid::Uui
                 workflow_limit,
                 ss_project_limit,
                 ss_keys_limit,
-                ss_file_limit,
                 ss_notes_limit
             FROM organization
             WHERE organization_id = $1 AND is_active = TRUE
