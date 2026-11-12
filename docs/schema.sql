@@ -226,7 +226,7 @@ CREATE TABLE vault_secret_key_versions (
 CREATE TABLE vault_secure_notes (
     note_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     project_id BIGINT NOT NULL REFERENCES vault_project(project_id) ON DELETE CASCADE,
-    created_by_user_id BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    created_by_user_id BIGINT NOT NULL REFERENCES app_user(user_id) ON DELETE CASCADE,
 
     note_title VARCHAR(100) NOT NULL,
     details JSONB NOT NULL,  -- Additional UI metadata for the secure note
@@ -245,7 +245,7 @@ CREATE TABLE vault_secure_notes (
 -- Share Vault Secure Notes with other users (Internal sharing)
 CREATE TABLE vault_secure_note_internal_shares (
     note_id BIGINT NOT NULL REFERENCES vault_secure_notes(note_id) ON DELETE CASCADE,
-    shared_with_user_id BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    shared_with_user_id BIGINT NOT NULL REFERENCES app_user(user_id) ON DELETE CASCADE,
 
     -- Use etcd to manage distributed locks for editing permissions
     can_edit BOOLEAN NOT NULL DEFAULT FALSE,  -- Indicates if the shared user can edit the secure note
