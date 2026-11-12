@@ -1,6 +1,7 @@
 use crate::errors::{ServiceError, ServiceResult};
 use serde::{Deserialize, Serialize};
 use super::dto::AuthInfoDbDto;
+use pg_row_derive::RowFrom;
 use uuid::Uuid;
 
 
@@ -12,12 +13,6 @@ pub struct SessionUser {
     pub user_id: i64,
     pub organization_id: Uuid,
 
-    // Security and access information
-    pub allow_refresh: bool,    // Indicates if the session can be refreshed
-    pub encryption_key: String,
-    pub permissions: Vec<String>,
-    pub tags: Vec<i64>,
-
     // Basic user information
     pub user_name: String,
     pub display_name: String,
@@ -27,13 +22,37 @@ pub struct SessionUser {
     pub primary_email: String,
     pub is_email_verified: bool,
 
-    // Limits for the user or organization
+    // Security and access information
+    pub encryption_key: String,
+    pub allow_refresh: bool,    // Indicates if the session can be refreshed
+
+    pub allowed_linux_users: Vec<String>,
+    pub permissions: Vec<String>,
+    pub tags: Vec<i64>,
+
+    pub can_approve_approvals: bool,
+    pub can_bypass_approvals: bool,
+}
+
+
+#[derive(RowFrom)]
+pub struct OrgQuotaLimits {
+    pub organization_id: Uuid,
+
+    pub allocated_ai_credit: i64,
+    pub utilized_ai_credit: i64,
+
+    pub allocated_storage_bytes: i64,
+    pub utilized_storage_bytes: i64,
+
     pub user_limit: i32,
     pub server_limit: i32,
+    pub workflow_limit: i32,
+
     pub ss_project_limit: i32,
     pub ss_keys_limit: i32,
     pub ss_file_limit: i32,
-    pub user_notes_limit: i32,
+    pub ss_notes_limit: i32,
 }
 
 
@@ -50,8 +69,13 @@ impl SessionUser {
 
             allow_refresh,
             encryption_key: auth_info.encryption_key,
+
+            allowed_linux_users: auth_info.allowed_linux_users,
             permissions: auth_info.permissions,
             tags: auth_info.tags,
+
+            can_approve_approvals: auth_info.can_approve_approvals,
+            can_bypass_approvals: auth_info.can_bypass_approvals,
 
             user_name: auth_info.user_name,
             display_name: auth_info.display_name,
@@ -59,13 +83,6 @@ impl SessionUser {
 
             primary_email: auth_info.primary_email,
             is_email_verified: auth_info.is_email_verified,
-
-            user_limit: auth_info.user_limit,
-            server_limit: auth_info.server_limit,
-            ss_project_limit: auth_info.ss_project_limit,
-            ss_keys_limit: auth_info.ss_keys_limit,
-            ss_file_limit: auth_info.ss_file_limit,
-            user_notes_limit: auth_info.user_notes_limit,
         }
     }
 

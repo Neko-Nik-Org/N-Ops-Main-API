@@ -1,6 +1,7 @@
 use super::dto::{AuthInfoDbDto, OrgInfoDbDto};
 use deadpool_postgres::Pool as PgPool;
 use serde_json::Value as JsonValue;
+use super::model::OrgQuotaLimits;
 use crate::errors::PgResult;
 use std::net::IpAddr;
 
@@ -27,7 +28,11 @@ pub async fn get_user_auth_info(db_pool: &PgPool, user_name: &str) -> PgResult<O
                 u.has_totp_2fa,
                 u.has_email_2fa,
 
+                -- Role information
                 r.permissions,
+                r.can_approve_approvals,
+                r.can_bypass_approvals,
+                r.allowed_linux_users,
 
                 -- Role-associated resource tag IDs
                 COALESCE(
@@ -50,14 +55,6 @@ pub async fn get_user_auth_info(db_pool: &PgPool, user_name: &str) -> PgResult<O
                 -- Contact information
                 u.primary_email,
                 u.is_email_verified,
-
-                -- Organization limits
-                o.user_limit,
-                o.server_limit,
-                o.ss_project_limit,
-                o.ss_keys_limit,
-                o.ss_file_limit,
-                o.user_notes_limit,
 
                 -- Authentication metadata
                 u.last_login_at
@@ -91,17 +88,17 @@ pub async fn get_ip_location(db_pool: &PgPool, client_ip: &str) -> PgResult<(Str
         .query_one(
             r#"
             SELECT country_iso_code, country_name
-            FROM ip_geo_locations
+            FROM ip_geographic_locations
             WHERE network >>= $1
             "#,
             &[&client_ip.parse::<IpAddr>().ok()],
         )
         .await?;
 
-    let country_iso_code = row.get::<&str, String>("country_iso_code");
-    let country_name = row.get::<&str, String>("country_name");
-
-    Ok((country_iso_code, country_name))
+    Ok((
+        row.get("country_iso_code"),
+        row.get("country_name"),
+    ))
 }
 
 
@@ -187,19 +184,54 @@ pub async fn fetch_org_info(db_pool: &PgPool, organization_id: uuid::Uuid) -> Pg
                 organization_id,
                 organization_name,
                 organization_info,
+                allocated_ai_credit,
+                utilized_ai_credit,
+                allocated_storage_bytes,
+                utilized_storage_bytes,
                 user_limit,
                 server_limit,
+                workflow_limit,
                 ss_project_limit,
                 ss_keys_limit,
                 ss_file_limit,
-                user_notes_limit,
+                ss_notes_limit,
                 created_at
             FROM organization
-            WHERE organization_id = $1
+            WHERE organization_id = $1 AND is_active = TRUE
             "#,
             &[&organization_id],
         )
         .await?;
 
     Ok(OrgInfoDbDto::from(row))
+}
+
+
+pub async fn fetch_org_quota_limits(db_pool: &PgPool, organization_id: uuid::Uuid) -> PgResult<OrgQuotaLimits> {
+    let client = db_pool.get().await?;
+
+    let row = client
+        .query_one(
+            r#"
+            SELECT
+                organization_id,
+                allocated_ai_credit,
+                utilized_ai_credit,
+                allocated_storage_bytes,
+                utilized_storage_bytes,
+                user_limit,
+                server_limit,
+                workflow_limit,
+                ss_project_limit,
+                ss_keys_limit,
+                ss_file_limit,
+                ss_notes_limit
+            FROM organization
+            WHERE organization_id = $1 AND is_active = TRUE
+            "#,
+            &[&organization_id],
+        )
+        .await?;
+
+    Ok(OrgQuotaLimits::from(row))
 }

@@ -10,19 +10,25 @@ CREATE TABLE organization (
     organization_info JSONB NOT NULL,
     encryption_key TEXT NOT NULL,  -- AES-256-GCM encryption key (Encrypted with Master Key from environment)
 
+    -- Quota for the organization
+    allocated_ai_credit BIGINT NOT NULL,  -- Total AI credits allocated to the organization
+    utilized_ai_credit BIGINT NOT NULL,  -- AI credits utilized by the organization
+
+    allocated_storage_bytes BIGINT NOT NULL,  -- Total storage allocated to the organization
+    utilized_storage_bytes BIGINT NOT NULL,  -- Storage utilized by the organization
+
     is_active BOOLEAN DEFAULT TRUE NOT NULL,
 
     -- Limits for the organization
     user_limit INT NOT NULL,     -- Total number of users allowed in the organization
     server_limit INT NOT NULL,   -- Total number of servers allowed in the organization
+    workflow_limit INT NOT NULL,   -- Total number of workflows allowed in the organization
 
     -- Limits for secret keys/stores within the organization (SS - Secret Store)
     ss_project_limit INT NOT NULL,   -- Total number of projects allowed in the organization
     ss_keys_limit INT NOT NULL,      -- Total number of secret keys allowed per project
     ss_file_limit INT NOT NULL,      -- Total number of secret files allowed per project
-
-    -- Notes limit
-    user_notes_limit INT NOT NULL,   -- Total number of notes allowed per user
+    ss_notes_limit INT NOT NULL,   -- Total number of notes allowed per project
 
     -- Additional limits can be added here as needed
 
@@ -53,6 +59,13 @@ CREATE TABLE user_role (
     -- Each role will have Tags associated with it for scoping users, Ref: 'role_tag' table
     -- if not, user accociated with this role will have unrestricted access to all tags
     permissions TEXT[] NOT NULL,    -- e.g., ['user:create', 'user:delete', 'server:read']
+
+    -- Is Admin role (Roles with elevated privileges)
+    can_approve_approvals BOOLEAN DEFAULT FALSE NOT NULL,  -- Can the role approve approvals
+    can_bypass_approvals BOOLEAN DEFAULT FALSE NOT NULL,  -- Can the role bypass all approvals (Else needs approval)
+
+    -- Linux Users list - Allow only specific Linux users for this role
+    allowed_linux_users TEXT[] NOT NULL,  -- List of allowed Linux users for this role
 
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -109,15 +122,23 @@ CREATE TABLE app_user (
 );
 
 
+-- IP based Geographic Locations (IP range to Country mapping)
+CREATE TABLE ip_geographic_locations (
+    network CIDR PRIMARY KEY,
+    country_iso_code TEXT NOT NULL,
+    country_name TEXT NOT NULL
+);
+
+
 -- API keys for an organization
 CREATE TABLE api_key (
     api_key_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, -- Lookup ID for the API key
     organization_id UUID NOT NULL REFERENCES organization(organization_id) ON DELETE CASCADE,
 
     key_name VARCHAR(100) NOT NULL,
-    key_description TEXT NOT NULL,  -- Description of the API key
+    key_description TEXT NOT NULL,  -- Reason or description for the API key
 
-    -- Example: '{api_key_id}_{actual_api_key_value}' so that its easy to do lookups and verify the key
+    -- Example: 'nk-{api_key_id}_base64({actual_api_key_value})' so that its easy to do lookups and verify the key
     key_value TEXT UNIQUE NOT NULL,  -- HMAC-SHA-256 of the API key value
 
     -- Only has 'Keys vault' & 'Config files' resource permissions (No other resource management allowed programmatically)
@@ -198,4 +219,50 @@ CREATE TABLE vault_secret_key_versions (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     PRIMARY KEY (secret_id, version_number)
+);
+
+
+-- Vault Secure Notes
+CREATE TABLE vault_secure_notes (
+    note_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    project_id BIGINT NOT NULL REFERENCES vault_project(project_id) ON DELETE CASCADE,
+    created_by_user_id BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+
+    note_title VARCHAR(100) NOT NULL,
+    details JSONB NOT NULL,  -- Additional UI metadata for the secure note
+
+    is_encrypted BOOLEAN NOT NULL DEFAULT TRUE,  -- Indicates if the note content is encrypted
+    note_content TEXT NOT NULL,  -- Encrypted or plain text content of the secure note
+
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+
+    -- Unique note title per user and project combination
+    UNIQUE (note_title, created_by_user_id, project_id)
+);
+
+
+-- Share Vault Secure Notes with other users (Internal sharing)
+CREATE TABLE vault_secure_note_internal_shares (
+    note_id BIGINT NOT NULL REFERENCES vault_secure_notes(note_id) ON DELETE CASCADE,
+    shared_with_user_id BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+
+    -- Use etcd to manage distributed locks for editing permissions
+    can_edit BOOLEAN NOT NULL DEFAULT FALSE,  -- Indicates if the shared user can edit the secure note
+
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+
+    PRIMARY KEY (note_id, shared_with_user_id)
+);
+
+
+-- Share Vault Secure Notes with public (External sharing) [by link]
+CREATE TABLE vault_secure_note_external_shares (
+    public_share_id VARCHAR(50) PRIMARY KEY,
+    note_id BIGINT NOT NULL REFERENCES vault_secure_notes(note_id) ON DELETE CASCADE,
+
+    password_hash TEXT NULL,    -- Hashed password required to access the public share, if any
+    expires_at TIMESTAMPTZ NULL,  -- Expiration time for the public share, if any
+
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 );

@@ -26,6 +26,9 @@ pub struct AuthInfoDbDto {
 
     pub permissions: Vec<String>,
     pub tags: Vec<i64>,
+    pub can_approve_approvals: bool,
+    pub can_bypass_approvals: bool,
+    pub allowed_linux_users: Vec<String>,
 
     // Basic user information
     pub user_name: String,
@@ -35,14 +38,6 @@ pub struct AuthInfoDbDto {
     // Contact information (Use only if it is verified)
     pub primary_email: String,
     pub is_email_verified: bool,
-
-    // Limits for the user or organization
-    pub user_limit: i32,
-    pub server_limit: i32,
-    pub ss_project_limit: i32,
-    pub ss_keys_limit: i32,
-    pub ss_file_limit: i32,
-    pub user_notes_limit: i32,
 
     pub last_login_at: ChronoUtc,
 }
@@ -61,11 +56,21 @@ pub struct OrgInfoDbDto {
     pub organization_id: Uuid,
     pub organization_name: String,
     pub organization_info: JsonValue,
+
+    pub allocated_ai_credit: i64,
+    pub utilized_ai_credit: i64,
+
+    pub allocated_storage_bytes: i64,
+    pub utilized_storage_bytes: i64,
+
     pub user_limit: i32,
     pub server_limit: i32,
+    pub workflow_limit: i32,
+
     pub ss_project_limit: i32,
     pub ss_keys_limit: i32,
     pub ss_file_limit: i32,
-    pub user_notes_limit: i32,
+    pub ss_notes_limit: i32,
+
     pub created_at: ChronoUtc,
 }

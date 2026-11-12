@@ -5,18 +5,18 @@ Neko Nik Keys Suite Command Center Secrets and Configuration Management Jobs and
 - Org + Users with full RBAC
 	- 2FA - email,totp,physical-key,fido,WebAuthn
 
-- Secrets, environment variables and configuration with staging seperation and project seperation
+- Secrets, environment variables and configuration with tag separation and project separation
 	- Centralized secrets vault per org
 	- Environment-variable management
-        - project (limited) -> service (unlimited) -> envs/files (limited)
+        - project (limited) -> service (unlimited) -> envs/files [tagged] (limited)
         - ENV's / Files will have tagging support, so that no need to have explicit environment references
 	- Configuration file management
 	- Fully Encrypted secret storage with AES-256-GCM (Authenticated Encryption with Associated Data)
 	- Secret reveal permissions for users [RBAC]
 	- Secret versioning + history + Rollback + generate new
-	- Secret access audit logs
+	- Secret reveal access audit logs
 	- Bulk variable editing + import .env + export
-	- API access to secrets + CLI tool / CURL cmd
+	- API access to secrets + CLI tool / CURL cmd + Docker integration
 	- Agent-side secure secret retrieval
 	- Programming language libs too (Rust, Python, Go, JS)
 	- Support Docker Compose secrets
