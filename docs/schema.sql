@@ -8,6 +8,7 @@ CREATE TABLE organization (
 
     -- Metadata about the organization (not indexed)
     organization_info JSONB NOT NULL,
+    -- billing_info JSONB NOT NULL,  -- Billing and GST, SLA and other financial details
     encryption_key TEXT NOT NULL,  -- AES-256-GCM encryption key (Encrypted with Master Key from environment)
 
     -- Quota for the organization
