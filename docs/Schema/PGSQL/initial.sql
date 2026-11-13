@@ -46,7 +46,7 @@ CREATE TABLE resource_tag (
 
 
 -- IP based Geographic Locations (IP range to Country mapping)
-CREATE TABLE ip_geographic_locations (
+CREATE TABLE ip_geo_locations (
     network CIDR PRIMARY KEY,
     country_iso_code TEXT NOT NULL,
     country_name TEXT NOT NULL

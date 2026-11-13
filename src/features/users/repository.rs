@@ -88,7 +88,7 @@ pub async fn get_ip_location(db_pool: &PgPool, client_ip: &str) -> PgResult<(Str
         .query_one(
             r#"
             SELECT country_iso_code, country_name
-            FROM ip_geographic_locations
+            FROM ip_geo_locations
             WHERE network >>= $1
             "#,
             &[&client_ip.parse::<IpAddr>().ok()],
