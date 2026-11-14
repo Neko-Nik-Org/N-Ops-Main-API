@@ -40,10 +40,26 @@ async fn main() -> std::io::Result<()> {
                 actix_scope("/health")
                 .service(health::full_health_check)
             )
-            // .service(
-            //     actix_scope("/internal")
+            // .service(    // super-admin -> Admin Panel for managing organizations
+            //     actix_scope("/super-admin/organization")
             //     .wrap(from_fn(middleware::key_based::auth_check))
-            //     .service(users::internal_get_user) // Example internal endpoint to get user details, not sure if needed
+            //     .service(organization::create_organization)
+            //     .service(organization::update_organization)
+            //     .service(organization::delete_organization)
+            //     .service(organization::enable_organization)
+            //     .service(organization::list_organizations)
+            //     .service(organization::get_organization)
+            // )
+            // .service(
+            //     actix_scope("/super-admin/user")
+            //     .wrap(from_fn(middleware::key_based::auth_check))
+            //     .service(users::admin_create_user)
+            //     .service(users::admin_update_user)
+            //     .service(users::admin_reset_password)
+            //     .service(users::admin_delete_user)
+            //     .service(users::admin_list_users)
+            //     .service(users::admin_get_user)
+            //     .service(users::admin_verify_email)
             // )
             .service(
                 actix_scope("/auth")
@@ -66,6 +82,12 @@ async fn main() -> std::io::Result<()> {
                 .service(users::get_org_info)
                 .service(users::get_user_details)
                 .service(users::set_user_details)
+                // .service(users::change_password)    // Change the current user's password
+                // .service(users::update_profile)    // Update the current user's profile (name, email, etc.)
+                // .service(users::change_username)    // Change the current user's username
+                // .service(users::check_username)    // Check if the desired username is available
+                // .service(users::send_verification_email)    // Send verification email to the current user
+                // .service(users::verify_email)    // Verify the current user's email
             )
             // .service(
             //     actix_scope("/user/admin")
@@ -76,6 +98,7 @@ async fn main() -> std::io::Result<()> {
             //     .service(users::delete_user)    // Delete Any User
             //     .service(users::list_users) // List All Users
             //     .service(users::get_user) // Get Any User info
+            //     .service(users::admin_verify_email) // Admin verify any user's email (Bypass user verification)
             // )
             .service(
                 actix_scope("/tag")
