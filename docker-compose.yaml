@@ -56,6 +56,10 @@ services:
       - SMTP_PORT=<SMTP_PORT>
       - SMTP_USE_TLS=<SMTP_USE_TLS>
 
+      # OTP (One-Time Password) Configuration
+      - OTP_CHARSET=<OTP_CHARSET>
+      - OTP_HASH_SECRET=<OTP_HASH_SECRET, generate using 'openssl rand -hex 32'>
+
       # Self API Configuration
       - ALLOWED_ORIGINS=<ALLOWED_ORIGINS_LIST>
       - SELF_API_KEY=<SELF_API_KEY>

@@ -78,7 +78,8 @@ pub async fn send_verification_email(session_user: web::ReqData<SessionUser>, st
     let verification_code = otp::generate_otp(7)?;
 
     // Store the verification code in the cache with an expiration time
-    
+    let otp_hash = otp::hash_otp(&verification_code);
 
-    Ok(HttpResponse::Accepted().finish())
+
+    Ok(HttpResponse::NotImplemented().finish())
 }

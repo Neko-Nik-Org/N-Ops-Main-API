@@ -1,4 +1,4 @@
-use crate::utils::initial::{ApiSettings, AppSettings, RmqSettings, CfTurnstileSettings, SmtpSettings};
+use crate::utils::initial::{ApiSettings, AppSettings, RmqSettings, CfTurnstileSettings, SmtpSettings, OtpSettings};
 use crate::cache::moka_cache::{AppCache, moka_builder};
 use crate::database::pool::{init_pg_pool, warm_pool};
 use crate::cache::redis_cache::init_redis;
@@ -36,6 +36,11 @@ pub static RMQ_SETTINGS: LazyLock<RmqSettings> = LazyLock::new(|| {
 
 pub static SMTP_SETTINGS: LazyLock<SmtpSettings> = LazyLock::new(|| {
     SmtpSettings::from_env()
+});
+
+
+pub static OTP_SETTINGS: LazyLock<OtpSettings> = LazyLock::new(|| {
+    OtpSettings::from_env()
 });
 
 

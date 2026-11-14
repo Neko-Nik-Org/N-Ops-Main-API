@@ -5,8 +5,6 @@ use std::env::var as env_var;
 use std::time::Duration;
 
 
-pub const OTP_CHARSET: &str = "ABCDEFGHJKLMNPQRSTWXY3456789";   // Characters used for generating OTPs
-
 
 pub const ALL_AVAILABLE_PERMISSIONS: [&str; 4] = [
     // Resource Tag's
@@ -52,6 +50,13 @@ pub struct RmqSettings {
     pub virtual_host: String,
     pub exchange_name: String,
     pub routing_key: String,
+}
+
+
+pub struct OtpSettings {
+    pub chars: Vec<char>,
+    pub chars_len: u32,
+    pub hash_secret: String,
 }
 
 
@@ -284,6 +289,25 @@ impl SmtpSettings {
             credentials,
             port,
             use_tls,
+        }
+    }
+}
+
+
+impl OtpSettings {
+    pub fn from_env() -> Self {
+        let charset = env_var("OTP_CHARSET").expect("OTP_CHARSET must be set");
+
+        // Collect the characters from the allowed character set into a vector
+        let chars: Vec<char> = charset.chars().collect();
+        let chars_len = chars.len() as u32;
+
+        let hash_secret = env_var("OTP_HASH_SECRET").expect("OTP_HASH_SECRET must be set, generate using 'openssl rand -hex 32'");
+
+        OtpSettings {
+            chars,
+            chars_len,
+            hash_secret,
         }
     }
 }

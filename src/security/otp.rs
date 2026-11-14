@@ -16,23 +16,23 @@
  */
 
 
-use crate::utils::initial::OTP_CHARSET;
 use rand::{TryRng, rngs::SysRng};
 use crate::errors::ServiceResult;
+use hmac::{Hmac, Mac, KeyInit};
+use crate::state::OTP_SETTINGS;
+use sha2::Sha256;
+
+
+type HmacSha256 = Hmac<Sha256>;
 
 
 
 /// Generates a cryptographically secure one-time password (OTP) of the specified length
 pub fn generate_otp(length: usize) -> ServiceResult<String> {
-    // Collect the characters from the allowed character set into a vector
-    let chars: Vec<char> = OTP_CHARSET.chars().collect();
     let mut rng = SysRng;   // Initialize the system random number generator
 
-    // Determine the length of the character set
-    let charset_len = chars.len() as u32;
-
     // Rejection sampling avoids modulo bias
-    let upper_bound = u32::MAX - (u32::MAX % charset_len);
+    let upper_bound = u32::MAX - (u32::MAX % OTP_SETTINGS.chars_len);
 
     // Initialize the OTP string with the specified capacity
     let mut otp = String::with_capacity(length);
@@ -47,13 +47,25 @@ pub fn generate_otp(length: usize) -> ServiceResult<String> {
             // Check if the random number is within the acceptable range
             // If it is within the acceptable range, it can be used to determine the index
             if random_number < upper_bound {
-                break (random_number % charset_len) as usize;
+                break (random_number % OTP_SETTINGS.chars_len) as usize;
             }
         };
 
         // Append the selected character to the OTP string
-        otp.push(chars[index]);
+        otp.push(OTP_SETTINGS.chars[index]);
     }
 
     Ok(otp)
+}
+
+
+/// Hashes the given one-time password (OTP) using HMAC-SHA256 with a ENV secret key
+pub fn hash_otp(otp: &str) -> String {
+    // Initialize the HMAC-SHA256 instance with the secret key
+    let mut mac = HmacSha256::new_from_slice(OTP_SETTINGS.hash_secret.as_bytes())
+        .expect("Invalid HMAC key");
+
+    mac.update(otp.as_bytes());
+
+    hex::encode(mac.finalize().into_bytes())
 }
