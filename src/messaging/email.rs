@@ -21,6 +21,10 @@ const VERIFY_EMAIL_HTML: &str = include_str!("../../templates/verify_email/email
 
 const VERIFY_EMAIL_TEXT: &str = include_str!("../../templates/verify_email/email_otp.txt");
 
+const VERIFY_EMAIL_SUCCESS_HTML: &str = include_str!("../../templates/verify_email/email_success.html");
+
+const VERIFY_EMAIL_SUCCESS_TEXT: &str = include_str!("../../templates/verify_email/email_success.txt");
+
 const WELCOME_EMAIL_HTML: &str = include_str!("../../templates/initial_email/welcome_email.html");
 
 const WELCOME_EMAIL_TEXT: &str = include_str!("../../templates/initial_email/welcome_email.txt");
