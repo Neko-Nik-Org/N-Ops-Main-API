@@ -1,4 +1,4 @@
-use crate::features::users::{SessionUser, LoginReqDto, create_user_session};
+use crate::features::users::{SessionUser, LoginReqDto, create_user_session, refresh_user_session};
 use crate::cache::redis_cache::{set_redis_cache, delete_redis_cache};
 use actix_web::{delete, get, post, web, HttpResponse, HttpRequest};
 use crate::security::cf_turnstile::verify_turnstile_response;
@@ -111,28 +111,13 @@ pub async fn user_logout(session_user: web::ReqData<SessionUser>, state: web::Da
 
 #[post("/refresh")]
 pub async fn refresh_session(session_user: web::ReqData<SessionUser>, state: web::Data<AppState>) -> ApiResponse {
-    let mut session_user = session_user.into_inner();
+    let session_user = session_user.into_inner();
 
-    // If the session is not allowed to be refreshed, return an error
-    if !session_user.allow_refresh {
-        return Err(ServiceError::BadRequest("Session cannot be refreshed".into()));
-    }
-
-    let old_session_key = format!("session:{}", session_user.session_id);
-
-    session_user.refresh(); // Refresh the session ID
-
-    let new_session_key = format!("session:{}", session_user.session_id);
-
-    // Delete the old session from Redis
-    delete_redis_cache(&state.redis_cache, &old_session_key).await?;
-
-    // Store the refreshed session in Redis with a 3-hour TTL
-    set_redis_cache(&state.redis_cache, &new_session_key, &session_user, 3 * 60 * 60).await?;
+    let new_session_user = refresh_user_session(&state, &session_user).await?;
 
     // Return the session creation response
     Ok(HttpResponse::Ok().json(serde_json::json!({
         "message": "Session refreshed successfully",
-        "session_id": session_user.session_id
+        "session_id": new_session_user.session_id
     })))
 }

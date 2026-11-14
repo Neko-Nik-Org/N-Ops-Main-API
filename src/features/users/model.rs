@@ -1,4 +1,4 @@
-use crate::errors::{ServiceError, ServiceResult};
+use crate::{errors::{ServiceError, ServiceResult}, routes::auth};
 use serde::{Deserialize, Serialize};
 use super::dto::AuthInfoDbDto;
 use pg_row_derive::RowFrom;
@@ -84,11 +84,6 @@ impl SessionUser {
             primary_email: auth_info.primary_email,
             is_email_verified: auth_info.is_email_verified,
         }
-    }
-
-    /// Refreshes the session by generating a new session ID
-    pub fn refresh(&mut self) {
-        self.session_id = Uuid::new_v4();
     }
 
     /// Check if the session has all the required permissions
