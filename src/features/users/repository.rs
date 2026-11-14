@@ -252,3 +252,21 @@ pub async fn fetch_org_quota_limits(db_pool: &PgPool, organization_id: uuid::Uui
 
     Ok(OrgQuotaLimits::from(row))
 }
+
+
+pub async fn update_user_email_verified(db_pool: &PgPool, user_id: i64, is_email_verified: bool) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            UPDATE app_user
+            SET is_email_verified = $1
+            WHERE user_id = $2
+            "#,
+            &[&is_email_verified, &user_id],
+        )
+        .await?;
+
+    Ok(result)
+}

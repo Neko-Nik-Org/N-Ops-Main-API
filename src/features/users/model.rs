@@ -24,6 +24,7 @@ pub struct SessionUser {
 
     // Security and access information
     pub encryption_key: String,
+    // pub anti_phishing_secret: String,    // TODO: Implement anti-phishing secret management
     pub allow_refresh: bool,    // Indicates if the session can be refreshed
 
     pub allowed_linux_users: Vec<String>,

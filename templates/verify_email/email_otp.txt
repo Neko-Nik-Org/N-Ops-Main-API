@@ -1,0 +1,13 @@
+N-Ops - Email Verification
+
+Hello {{DISPLAY_NAME}},
+
+Your email verification code is:
+
+{{OTP}}
+
+This code expires in 5 minutes.
+
+If you did not request this verification, ignore this email.
+
+N-Ops Security Team
