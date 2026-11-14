@@ -270,3 +270,23 @@ pub async fn update_user_email_verified(db_pool: &PgPool, user_id: i64, is_email
 
     Ok(result)
 }
+
+
+pub async fn check_username_exists(db_pool: &PgPool, username: &str) -> PgResult<bool> {
+    let client = db_pool.get().await?;
+
+    let row = client
+        .query_one(
+            r#"
+            SELECT EXISTS(
+                SELECT 1
+                FROM app_user
+                WHERE username = $1
+            ) AS username_exists
+            "#,
+            &[&username],
+        )
+        .await?;
+
+    Ok(row.get("username_exists"))
+}

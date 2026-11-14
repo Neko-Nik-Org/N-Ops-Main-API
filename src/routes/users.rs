@@ -1,4 +1,4 @@
-use crate::features::users::{SessionUser, fetch_user_ui_info, fetch_user_details, reset_user_details, reset_user_ui_info, fetch_org_info, update_user_email_verified};
+use crate::features::users::{SessionUser, fetch_user_ui_info, fetch_user_details, reset_user_details, reset_user_ui_info, fetch_org_info, update_user_email_verified, check_username_exists};
 use crate::cache::redis_cache::{get_redis_cache, set_redis_cache, delete_redis_cache};
 use crate::errors::{ApiResponse, ServiceError};
 use actix_web::{get, post, web, HttpResponse};
@@ -139,4 +139,22 @@ pub async fn verify_email(session_user: web::ReqData<SessionUser>, body: web::Js
     delete_redis_cache(&state.redis_cache, &otp_cache_key).await?;
 
     Ok(HttpResponse::Ok().body("Email verified successfully"))
+}
+
+
+#[get("/user-name/check/{username}")]
+pub async fn check_username(path: web::Path<String>, state: web::Data<AppState>) -> ApiResponse {
+    let username = path.into_inner();
+
+    // Can be used to Change Self's username or for Admins to check if a username
+    // is available before creating or updating a user/profile
+
+    // Check if the username exists in the database
+    let exists = check_username_exists(&state.pg_pool, &username).await?;
+
+    if exists {
+        Ok(HttpResponse::Conflict().body("Username is already taken"))
+    } else {
+        Ok(HttpResponse::Ok().body("Username is available"))
+    }
 }
