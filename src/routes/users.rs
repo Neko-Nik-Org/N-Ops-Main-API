@@ -1,7 +1,9 @@
 use crate::features::users::{SessionUser, fetch_user_ui_info, fetch_user_details, reset_user_details, reset_user_ui_info, fetch_org_info};
+use crate::cache::redis_cache::{get_redis_cache, set_redis_cache, delete_redis_cache};
 use crate::errors::{ApiResponse, ServiceError};
 use actix_web::{get, post, web, HttpResponse};
 use crate::state::AppState;
+use crate::security::otp;
 
 
 
@@ -65,4 +67,18 @@ pub async fn get_org_info(session_user: web::ReqData<SessionUser>, state: web::D
     let org_info = fetch_org_info(&state.pg_pool, session_user.organization_id).await?;
 
     Ok(HttpResponse::Ok().json(org_info))
+}
+
+
+#[post("/verify-email/send")]
+pub async fn send_verification_email(session_user: web::ReqData<SessionUser>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+
+    // Generate a verification code for the session user
+    let verification_code = otp::generate_otp(7)?;
+
+    // Store the verification code in the cache with an expiration time
+    
+
+    Ok(HttpResponse::Accepted().finish())
 }

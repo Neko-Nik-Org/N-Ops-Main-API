@@ -82,11 +82,11 @@ async fn main() -> std::io::Result<()> {
                 .service(users::get_org_info)
                 .service(users::get_user_details)
                 .service(users::set_user_details)
+                .service(users::send_verification_email)
                 // .service(users::change_password)    // Change the current user's password
                 // .service(users::update_profile)    // Update the current user's profile (name, email, etc.)
                 // .service(users::change_username)    // Change the current user's username
                 // .service(users::check_username)    // Check if the desired username is available
-                // .service(users::send_verification_email)    // Send verification email to the current user
                 // .service(users::verify_email)    // Verify the current user's email
             )
             // .service(

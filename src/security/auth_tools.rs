@@ -75,13 +75,6 @@ pub fn verify_password_hash(base64_password: &str, hash: &str) -> bool {
 }
 
 
-/// Generates a 6-digit one-time password (OTP) as a string
-pub fn generate_otp() -> String {
-    // Consider using a more secure OTP generation method if needed
-    rand::random_range(100000..999999).to_string()
-}
-
-
 /// Checks if a client IP is allowed based on a list of allowed IP ranges [IPv4/IPv6] (CIDR notation)
 /// Returns true if the client IP is within any of the allowed ranges, false otherwise
 pub fn check_ip_range_allowed(client_ip: &str, allowed_ip_ranges: &[String]) -> bool {

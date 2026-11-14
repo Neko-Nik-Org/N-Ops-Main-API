@@ -26,6 +26,7 @@ impl ResponseError for ServiceError {
             ServiceError::LettreAddress(_) => StatusCode::BAD_REQUEST,
             ServiceError::LettreBase(_) => StatusCode::EXPECTATION_FAILED,
             ServiceError::LettreSmtp(_) => StatusCode::GONE,
+            ServiceError::RandomGeneration(_) => StatusCode::EXPECTATION_FAILED,
             ServiceError::BadRequest(_) => StatusCode::BAD_REQUEST,
             ServiceError::NotFound(_) => StatusCode::NOT_FOUND,
             ServiceError::Unprocessable(_) => StatusCode::UNPROCESSABLE_ENTITY,
@@ -64,6 +65,7 @@ impl ResponseError for ServiceError {
             ServiceError::LettreAddress(_) => "Invalid email address",
             ServiceError::LettreBase(_) => "Email sending error",
             ServiceError::LettreSmtp(_) => "SMTP server error",
+            ServiceError::RandomGeneration(_) => "Random number generation error",
         };
 
         HttpResponse::build(status).json(ErrorResp {

@@ -5,6 +5,9 @@ use std::env::var as env_var;
 use std::time::Duration;
 
 
+pub const OTP_CHARSET: &str = "ABCDEFGHJKLMNPQRSTWXY3456789";   // Characters used for generating OTPs
+
+
 pub const ALL_AVAILABLE_PERMISSIONS: [&str; 4] = [
     // Resource Tag's
     "tag:view",

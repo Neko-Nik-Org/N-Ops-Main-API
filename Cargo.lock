@@ -2192,6 +2192,7 @@ dependencies = [
  "cidr",
  "deadpool",
  "deadpool-postgres",
+ "getrandom 0.4.3",
  "lettre",
  "moka",
  "native-tls",

@@ -1,6 +1,7 @@
 use lettre::address::AddressError as LettreAddressError;
 use lettre::transport::smtp::Error as LettreSmtpError;
 use lettre::error::Error as LettreBaseError;
+use getrandom::Error as GetRandomError;
 use super::pgsql::PgError;
 use redis::RedisError;
 use thiserror::Error;
@@ -35,6 +36,9 @@ pub enum ServiceError {
 
     #[error("Lettre address error: {0}")]
     LettreAddress(#[from] LettreAddressError),
+
+    #[error("Random number generation error: {0}")]
+    RandomGeneration(#[from] GetRandomError),
 
     // -----------------------------
     // Application-specific errors

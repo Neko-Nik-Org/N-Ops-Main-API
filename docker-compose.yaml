@@ -48,6 +48,14 @@ services:
       - RABBITMQ_EXCHANGE_NAME=amq.default
       - RABBITMQ_MAILBOX_MANAGER_QUEUE=<RABBITMQ_MAILBOX_MANAGER_QUEUE>
 
+      # SMTP Email Configuration
+      - SMTP_HOST=<SMTP_HOST>
+      - SMTP_FROM_EMAIL="No-Reply <no-reply@email.com>"
+      - SMTP_USER_NAME=<SMTP_USER_NAME>
+      - SMTP_PASSWORD=<SMTP_PASSWORD>
+      - SMTP_PORT=<SMTP_PORT>
+      - SMTP_USE_TLS=<SMTP_USE_TLS>
+
       # Self API Configuration
       - ALLOWED_ORIGINS=<ALLOWED_ORIGINS_LIST>
       - SELF_API_KEY=<SELF_API_KEY>
