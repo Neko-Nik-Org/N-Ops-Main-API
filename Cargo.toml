@@ -7,6 +7,7 @@ edition = "2024"
 [dependencies]
 tokio-postgres = { version = "0.7", features = ["with-uuid-1", "with-serde_json-1", "with-chrono-0_4"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+lettre = { version = "0.11", features = ["tokio1", "tokio1-native-tls"] }
 deadpool-postgres = { version = "0.14", features = ["serde"] }
 redis = { version = "1.7", features = ["tokio-comp"] }
 uuid = { version = "1.0", features = ["v4", "serde"] }

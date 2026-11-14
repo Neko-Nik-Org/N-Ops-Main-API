@@ -1,3 +1,6 @@
+use lettre::address::AddressError as LettreAddressError;
+use lettre::transport::smtp::Error as LettreSmtpError;
+use lettre::error::Error as LettreBaseError;
 use super::pgsql::PgError;
 use redis::RedisError;
 use thiserror::Error;
@@ -23,6 +26,15 @@ pub enum ServiceError {
 
     #[error("PostgreSQL error: {0}")]
     Pgsql(#[from] PgError),
+
+    #[error("Lettre SMTP error: {0}")]
+    LettreSmtp(#[from] LettreSmtpError),
+
+    #[error("Lettre base error: {0}")]
+    LettreBase(#[from] LettreBaseError),
+
+    #[error("Lettre address error: {0}")]
+    LettreAddress(#[from] LettreAddressError),
 
     // -----------------------------
     // Application-specific errors

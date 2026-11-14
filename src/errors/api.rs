@@ -23,6 +23,9 @@ impl ResponseError for ServiceError {
             ServiceError::SerDe(_) => StatusCode::UNPROCESSABLE_ENTITY,
             ServiceError::Reqwest(_) => StatusCode::BAD_GATEWAY,
             ServiceError::Pgsql(_) => StatusCode::EXPECTATION_FAILED,
+            ServiceError::LettreAddress(_) => StatusCode::BAD_REQUEST,
+            ServiceError::LettreBase(_) => StatusCode::EXPECTATION_FAILED,
+            ServiceError::LettreSmtp(_) => StatusCode::GONE,
             ServiceError::BadRequest(_) => StatusCode::BAD_REQUEST,
             ServiceError::NotFound(_) => StatusCode::NOT_FOUND,
             ServiceError::Unprocessable(_) => StatusCode::UNPROCESSABLE_ENTITY,
@@ -58,6 +61,9 @@ impl ResponseError for ServiceError {
             ServiceError::Reqwest(_) => "Upstream API service error",
             ServiceError::Redis(_) => "Cache Database error",
             ServiceError::Pgsql(_) => "SQL Database error",
+            ServiceError::LettreAddress(_) => "Invalid email address",
+            ServiceError::LettreBase(_) => "Email sending error",
+            ServiceError::LettreSmtp(_) => "SMTP server error",
         };
 
         HttpResponse::build(status).json(ErrorResp {

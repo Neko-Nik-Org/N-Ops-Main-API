@@ -1,4 +1,6 @@
+use lettre::transport::smtp::authentication::Credentials as SmtpCredentials;
 use base64::{Engine, engine::general_purpose::STANDARD as BASE64_STANDARD};
+use lettre::message::Mailbox;
 use std::env::var as env_var;
 use std::time::Duration;
 
@@ -47,6 +49,15 @@ pub struct RmqSettings {
     pub virtual_host: String,
     pub exchange_name: String,
     pub routing_key: String,
+}
+
+
+pub struct SmtpSettings {
+    pub host: String,
+    pub from_email: Mailbox,
+    pub credentials: SmtpCredentials,
+    pub use_tls: bool,
+    pub port: u16,
 }
 
 
@@ -235,6 +246,41 @@ impl CfTurnstileSettings {
         CfTurnstileSettings {
             api_url,
             secret_key,
+        }
+    }
+}
+
+
+impl SmtpSettings {
+    pub fn from_env() -> Self {
+        let host = env_var("SMTP_HOST").expect("SMTP_HOST must be set");
+        let port = env_var("SMTP_PORT").expect("SMTP_PORT must be set").parse::<u16>().expect("SMTP_PORT must be a valid u16");
+        
+        let from_email = env_var("SMTP_FROM_EMAIL")
+            .expect("SMTP_FROM_EMAIL must be set")
+            .parse::<Mailbox>()
+            .expect("SMTP_FROM_EMAIL must be a valid email address");
+
+        let user_name = env_var("SMTP_USER_NAME").expect("SMTP_USER_NAME must be set");
+        let password = env_var("SMTP_PASSWORD").expect("SMTP_PASSWORD must be set");
+        let credentials = SmtpCredentials::new(user_name, password);
+
+        let use_tls = env_var("SMTP_USE_TLS")
+            .ok()
+            .map(|s| s.to_lowercase())
+            .map(|s| match s.as_str() {
+                "true" => true,
+                "false" => false,
+                _ => panic!("SMTP_USE_TLS must be true or false"),
+            })
+            .unwrap_or(true);
+
+        SmtpSettings {
+            host,
+            from_email,
+            credentials,
+            port,
+            use_tls,
         }
     }
 }
