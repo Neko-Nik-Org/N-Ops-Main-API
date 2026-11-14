@@ -1,4 +1,4 @@
-use crate::features::users::{SessionUser, LoginReqDto, create_user_session, refresh_user_session};
+use crate::features::users::{SessionUser, LoginReqDto, create_user_session, refresh_user_session, update_last_login_at};
 use crate::cache::redis_cache::{set_redis_cache, delete_redis_cache};
 use actix_web::{delete, get, post, web, HttpResponse, HttpRequest};
 use crate::security::cf_turnstile::verify_turnstile_response;
@@ -61,6 +61,9 @@ pub async fn user_login(request: HttpRequest, login_request: web::Json<LoginReqD
         })));
     }
 
+    // Update the last login timestamp for the user
+    update_last_login_at(&state.pg_pool, auth_info.user_id).await?;
+
     // Generate a Session struct
     let user_session = SessionUser::new(auth_info, login_request.remember_me);
     let session_key = format!("session:{}", user_session.session_id);
@@ -114,6 +117,8 @@ pub async fn refresh_session(session_user: web::ReqData<SessionUser>, state: web
     let session_user = session_user.into_inner();
 
     let new_session_user = refresh_user_session(&state, &session_user).await?;
+
+    update_last_login_at(&state.pg_pool, new_session_user.user_id).await?;
 
     // Return the session creation response
     Ok(HttpResponse::Ok().json(serde_json::json!({

@@ -10,6 +10,7 @@ pub use dto::LoginReqDto;
 pub use repository::{
     update_user_email_verified,
     check_username_exists,
+    update_last_login_at,
     fetch_user_ui_info,
     reset_user_ui_info,
     fetch_user_details,

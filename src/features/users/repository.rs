@@ -290,3 +290,21 @@ pub async fn check_username_exists(db_pool: &PgPool, username: &str) -> PgResult
 
     Ok(row.get("username_exists"))
 }
+
+
+pub async fn update_last_login_at(db_pool: &PgPool, user_id: i64) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            UPDATE app_user
+            SET last_login_at = NOW()
+            WHERE user_id = $1
+            "#,
+            &[&user_id],
+        )
+        .await?;
+
+    Ok(result)
+}
