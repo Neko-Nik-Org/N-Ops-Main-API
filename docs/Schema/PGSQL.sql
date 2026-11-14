@@ -2,6 +2,7 @@
 
 ---------------- Initial Schema for N-Ops ----------------
 
+
 -- Organization to manage different organizations within N-Ops
 CREATE TABLE organization (
     organization_id UUID PRIMARY KEY,
@@ -68,6 +69,7 @@ CREATE TABLE app_user (
     user_name VARCHAR(100) NOT NULL UNIQUE,  -- e.g., 'john_doe'
     primary_email VARCHAR(254) UNIQUE NOT NULL,
     display_name VARCHAR(100) NOT NULL,
+    -- anti_phishing_secret TEXT NOT NULL,  -- Anti-phishing secret for the user (Sent with every e-mail) [Encrypted]
 
     password_hash TEXT NOT NULL,    -- Bcrypt hash of the user's password
     user_details JSONB NOT NULL,  -- Just for storing extra info (not indexed)

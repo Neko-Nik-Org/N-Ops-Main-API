@@ -88,7 +88,7 @@ async fn main() -> std::io::Result<()> {
                 .service(users::send_verification_email)
                 // .service(users::change_password)    // Change the current user's password
                 // .service(users::update_profile)    // Update the current user's profile (name, email, etc.)
-                // .service(users::change_username)    // Change the current user's username
+                // .service(users::change_username)    // Change the current user's username (Do all necessary checks too)
             )
             // .service(
             //     actix_scope("/user/admin")
