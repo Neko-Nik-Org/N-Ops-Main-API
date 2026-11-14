@@ -1,7 +1,9 @@
 use crate::features::users::{SessionUser, fetch_user_ui_info, fetch_user_details, reset_user_details, reset_user_ui_info, fetch_org_info};
 use crate::cache::redis_cache::{get_redis_cache, set_redis_cache, delete_redis_cache};
 use crate::errors::{ApiResponse, ServiceError};
+use crate::messaging::email::send_basic_email;
 use actix_web::{get, post, web, HttpResponse};
+use lettre::message::Mailbox;
 use crate::state::AppState;
 use crate::security::otp;
 
@@ -74,12 +76,72 @@ pub async fn get_org_info(session_user: web::ReqData<SessionUser>, state: web::D
 pub async fn send_verification_email(session_user: web::ReqData<SessionUser>, state: web::Data<AppState>) -> ApiResponse {
     let session_user = session_user.into_inner();
 
+    if session_user.is_email_verified {
+        return Ok(HttpResponse::BadRequest().body("Email is already verified"));
+    }
+
+    // TODO: Check if a verification email has been recently sent (cache check)
+
     // Generate a verification code for the session user
     let verification_code = otp::generate_otp(7)?;
 
     // Store the verification code in the cache with an expiration time
     let otp_hash = otp::hash_otp(&verification_code);
 
+    // Store the OTP hash in the cache with an expiration time
 
-    Ok(HttpResponse::NotImplemented().finish())
+    // We use the session ID to create a unique cache key for the OTP
+    // So that even if the user is logged in from multiple devices, each OTP is unique
+    let otp_cache_key = format!("otp:self:verify:email:{}", session_user.session_id);
+
+    // Store the user session in Redis with a 5-minute TTL
+    set_redis_cache(&state.redis_cache, &otp_cache_key, &otp_hash, 5 * 60).await?;
+
+    // Send the verification code to the user's email address
+    let send_to = Mailbox::new(
+        Some(session_user.display_name.clone()),
+        session_user.primary_email.parse()?
+    );
+
+    let subject = "N-Ops: Email Verification Code";
+    let plain_body = format!("Your verification code is: {}", verification_code);
+    let html_body = format!("<p>Your verification code is: <strong>{}</strong></p>", verification_code);
+    send_basic_email(send_to, subject.to_string(), plain_body, html_body).await?;
+
+    Ok(HttpResponse::Created().finish())
+}
+
+
+#[post("/verify-email/validate")]
+pub async fn verify_email(session_user: web::ReqData<SessionUser>, body: web::Json<String>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let otp_code = body.into_inner();
+
+    // TODO: Check if the user's email is already verified or if a verification email has been recently sent (cache check)
+    // Fetch the OTP hash from the cache and compare it with the provided OTP code
+    let otp_cache_key = format!("otp:self:verify:email:{}", session_user.session_id);
+
+    let cached_otp_hash: Option<String> = get_redis_cache(&state.redis_cache, &otp_cache_key).await?;
+    if cached_otp_hash.is_none() {
+        return Ok(
+            HttpResponse::BadRequest().body("Verification code has expired, please request a new one")
+        );
+    }
+    let cached_otp_hash = cached_otp_hash.unwrap();
+    let input_otp_hash = otp::hash_otp(&otp_code);
+
+    if cached_otp_hash != input_otp_hash {
+        // TODO: Only allow 3 times to attempt verification for 1 OTP code
+        return Ok(
+            HttpResponse::BadRequest().body("Verification code is incorrect")
+        );
+    }
+
+    // At this point, the OTP code is verified successfully
+    // TODO: You can proceed to mark the user's email as verified in your database
+
+    // Delete the OTP from the cache as it has been successfully used
+    delete_redis_cache(&state.redis_cache, &otp_cache_key).await?;
+
+    Ok(HttpResponse::Created().finish())
 }
