@@ -65,8 +65,8 @@ async fn main() -> std::io::Result<()> {
                 actix_scope("/auth")
                 .service(auth::user_login)
                 // .service(auth::forgot_password)
-                // .service(2fa::resend_otp)
-                // .service(2fa::verify_otp)
+                // .service(mfa::resend_otp)
+                // .service(mfa::verify_otp)
                 .service(
                     actix_scope("")
                     .wrap(from_fn(middleware::user_session::auth_check))
@@ -82,11 +82,11 @@ async fn main() -> std::io::Result<()> {
                 .service(users::set_ui_info)
                 .service(users::get_org_info)
                 .service(users::verify_email)
+                .service(users::self_password)
                 .service(users::check_username)
                 .service(users::get_user_details)
                 .service(users::set_user_details)
                 .service(users::send_verification_email)
-                // .service(users::change_password)    // Change the current user's password
                 // .service(users::update_profile)    // Update the current user's profile (name, email, etc.)
                 // .service(users::change_username)    // Change the current user's username (Do all necessary checks too)
             )

@@ -17,6 +17,7 @@
 
 
 use base64::{engine::general_purpose::STANDARD, Engine as _};
+use crate::errors::{ServiceResult, ServiceError};
 use cidr::{Ipv4Cidr, Ipv6Cidr};
 use std::net::IpAddr;
 
@@ -60,9 +61,11 @@ fn check_ip_allowed(client_ip: &str, ip_range: &str) -> bool {
 
 
 /// Generates a password hash from a given password string
-pub fn generate_password_hash(password: &str) -> String {
-    // Implementation for generating a password hash goes here
-    // For example, using bcrypt:
+pub fn generate_password_hash(base64_password: &str) -> String {
+    // Decode the base64 password into raw bytes
+    let password = decode_base64_password(base64_password);
+
+    // Generate the password hash using bcrypt
     bcrypt::hash(password, bcrypt::DEFAULT_COST).unwrap()
 }
 
@@ -91,4 +94,53 @@ pub fn check_ip_range_allowed(client_ip: &str, allowed_ip_ranges: &[String]) -> 
     }
 
     false
+}
+
+
+/// Validates a base64-encoded password against the defined password policy
+pub fn validate_base64_password(base64_password: &str) -> ServiceResult<()> {
+    // Decode the base64 password
+    let raw_password = match String::from_utf8(decode_base64_password(base64_password)) {
+        Ok(s) => s,
+        Err(_) => return Err(ServiceError::BadRequest(
+            "Invalid base64 password".to_string()
+        )),
+    };
+
+    // Should be length range 8-64 characters
+    if raw_password.len() < 8 || raw_password.len() > 64 {
+        return Err(ServiceError::BadRequest(
+            "Password must be between 8 and 64 characters".to_string()
+        ));
+    }
+
+    // At least 1 Uppercase letter
+    if raw_password.chars().all(|c| !c.is_uppercase()) {
+        return Err(ServiceError::BadRequest(
+            "Password must contain at least one uppercase letter".to_string()
+        ));
+    }
+
+    // At least 1 Lowercase letter
+    if raw_password.chars().all(|c| !c.is_lowercase()) {
+        return Err(ServiceError::BadRequest(
+            "Password must contain at least one lowercase letter".to_string()
+        ));
+    }
+
+    // At least 1 Digit
+    if raw_password.chars().all(|c| !c.is_digit(10)) {
+        return Err(ServiceError::BadRequest(
+            "Password must contain at least one digit".to_string()
+        ));
+    }
+
+    // At least 1 Special character
+    if raw_password.chars().all(|c| c.is_alphanumeric()) {
+        return Err(ServiceError::BadRequest(
+            "Password must contain at least one special character".to_string()
+        ));
+    }
+
+    Ok(())
 }

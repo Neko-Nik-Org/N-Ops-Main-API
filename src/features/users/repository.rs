@@ -308,3 +308,21 @@ pub async fn update_last_login_at(db_pool: &PgPool, user_id: i64) -> PgResult<u6
 
     Ok(result)
 }
+
+
+pub async fn update_user_password(db_pool: &PgPool, user_id: i64, new_password_hash: &str) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            UPDATE app_user
+            SET password_hash = $1, updated_at = NOW()
+            WHERE user_id = $2
+            "#,
+            &[&new_password_hash, &user_id],
+        )
+        .await?;
+
+    Ok(result)
+}

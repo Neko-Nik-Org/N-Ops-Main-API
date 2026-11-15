@@ -1,4 +1,4 @@
-use crate::features::users::{SessionUser, fetch_user_ui_info, fetch_user_details, reset_user_details, reset_user_ui_info, fetch_org_info, update_user_email_verified, check_username_exists};
+use crate::features::users::{SessionUser, fetch_user_ui_info, fetch_user_details, reset_user_details, reset_user_ui_info, fetch_org_info, update_user_email_verified, check_username_exists, update_user_password};
 use crate::cache::redis_cache::{get_redis_cache, set_redis_cache, delete_redis_cache};
 use crate::errors::{ApiResponse, ServiceError};
 use actix_web::{get, post, web, HttpResponse};
@@ -157,4 +157,16 @@ pub async fn check_username(path: web::Path<String>, state: web::Data<AppState>)
     } else {
         Ok(HttpResponse::Ok().body("Username is available"))
     }
+}
+
+
+#[post("/change-password")]
+pub async fn self_password(session_user: web::ReqData<SessionUser>, body: web::Json<String>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let new_password_base64 = body.into_inner();
+
+    // Update the user's password in the database
+    update_user_password(&state, session_user.user_id, &new_password_base64).await?;
+
+    Ok(HttpResponse::Ok().body("Password changed successfully"))
 }

@@ -4,7 +4,7 @@ mod model;
 mod dto;
 
 
-pub use service::{create_user_session, refresh_user_session};
+pub use service::{create_user_session, refresh_user_session, update_user_password};
 pub use model::SessionUser;
 pub use dto::LoginReqDto;
 pub use repository::{

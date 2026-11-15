@@ -1,4 +1,4 @@
-use crate::security::auth_tools::{verify_password_hash, check_ip_range_allowed};
+use crate::security::auth_tools::{verify_password_hash, check_ip_range_allowed, validate_base64_password, generate_password_hash};
 use crate::cache::redis_cache::{set_redis_cache, delete_redis_cache};
 use crate::errors::{ServiceError, ServiceResult};
 use super::dto::{LoginReqDto, AuthInfoDbDto};
@@ -90,4 +90,22 @@ pub async fn refresh_user_session(state: &AppState, session_user: &SessionUser) 
     delete_redis_cache(&state.redis_cache, &current_session_key).await?;
 
     Ok(session_user)
+}
+
+
+/// Update the password for the given user
+pub async fn update_user_password(state: &AppState, user_id: i64, new_password_base64: &str) -> ServiceResult<()> {
+    // Validate the new password against the defined password policy
+    validate_base64_password(&new_password_base64)?;
+
+    // Generate the password hash from the new password
+    let new_password_hash = generate_password_hash(&new_password_base64);
+
+    // Update the password in the repository
+    let result = repository::update_user_password(&state.pg_pool, user_id, &new_password_hash).await?;
+    if result == 0 {
+        return Err(ServiceError::BadRequest("Failed to update user password in the database".into()));
+    }
+
+    Ok(())
 }
