@@ -1,4 +1,4 @@
-use crate::security::auth_tools::{verify_password_hash, check_ip_range_allowed, validate_base64_password, generate_password_hash};
+use crate::security::auth_tools::{verify_password_hash, check_ip_range_allowed, validate_base64_password, generate_password_hash, validate_username};
 use crate::cache::redis_cache::{set_redis_cache, delete_redis_cache};
 use crate::errors::{ServiceError, ServiceResult};
 use super::dto::{LoginReqDto, AuthInfoDbDto};
@@ -105,6 +105,27 @@ pub async fn update_user_password(state: &AppState, user_id: i64, new_password_b
     let result = repository::update_user_password(&state.pg_pool, user_id, &new_password_hash).await?;
     if result == 0 {
         return Err(ServiceError::BadRequest("Failed to update user password in the database".into()));
+    }
+
+    Ok(())
+}
+
+
+/// Update the username for the given user
+pub async fn update_user_username(state: &AppState, user_id: i64, new_username: &str) -> ServiceResult<()> {
+    // Validate the new username against the defined username policy
+    validate_username(&new_username)?;
+
+    // Check if the new username is available
+    let exists = repository::check_username_exists(&state.pg_pool, &new_username).await?;
+    if exists {
+        return Err(ServiceError::BadRequest("Username is already taken".into()));
+    }
+
+    // Update the username in the repository
+    let result = repository::update_user_username(&state.pg_pool, user_id, &new_username).await?;
+    if result == 0 {
+        return Err(ServiceError::BadRequest("Failed to update username in the database".into()));
     }
 
     Ok(())

@@ -1,7 +1,7 @@
-use crate::features::users::{SessionUser, fetch_user_ui_info, fetch_user_details, reset_user_details, reset_user_ui_info, fetch_org_info, update_user_email_verified, check_username_exists, update_user_password};
+use crate::features::users::{SessionUser, fetch_user_ui_info, fetch_user_details, reset_user_details, reset_user_ui_info, fetch_org_info, update_user_email_verified, check_username_exists, update_user_password, update_user_username, deactivate_user};
 use crate::cache::redis_cache::{get_redis_cache, set_redis_cache, delete_redis_cache};
 use crate::errors::{ApiResponse, ServiceError};
-use actix_web::{get, post, web, HttpResponse};
+use actix_web::{get, post, delete, web, HttpResponse};
 use crate::state::AppState;
 use crate::security::otp;
 use crate::messaging;
@@ -169,4 +169,34 @@ pub async fn self_password(session_user: web::ReqData<SessionUser>, body: web::J
     update_user_password(&state, session_user.user_id, &new_password_base64).await?;
 
     Ok(HttpResponse::Ok().body("Password changed successfully"))
+}
+
+
+#[post("/change-username")]
+pub async fn self_user_name_update(session_user: web::ReqData<SessionUser>, body: web::Json<String>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let new_username = body.into_inner();
+
+    // Update the user's username in the database
+    update_user_username(&state, session_user.user_id, &new_username).await?;
+
+    Ok(HttpResponse::Ok().body("Username changed successfully"))
+}
+
+
+#[delete("/deactivate")]
+pub async fn self_deactivate(session_user: web::ReqData<SessionUser>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+
+    // Delete the user session from Redis
+    let session_key = format!("session:{}", session_user.session_id);
+    delete_redis_cache(&state.redis_cache, &session_key).await?;
+
+    // Deactivate the user's account in the database
+    let result = deactivate_user(&state.pg_pool, session_user.user_id).await?;
+    if result == 0 {
+        return Ok(HttpResponse::NotFound().body("User not found! Maybe already deactivated or deleted"));
+    }
+
+    Ok(HttpResponse::Ok().body("Your account has been deactivated successfully, contact admin to reactivate if needed"))
 }

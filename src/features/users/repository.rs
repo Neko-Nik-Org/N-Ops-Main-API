@@ -326,3 +326,39 @@ pub async fn update_user_password(db_pool: &PgPool, user_id: i64, new_password_h
 
     Ok(result)
 }
+
+
+pub async fn update_user_username(db_pool: &PgPool, user_id: i64, new_username: &str) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            UPDATE app_user
+            SET user_name = $1, updated_at = NOW()
+            WHERE user_id = $2
+            "#,
+            &[&new_username, &user_id],
+        )
+        .await?;
+
+    Ok(result)
+}
+
+
+pub async fn deactivate_user(db_pool: &PgPool, user_id: i64) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            UPDATE app_user
+            SET is_active = FALSE, updated_at = NOW()
+            WHERE user_id = $1
+            "#,
+            &[&user_id],
+        )
+        .await?;
+
+    Ok(result)
+}

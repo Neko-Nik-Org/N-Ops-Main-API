@@ -144,3 +144,58 @@ pub fn validate_base64_password(base64_password: &str) -> ServiceResult<()> {
 
     Ok(())
 }
+
+
+/// Validates a username against the defined username policy
+pub fn validate_username(username: &str) -> ServiceResult<()> {
+    // Should be length range 3-99 characters
+    if username.len() < 3 || username.len() > 100 {
+        return Err(ServiceError::BadRequest(
+            "Username must be between 3 and 100 characters".to_string()
+        ));
+    }
+
+    // Should only contain alphanumeric characters and underscores
+    if !username.chars().all(|c| c.is_alphanumeric() || c == '_') {
+        return Err(ServiceError::BadRequest(
+            "Username can only contain alphanumeric characters and underscores".to_string()
+        ));
+    }
+
+    // Should not start with a digit
+    if username.chars().next().map(|c| c.is_digit(10)).unwrap_or(false) {
+        return Err(ServiceError::BadRequest(
+            "Username cannot start with a digit".to_string()
+        ));
+    }
+
+    // Should not contain consecutive underscores
+    if username.contains("__") {
+        return Err(ServiceError::BadRequest(
+            "Username cannot contain consecutive underscores".to_string()
+        ));
+    }
+
+    // Should not start or end with an underscore
+    if username.starts_with('_') || username.ends_with('_') {
+        return Err(ServiceError::BadRequest(
+            "Username cannot start or end with an underscore".to_string()
+        ));
+    }
+
+    // Should not contain spaces
+    if username.contains(' ') {
+        return Err(ServiceError::BadRequest(
+            "Username cannot contain spaces".to_string()
+        ));
+    }
+
+    // Should not contain any non-ASCII characters
+    if !username.is_ascii() {
+        return Err(ServiceError::BadRequest(
+            "Username can only contain ASCII characters".to_string()
+        ));
+    }
+
+    Ok(())
+}
