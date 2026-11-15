@@ -137,6 +137,7 @@ Side panel will have
 - Admin
     - Organization (RU)
     - Users (CRUD)
+        - Can be invited via email with link for registration
     - API Keys (CRUD) (Use same roles no need to make new)
     - Roles (CRUD)
     - Tags (CRUD)
@@ -236,6 +237,7 @@ Side panel will have
             - Make API calls, with customizable request body, headers and method
             - Send User based notifications (App notifications), select self org user names and define the message content
             - Nothing will connect after this. This is the end step.
+            - The alert email should be verified before sending. So that only authorized and valid email addresses are used for notifications
         - If condition
             - Can read JSON input and extract keys and values for condition evaluation
             - If input meets certain conditions
