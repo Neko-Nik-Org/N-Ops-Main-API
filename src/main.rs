@@ -1,4 +1,4 @@
-use routes::{health, auth, users, tags};
+use routes::{health, auth, users, tags, user_roles};
 use actix_web::web::scope as actix_scope;
 use actix_web::middleware::from_fn;
 use actix_web::{App, HttpServer};
@@ -42,7 +42,7 @@ async fn main() -> std::io::Result<()> {
             )
             // .service(    // super-admin -> Admin Panel for managing organizations
             //     actix_scope("/super-admin/organization")
-            //     .wrap(from_fn(middleware::key_based::auth_check))
+            //     .wrap(from_fn(middleware::key_based::admin_auth_check))
             //     .service(organization::create_organization)
             //     .service(organization::update_organization)
             //     .service(organization::delete_organization)
@@ -52,7 +52,7 @@ async fn main() -> std::io::Result<()> {
             // )
             // .service(
             //     actix_scope("/super-admin/user")
-            //     .wrap(from_fn(middleware::key_based::auth_check))
+            //     .wrap(from_fn(middleware::key_based::admin_auth_check))
             //     .service(users::admin_create_user)
             //     .service(users::admin_update_user)
             //     .service(users::admin_reset_password)
@@ -111,6 +111,15 @@ async fn main() -> std::io::Result<()> {
                 .service(tags::list_tags)
                 .service(tags::get_tag)
             )
+            .service(
+                actix_scope("/user/roles")
+                .wrap(from_fn(middleware::user_session::auth_check))
+                .service(user_roles::create_role)
+                // .service(user_roles::update_user_role)    // Update Any User Role's Properties (Session user should have all sub-set of the role's permissions and all)
+                // .service(user_roles::delete_user_role)    // Delete Any User Role (Session user should have all sub-set of the role's permissions and all)
+                // .service(user_roles::list_user_roles) // List All User Roles (list all, no need to check any tags and permissions. Since its all Read-Only)
+                // .service(user_roles::get_user_role) // Get Any User Role info (list all, no need to check any tags and permissions. Since its all Read-Only)
+            )
             // .service(
             //     actix_scope("/api-keys")
             //     .wrap(from_fn(middleware::user_session::auth_check))
@@ -119,15 +128,6 @@ async fn main() -> std::io::Result<()> {
             //     .service(api_keys::delete_api_key)    // Delete Any API Key (by user tag permission)
             //     .service(api_keys::list_api_keys) // List All API Keys (by user tag permission)
             //     .service(api_keys::get_api_key) // Get Any API Key info (by user tag permission)
-            // )
-            // .service(
-            //     actix_scope("/user/roles")
-            //     .wrap(from_fn(middleware::user_session::auth_check))
-            //     .service(user_roles::create_user_role)    // Create Any User Role (by user tag permission)
-            //     .service(user_roles::update_user_role)    // Update Any User Role's Properties (by user tag permission)
-            //     .service(user_roles::delete_user_role)    // Delete Any User Role (by user tag permission)
-            //     .service(user_roles::list_user_roles) // List All User Roles (by user tag permission)
-            //     .service(user_roles::get_user_role) // Get Any User Role info (by user tag permission)
             // )
             // .service(
             //     actix_scope("/vault/project")

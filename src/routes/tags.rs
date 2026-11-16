@@ -77,8 +77,13 @@ pub async fn get_tag(session_user: web::ReqData<SessionUser>, path: web::Path<i6
 pub async fn list_tags(session_user: web::ReqData<SessionUser>, state: web::Data<AppState>) -> ApiResponse {
     let session_user = session_user.into_inner();
 
+    // TODO: No need to do permission check, since the same endpoint will be used everywhere to list tags
+    // - Cache the tags
+    // - Write a service function to do all the below logic and return the accessible tags directly
+
     // Validate that the session user has the required permissions
     session_user.has_all_permissions(&["tag:view"])?;
+    // TODO: Remove Tag view permission, that should be given by default for all users
 
     // Get the list of all tags for the session user's organization (No tag-specific filtering applied)
     let tags = tags::list_all_tags(&state, &session_user).await?;
