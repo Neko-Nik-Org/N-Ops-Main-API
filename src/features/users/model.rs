@@ -1,4 +1,4 @@
-use crate::{errors::{ServiceError, ServiceResult}, routes::auth};
+use crate::errors::{ServiceError, ServiceResult};
 use serde::{Deserialize, Serialize};
 use super::dto::AuthInfoDbDto;
 use pg_row_derive::RowFrom;
@@ -108,5 +108,17 @@ impl SessionUser {
         } else {
             Err(ServiceError::Forbidden("Insufficient tag access".into()))
         }
+    }
+
+    /// Return the tags that the session user has access to only
+    pub fn accessible_tags(&self, all_tags: &[i64]) -> Vec<i64> {
+        if self.tags.is_empty() {
+            return all_tags.to_vec();
+        }
+
+        all_tags.iter()
+            .filter(|&&tag_id| self.tags.contains(&tag_id))
+            .cloned()
+            .collect()
     }
 }

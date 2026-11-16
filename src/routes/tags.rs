@@ -83,5 +83,13 @@ pub async fn list_tags(session_user: web::ReqData<SessionUser>, state: web::Data
     // Get the list of all tags for the session user's organization (No tag-specific filtering applied)
     let tags = tags::list_all_tags(&state, &session_user).await?;
 
-    Ok(HttpResponse::Ok().json(tags))
+    // List only the tags that the session user has permission to view
+    let tag_ids = tags.iter().map(|tag| tag.tag_id).collect::<Vec<_>>();
+    let accessible_tag_ids = session_user.accessible_tags(&tag_ids);
+
+    let final_tags = tags.into_iter()
+        .filter(|tag| accessible_tag_ids.contains(&tag.tag_id))
+        .collect::<Vec<_>>();
+
+    Ok(HttpResponse::Ok().json(final_tags))
 }
