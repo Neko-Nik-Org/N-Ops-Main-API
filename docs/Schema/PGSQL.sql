@@ -235,6 +235,8 @@ CREATE TABLE vault_secret_key_versions (
     version_number BIGINT NOT NULL,  -- Version number of the secret key
 
     is_encrypted BOOLEAN NOT NULL DEFAULT TRUE,  -- Indicates if the secret value is encrypted
+    -- TODO: Consider adding a flag to indicate if the secret value is hidden from the UI or logs
+    -- is_hidden BOOLEAN NOT NULL DEFAULT FALSE,  -- Indicates if the secret value is hidden (not shown in UI or anywhere else)
     secret_value TEXT NOT NULL,  -- Encrypted AES-256-GCM secret value or plain text if not encrypted
 
     details JSONB NOT NULL,  -- Additional details like created_by, reason for change, etc.

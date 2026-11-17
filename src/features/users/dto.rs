@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use serde_json::Value as JsonValue;
 use pg_row_derive::RowFrom;
 use uuid::Uuid;
 
@@ -48,36 +47,4 @@ pub struct LoginReqDto {
     pub user_name: String,
     pub password: String,    // Base64 encoded password
     pub remember_me: bool,   // Indicates if the user can refresh the session
-}
-
-
-#[derive(RowFrom, Serialize)]
-pub struct OrgInfoDbDto {
-    pub organization_id: Uuid,
-    pub organization_name: String,
-    pub organization_info: JsonValue,
-
-    pub allocated_ai_credit: i64,
-    pub utilized_ai_credit: i64,
-
-    pub allocated_storage_bytes: i64,
-    pub utilized_storage_bytes: i64,
-
-    pub user_limit: i32,
-    pub current_user_count: i32,
-
-    pub server_limit: i32,
-    // pub current_server_count: i32,
-
-    pub workflow_limit: i32,
-    // pub current_workflow_count: i32,
-
-    pub ss_project_limit: i32,
-    pub current_ss_project_count: i32,
-
-    // This is per project limit for Vault secret store
-    pub ss_keys_limit: i32,
-    pub ss_notes_limit: i32,
-
-    pub created_at: ChronoUtc,
 }

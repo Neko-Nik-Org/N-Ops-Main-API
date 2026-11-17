@@ -1,11 +1,22 @@
-use crate::features::users::{SessionUser, fetch_user_ui_info, fetch_user_details, reset_user_details, reset_user_ui_info, fetch_org_info, update_user_email_verified, check_username_exists, update_user_password, update_user_username, deactivate_user};
+use crate::features::users::{SessionUser, fetch_user_profile, fetch_user_ui_info, fetch_user_details, reset_user_details, reset_user_ui_info, fetch_org_info, update_user_email_verified, check_username_exists, update_user_password, update_user_username, deactivate_user};
 use crate::cache::redis_cache::{get_redis_cache, set_redis_cache, delete_redis_cache};
-use crate::errors::{ApiResponse, ServiceError};
 use actix_web::{get, post, delete, web, HttpResponse};
+use crate::errors::{ApiResponse, ServiceError};
 use crate::state::AppState;
 use crate::security::otp;
 use crate::messaging;
 
+
+
+#[get("/profile")]
+pub async fn get_profile(session_user: web::ReqData<SessionUser>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+
+    // Fetch the UI info for the session user
+    let ui_info = fetch_user_profile(&state.pg_pool, session_user.user_id).await?;
+
+    Ok(HttpResponse::Ok().json(ui_info))
+}
 
 
 #[get("/ui-info")]

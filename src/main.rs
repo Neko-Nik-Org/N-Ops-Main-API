@@ -78,6 +78,7 @@ async fn main() -> std::io::Result<()> {
             .service(
                 actix_scope("/user/self")
                 .wrap(from_fn(middleware::user_session::auth_check))
+                .service(users::get_profile)
                 .service(users::get_ui_info)
                 .service(users::set_ui_info)
                 .service(users::get_org_info)

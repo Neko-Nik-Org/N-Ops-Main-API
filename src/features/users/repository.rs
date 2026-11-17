@@ -1,7 +1,7 @@
-use super::dto::{AuthInfoDbDto, OrgInfoDbDto};
+use super::model::{OrgInfo, UserProfileInfo};
 use deadpool_postgres::Pool as PgPool;
 use serde_json::Value as JsonValue;
-use super::model::OrgQuotaLimits;
+use super::dto::AuthInfoDbDto;
 use crate::errors::PgResult;
 use std::net::IpAddr;
 
@@ -102,6 +102,63 @@ pub async fn get_ip_location(db_pool: &PgPool, client_ip: &str) -> PgResult<(Str
 }
 
 
+pub async fn fetch_user_profile(db_pool: &PgPool, user_id: i64) -> PgResult<Option<UserProfileInfo>> {
+    let client = db_pool.get().await?;
+
+    let row = client
+        .query_opt(
+            r#"
+            SELECT
+                u.user_id,
+                u.organization_id,
+
+                -- Basic user information
+                u.user_name,
+                u.display_name,
+                o.organization_name,
+
+                -- Active status flags
+                u.is_active AS is_user_active,
+                o.is_active AS is_organization_active,
+
+                -- Contact information
+                u.primary_email,
+                u.is_email_verified,
+
+                -- Permissions and access control
+                r.permissions,
+                r.can_approve_approvals,
+                r.can_bypass_approvals,
+                r.allowed_linux_users,
+
+                -- Role-associated resource tag IDs
+                COALESCE(
+                    (
+                        SELECT ARRAY_AGG(t.tag_id ORDER BY t.tag_id)
+                        FROM role_tag rt
+                        INNER JOIN resource_tag t
+                            ON t.tag_id = rt.tag_id
+                            AND t.organization_id = u.organization_id
+                        WHERE rt.role_id = r.role_id
+                    ),
+                    ARRAY[]::BIGINT[]
+                ) AS tags
+            FROM app_user u
+            INNER JOIN organization o
+                ON o.organization_id = u.organization_id
+            INNER JOIN user_role r
+                ON r.role_id = u.role_id
+                AND r.organization_id = u.organization_id
+            WHERE u.user_id = $1
+            "#,
+            &[&user_id],
+        )
+        .await?;
+
+    Ok(row.map(UserProfileInfo::from))
+}
+
+
 pub async fn fetch_user_ui_info(db_pool: &PgPool, user_id: i64) -> PgResult<JsonValue> {
     let client = db_pool.get().await?;
 
@@ -174,7 +231,7 @@ pub async fn reset_user_details(db_pool: &PgPool, user_id: i64, user_details: &J
 }
 
 
-pub async fn fetch_org_info(db_pool: &PgPool, organization_id: uuid::Uuid) -> PgResult<OrgInfoDbDto> {
+pub async fn fetch_org_info(db_pool: &PgPool, organization_id: uuid::Uuid) -> PgResult<OrgInfo> {
     let client = db_pool.get().await?;
 
     let row = client
@@ -221,36 +278,7 @@ pub async fn fetch_org_info(db_pool: &PgPool, organization_id: uuid::Uuid) -> Pg
         )
         .await?;
 
-    Ok(OrgInfoDbDto::from(row))
-}
-
-
-pub async fn fetch_org_quota_limits(db_pool: &PgPool, organization_id: uuid::Uuid) -> PgResult<OrgQuotaLimits> {
-    let client = db_pool.get().await?;
-
-    let row = client
-        .query_one(
-            r#"
-            SELECT
-                organization_id,
-                allocated_ai_credit,
-                utilized_ai_credit,
-                allocated_storage_bytes,
-                utilized_storage_bytes,
-                user_limit,
-                server_limit,
-                workflow_limit,
-                ss_project_limit,
-                ss_keys_limit,
-                ss_notes_limit
-            FROM organization
-            WHERE organization_id = $1 AND is_active = TRUE
-            "#,
-            &[&organization_id],
-        )
-        .await?;
-
-    Ok(OrgQuotaLimits::from(row))
+    Ok(OrgInfo::from(row))
 }
 
 

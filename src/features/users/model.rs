@@ -1,9 +1,11 @@
 use crate::errors::{ServiceError, ServiceResult};
 use serde::{Deserialize, Serialize};
+use serde_json::Value as JsonValue;
 use super::dto::AuthInfoDbDto;
 use pg_row_derive::RowFrom;
 use uuid::Uuid;
 
+type ChronoUtc = chrono::DateTime<chrono::Utc>;
 
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -36,9 +38,11 @@ pub struct SessionUser {
 }
 
 
-#[derive(RowFrom)]
-pub struct OrgQuotaLimits {
+#[derive(RowFrom, Serialize)]
+pub struct OrgInfo {
     pub organization_id: Uuid,
+    pub organization_name: String,
+    pub organization_info: JsonValue,
 
     pub allocated_ai_credit: i64,
     pub utilized_ai_credit: i64,
@@ -47,12 +51,48 @@ pub struct OrgQuotaLimits {
     pub utilized_storage_bytes: i64,
 
     pub user_limit: i32,
+    pub current_user_count: i32,
+
     pub server_limit: i32,
+    // pub current_server_count: i32,
+
     pub workflow_limit: i32,
+    // pub current_workflow_count: i32,
 
     pub ss_project_limit: i32,
+    pub current_ss_project_count: i32,
+
+    // This is per project limit for Vault secret store
     pub ss_keys_limit: i32,
     pub ss_notes_limit: i32,
+
+    pub created_at: ChronoUtc,
+}
+
+
+#[derive(RowFrom, Serialize)]
+pub struct UserProfileInfo {
+    pub user_id: i64,
+    pub organization_id: Uuid,
+
+    // Basic user information
+    pub user_name: String,
+    pub display_name: String,
+    pub organization_name: String,
+
+    // Contact information (Use only if it is verified)
+    pub primary_email: String,
+    pub is_email_verified: bool,
+    pub is_user_active: bool,
+    pub is_organization_active: bool,
+
+    // Permissions and access control
+    pub allowed_linux_users: Vec<String>,
+    pub permissions: Vec<String>,
+    pub tags: Vec<i64>,
+
+    pub can_approve_approvals: bool,
+    pub can_bypass_approvals: bool,
 }
 
 
