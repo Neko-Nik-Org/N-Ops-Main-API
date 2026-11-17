@@ -1,12 +1,8 @@
-use actix_web::{HttpResponse, get, post, put, web};
+use crate::features::vault_projects::{self, VaultProjectDto, ListQueryDto};
+use actix_web::{HttpResponse, delete, get, post, put, web};
 use crate::features::users::SessionUser;
 use crate::errors::ApiResponse;
 use crate::state::AppState;
-use crate::features::vault_projects::{
-    VaultProjectDto,
-    ListQueryDto,
-    self
-};
 
 
 
@@ -68,4 +64,19 @@ pub async fn get_project(session_user: web::ReqData<SessionUser>, path: web::Pat
     let project = vault_projects::get_project_detail(&state, &session_user, project_id).await?;
 
     Ok(HttpResponse::Ok().json(project))
+}
+
+
+#[delete("/delete/{project_id}")]
+pub async fn delete_project(session_user: web::ReqData<SessionUser>, path: web::Path<i64>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let project_id = path.into_inner();
+
+    // Validate that the session user has the required permissions
+    session_user.has_all_permissions(&["vault:project:view", "vault:project:delete"])?;
+
+    // Delete the project using the provided project ID and the session user's context
+    vault_projects::delete_project(&state, &session_user, project_id).await?;
+
+    Ok(HttpResponse::Ok().finish())
 }

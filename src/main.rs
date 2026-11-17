@@ -136,9 +136,9 @@ async fn main() -> std::io::Result<()> {
                 .wrap(from_fn(middleware::user_session::auth_check))
                 .service(vault_project::create_project)
                 .service(vault_project::update_project)
+                .service(vault_project::delete_project)
                 .service(vault_project::list_projects)
                 .service(vault_project::get_project)
-                // .service(vault_project::delete_project)
             )
             // .service(
             //     actix_scope("/vault/secret/keys")

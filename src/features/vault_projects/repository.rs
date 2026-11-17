@@ -97,3 +97,20 @@ pub async fn get_project_detail(db_pool: &PgPool, organization_id: Uuid, project
 
     Ok(row.map(VaultProject::from))
 }
+
+
+pub async fn delete_project(db_pool: &PgPool, organization_id: Uuid, project_id: i64) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            DELETE FROM vault_project
+            WHERE organization_id = $1 AND project_id = $2
+            "#,
+            &[&organization_id, &project_id],
+        )
+        .await?;
+
+    Ok(result)
+}

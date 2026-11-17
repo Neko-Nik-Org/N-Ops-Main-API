@@ -72,3 +72,19 @@ pub async fn get_project_detail(state: &AppState, session_user: &SessionUser, pr
 
     Ok(project)
 }
+
+
+/// Delete a project by its ID
+pub async fn delete_project(state: &AppState, session_user: &SessionUser, project_id: i64) -> ServiceResult<()> {
+    let result = repository::delete_project(
+        &state.pg_pool,
+        session_user.organization_id,
+        project_id
+    ).await?;
+
+    if result == 0 {
+        return Err(ServiceError::Unprocessable("Failed to delete project".into()));
+    }
+
+    Ok(())
+}
