@@ -49,7 +49,6 @@ pub async fn list_projects(db_pool: &PgPool, organization_id: Uuid, query: &List
             r#"
             SELECT
                 project_id,
-                organization_id,
                 project_name,
                 details,
                 created_at,
@@ -73,4 +72,28 @@ pub async fn list_projects(db_pool: &PgPool, organization_id: Uuid, query: &List
         .await?;
 
     Ok(VaultProject::from_rows(rows))
+}
+
+
+pub async fn get_project_detail(db_pool: &PgPool, organization_id: Uuid, project_id: i64) -> PgResult<Option<VaultProject>> {
+    let client = db_pool.get().await?;
+
+    let row = client
+        .query_opt(
+            r#"
+            SELECT
+                project_id,
+                organization_id,
+                project_name,
+                details,
+                created_at,
+                updated_at
+            FROM vault_project
+            WHERE organization_id = $1 AND project_id = $2
+            "#,
+            &[&organization_id, &project_id],
+        )
+        .await?;
+
+    Ok(row.map(VaultProject::from))
 }

@@ -137,8 +137,8 @@ async fn main() -> std::io::Result<()> {
                 .service(vault_project::create_project)
                 .service(vault_project::update_project)
                 .service(vault_project::list_projects)
+                .service(vault_project::get_project)
                 // .service(vault_project::delete_project)
-                // .service(vault_project::get_project)
             )
             // .service(
             //     actix_scope("/vault/secret/keys")

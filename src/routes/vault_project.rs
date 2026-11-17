@@ -1,4 +1,4 @@
-use actix_web::{HttpResponse, delete, get, post, put, patch, web};
+use actix_web::{HttpResponse, get, post, put, web};
 use crate::features::users::SessionUser;
 use crate::errors::ApiResponse;
 use crate::state::AppState;
@@ -53,4 +53,19 @@ pub async fn list_projects(session_user: web::ReqData<SessionUser>, query: web::
     let projects = vault_projects::list_projects(&state, &session_user, &query).await?;
 
     Ok(HttpResponse::Ok().json(projects))
+}
+
+
+#[get("/detail/{project_id}")]
+pub async fn get_project(session_user: web::ReqData<SessionUser>, path: web::Path<i64>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let project_id = path.into_inner();
+
+    // Validate that the session user has the required permissions
+    session_user.has_all_permissions(&["vault:project:view"])?;
+
+    // Fetch the project detail using the provided project ID and the session user's context
+    let project = vault_projects::get_project_detail(&state, &session_user, project_id).await?;
+
+    Ok(HttpResponse::Ok().json(project))
 }

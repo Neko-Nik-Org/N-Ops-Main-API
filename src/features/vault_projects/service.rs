@@ -56,3 +56,19 @@ pub async fn list_projects(state: &AppState, session_user: &SessionUser, query: 
 
     Ok(projects)
 }
+
+
+/// Get the details of a specific project by its ID
+pub async fn get_project_detail(state: &AppState, session_user: &SessionUser, project_id: i64) -> ServiceResult<Option<VaultProject>> {
+    let project = repository::get_project_detail(
+        &state.pg_pool,
+        session_user.organization_id,
+        project_id
+    ).await?;
+
+    if project.is_none() {
+        return Err(ServiceError::NotFound("Project not found".into()));
+    }
+
+    Ok(project)
+}
