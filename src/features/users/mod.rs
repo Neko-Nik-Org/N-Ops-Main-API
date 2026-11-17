@@ -4,9 +4,9 @@ mod model;
 mod dto;
 
 
-pub use service::{create_user_session, refresh_user_session, update_user_password, update_user_username};
+pub use service::{create_user_session, refresh_user_session, update_user_password, update_user_username, update_user_profile};
+pub use dto::{LoginReqDto, UpdateProfileReqDto};
 pub use model::SessionUser;
-pub use dto::LoginReqDto;
 pub use repository::{
     update_user_email_verified,
     check_username_exists,

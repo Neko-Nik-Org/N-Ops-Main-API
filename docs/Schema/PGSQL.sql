@@ -83,6 +83,7 @@ CREATE TABLE app_user (
 
     -- TODO: Put the Geo & IP restriction into a separate table for better management (Restriction Policy)
     -- Geographic or IP-based restrictions for this user (Allowed if either IP or Geo matches)
+    -- In that same policy, add something like enforcement mode (e.g., strict, relaxed) to control how restrictions are applied ?
     has_ip_restriction BOOLEAN DEFAULT FALSE NOT NULL,  -- Is IP restriction enabled for this user
     has_geo_restriction BOOLEAN DEFAULT FALSE NOT NULL,  -- Is geographic restriction enabled for this user
     allowed_ips TEXT[] NOT NULL,  -- List of allowed IP addresses for this user

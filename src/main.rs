@@ -85,12 +85,12 @@ async fn main() -> std::io::Result<()> {
                 .service(users::verify_email)
                 .service(users::self_password)
                 .service(users::check_username)
+                .service(users::update_profile)
                 .service(users::self_deactivate)
                 .service(users::get_user_details)
                 .service(users::set_user_details)
                 .service(users::self_user_name_update)
                 .service(users::send_verification_email)
-                // .service(users::update_profile)    // Update the current user's profile (name, email, etc.)
             )
             // .service(
             //     actix_scope("/user/admin")

@@ -390,3 +390,39 @@ pub async fn deactivate_user(db_pool: &PgPool, user_id: i64) -> PgResult<u64> {
 
     Ok(result)
 }
+
+
+pub async fn update_user_display_name(db_pool: &PgPool, user_id: i64, new_display_name: &str) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            UPDATE app_user
+            SET display_name = $1, updated_at = NOW()
+            WHERE user_id = $2
+            "#,
+            &[&new_display_name, &user_id],
+        )
+        .await?;
+
+    Ok(result)
+}
+
+
+pub async fn update_user_primary_email(db_pool: &PgPool, user_id: i64, new_primary_email: &str) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            UPDATE app_user
+            SET primary_email = $1, is_email_verified = FALSE, updated_at = NOW()
+            WHERE user_id = $2
+            "#,
+            &[&new_primary_email, &user_id],
+        )
+        .await?;
+
+    Ok(result)
+}

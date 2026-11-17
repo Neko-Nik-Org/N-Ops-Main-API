@@ -48,3 +48,10 @@ pub struct LoginReqDto {
     pub password: String,    // Base64 encoded password
     pub remember_me: bool,   // Indicates if the user can refresh the session
 }
+
+
+#[derive(Deserialize)]
+pub struct UpdateProfileReqDto {
+    pub display_name: String,
+    pub primary_email: Option<String>,  // If given, the new primary email for the user
+}

@@ -1,6 +1,6 @@
-use crate::features::users::{SessionUser, fetch_user_profile, fetch_user_ui_info, fetch_user_details, reset_user_details, reset_user_ui_info, fetch_org_info, update_user_email_verified, check_username_exists, update_user_password, update_user_username, deactivate_user};
 use crate::cache::redis_cache::{get_redis_cache, set_redis_cache, delete_redis_cache};
-use actix_web::{get, post, delete, web, HttpResponse};
+use crate::features::users::{self, SessionUser, UpdateProfileReqDto};
+use actix_web::{get, post, put, delete, web, HttpResponse};
 use crate::errors::{ApiResponse, ServiceError};
 use crate::state::AppState;
 use crate::security::otp;
@@ -13,7 +13,7 @@ pub async fn get_profile(session_user: web::ReqData<SessionUser>, state: web::Da
     let session_user = session_user.into_inner();
 
     // Fetch the UI info for the session user
-    let ui_info = fetch_user_profile(&state.pg_pool, session_user.user_id).await?;
+    let ui_info = users::fetch_user_profile(&state.pg_pool, session_user.user_id).await?;
 
     Ok(HttpResponse::Ok().json(ui_info))
 }
@@ -24,7 +24,7 @@ pub async fn get_ui_info(session_user: web::ReqData<SessionUser>, state: web::Da
     let session_user = session_user.into_inner();
 
     // Fetch the UI info for the session user
-    let ui_info = fetch_user_ui_info(&state.pg_pool, session_user.user_id).await?;
+    let ui_info = users::fetch_user_ui_info(&state.pg_pool, session_user.user_id).await?;
 
     Ok(HttpResponse::Ok().json(ui_info))
 }
@@ -36,7 +36,7 @@ pub async fn set_ui_info(session_user: web::ReqData<SessionUser>, data: web::Jso
     let ui_info = data.into_inner(); 
 
     // Update the UI info for the session user
-    let updated_ui_info = reset_user_ui_info(&state.pg_pool, session_user.user_id, &ui_info).await?;
+    let updated_ui_info = users::reset_user_ui_info(&state.pg_pool, session_user.user_id, &ui_info).await?;
     if updated_ui_info == 0 {
         return Err(ServiceError::BadRequest("Failed to update UI info".into()));
     }
@@ -50,7 +50,7 @@ pub async fn get_user_details(session_user: web::ReqData<SessionUser>, state: we
     let session_user = session_user.into_inner();
 
     // Fetch the user details for the session user
-    let user_details = fetch_user_details(&state.pg_pool, session_user.user_id).await?;
+    let user_details = users::fetch_user_details(&state.pg_pool, session_user.user_id).await?;
 
     Ok(HttpResponse::Ok().json(user_details))
 }
@@ -62,7 +62,7 @@ pub async fn set_user_details(session_user: web::ReqData<SessionUser>, data: web
     let user_details = data.into_inner(); 
 
     // Update the user details for the session user
-    let updated_user_details = reset_user_details(&state.pg_pool, session_user.user_id, &user_details).await?;
+    let updated_user_details = users::reset_user_details(&state.pg_pool, session_user.user_id, &user_details).await?;
     if updated_user_details == 0 {
         return Err(ServiceError::BadRequest("Failed to update user details".into()));
     }
@@ -76,7 +76,7 @@ pub async fn get_org_info(session_user: web::ReqData<SessionUser>, state: web::D
     let session_user = session_user.into_inner();
 
     // Fetch the organization info for the session user
-    let org_info = fetch_org_info(&state.pg_pool, session_user.organization_id).await?;
+    let org_info = users::fetch_org_info(&state.pg_pool, session_user.organization_id).await?;
 
     Ok(HttpResponse::Ok().json(org_info))
 }
@@ -144,7 +144,7 @@ pub async fn verify_email(session_user: web::ReqData<SessionUser>, body: web::Js
 
     // At this point, the OTP code is verified successfully
     // Mark the user's email as verified in the database
-    update_user_email_verified(&state.pg_pool, session_user.user_id, true).await?;
+    users::update_user_email_verified(&state.pg_pool, session_user.user_id, true).await?;
 
     // Delete the OTP from the cache as it has been successfully used
     delete_redis_cache(&state.redis_cache, &otp_cache_key).await?;
@@ -161,7 +161,7 @@ pub async fn check_username(path: web::Path<String>, state: web::Data<AppState>)
     // is available before creating or updating a user/profile
 
     // Check if the username exists in the database
-    let exists = check_username_exists(&state.pg_pool, &username).await?;
+    let exists = users::check_username_exists(&state.pg_pool, &username).await?;
 
     if exists {
         Ok(HttpResponse::Conflict().body("Username is already taken"))
@@ -177,7 +177,7 @@ pub async fn self_password(session_user: web::ReqData<SessionUser>, body: web::J
     let new_password_base64 = body.into_inner();
 
     // Update the user's password in the database
-    update_user_password(&state, session_user.user_id, &new_password_base64).await?;
+    users::update_user_password(&state, session_user.user_id, &new_password_base64).await?;
 
     Ok(HttpResponse::Ok().body("Password changed successfully"))
 }
@@ -189,7 +189,7 @@ pub async fn self_user_name_update(session_user: web::ReqData<SessionUser>, body
     let new_username = body.into_inner();
 
     // Update the user's username in the database
-    update_user_username(&state, session_user.user_id, &new_username).await?;
+    users::update_user_username(&state, session_user.user_id, &new_username).await?;
 
     Ok(HttpResponse::Ok().body("Username changed successfully"))
 }
@@ -204,10 +204,22 @@ pub async fn self_deactivate(session_user: web::ReqData<SessionUser>, state: web
     delete_redis_cache(&state.redis_cache, &session_key).await?;
 
     // Deactivate the user's account in the database
-    let result = deactivate_user(&state.pg_pool, session_user.user_id).await?;
+    let result = users::deactivate_user(&state.pg_pool, session_user.user_id).await?;
     if result == 0 {
         return Ok(HttpResponse::NotFound().body("User not found! Maybe already deactivated or deleted"));
     }
 
     Ok(HttpResponse::Ok().body("Your account has been deactivated successfully, contact admin to reactivate if needed"))
+}
+
+
+#[put("/profile")]
+pub async fn update_profile(session_user: web::ReqData<SessionUser>, body: web::Json<UpdateProfileReqDto>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let update_request = body.into_inner();
+
+    // Update the user's profile in the database
+    users::update_user_profile(&state, session_user.user_id, &update_request).await?;
+
+    Ok(HttpResponse::Ok().body("Profile updated successfully"))
 }
