@@ -1,5 +1,5 @@
+use super::dto::{VaultProjectDto, ListQueryDto};
 use deadpool_postgres::Pool as PgPool;
-use super::dto::VaultProjectDto;
 use super::model::VaultProject;
 use crate::errors::PgResult;
 use uuid::Uuid;
@@ -38,4 +38,39 @@ pub async fn update_project(db_pool: &PgPool, organization_id: Uuid, project_id:
         .await?;
 
     Ok(result)
+}
+
+
+pub async fn list_projects(db_pool: &PgPool, organization_id: Uuid, query: &ListQueryDto) -> PgResult<Vec<VaultProject>> {
+    let client = db_pool.get().await?;
+
+    let rows = client
+        .query(
+            r#"
+            SELECT
+                project_id,
+                organization_id,
+                project_name,
+                details,
+                created_at,
+                updated_at
+            FROM vault_project
+            WHERE organization_id = $1
+                AND (
+                    $2::TEXT IS NULL
+                    OR project_name ILIKE '%' || $2 || '%'
+                )
+            ORDER BY created_at DESC
+            LIMIT $3 OFFSET $4
+            "#,
+            &[
+                &organization_id,
+                &query.project_name,
+                &query.limit,
+                &query.offset,
+            ]
+        )
+        .await?;
+
+    Ok(VaultProject::from_rows(rows))
 }

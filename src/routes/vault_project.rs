@@ -4,6 +4,7 @@ use crate::errors::ApiResponse;
 use crate::state::AppState;
 use crate::features::vault_projects::{
     VaultProjectDto,
+    ListQueryDto,
     self
 };
 
@@ -37,4 +38,19 @@ pub async fn update_project(session_user: web::ReqData<SessionUser>, path: web::
     vault_projects::update_project(&state, &session_user, project_id, &new_project_data).await?;
 
     Ok(HttpResponse::Ok().finish())
+}
+
+
+#[get("/list")]
+pub async fn list_projects(session_user: web::ReqData<SessionUser>, query: web::Query<ListQueryDto>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let query = query.into_inner();
+
+    // Validate that the session user has the required permissions
+    session_user.has_all_permissions(&["vault:project:view"])?;
+
+    // Fetch the list of projects using the provided query and the session user's context
+    let projects = vault_projects::list_projects(&state, &session_user, &query).await?;
+
+    Ok(HttpResponse::Ok().json(projects))
 }

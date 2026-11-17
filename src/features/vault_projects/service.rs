@@ -1,6 +1,6 @@
 use crate::features::users::{SessionUser, fetch_org_info};
 use crate::errors::{ServiceError, ServiceResult};
-use super::dto::VaultProjectDto;
+use super::dto::{VaultProjectDto, ListQueryDto};
 use super::model::VaultProject;
 use crate::state::AppState;
 use super::repository;
@@ -44,4 +44,15 @@ pub async fn update_project(state: &AppState, session_user: &SessionUser, projec
     }
 
     Ok(())
+}
+
+/// List projects based on the provided query
+pub async fn list_projects(state: &AppState, session_user: &SessionUser, query: &ListQueryDto) -> ServiceResult<Vec<VaultProject>> {
+    let projects = repository::list_projects(
+        &state.pg_pool,
+        session_user.organization_id,
+        query
+    ).await?;
+
+    Ok(projects)
 }
