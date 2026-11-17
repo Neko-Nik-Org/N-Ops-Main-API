@@ -16,7 +16,7 @@ pub async fn create_tag(session_user: web::ReqData<SessionUser>, data: web::Json
     let new_tag_data = data.into_inner(); 
 
     // Validate that the session user has the required permissions
-    session_user.has_all_permissions(&["tag:view", "tag:create"])?;
+    session_user.has_all_permissions(&["tag:create"])?;
 
     // Create the new tag using the provided data and the session user's context
     tags::create_new_tag(&state, &session_user, &new_tag_data).await?;
@@ -31,7 +31,7 @@ pub async fn update_tag(session_user: web::ReqData<SessionUser>, data: web::Json
     let new_tag_data = data.into_inner(); 
 
     // Validate that the session user has the required permissions
-    session_user.has_all_permissions(&["tag:view", "tag:edit"])?;
+    session_user.has_all_permissions(&["tag:edit"])?;
     session_user.has_tag_permission(new_tag_data.tag_id)?;
 
     // Update the tag using the provided data and the session user's context
@@ -47,7 +47,7 @@ pub async fn delete_tag(session_user: web::ReqData<SessionUser>, path: web::Path
     let tag_id = path.into_inner();
 
     // Validate that the session user has the required permissions
-    session_user.has_all_permissions(&["tag:view", "tag:delete"])?;
+    session_user.has_all_permissions(&["tag:delete"])?;
     session_user.has_tag_permission(tag_id)?;
 
     // Delete the tag using the provided data and the session user's context
@@ -63,7 +63,6 @@ pub async fn get_tag(session_user: web::ReqData<SessionUser>, path: web::Path<i6
     let tag_id = path.into_inner();
 
     // Validate that the session user has the required permissions
-    // No need to check for "tag:view" permission, this endpoint will be used across all services that require tag information
     session_user.has_tag_permission(tag_id)?;
 
     // Get the tag using the provided data and the session user's context
@@ -81,16 +80,17 @@ pub async fn list_tags(session_user: web::ReqData<SessionUser>, state: web::Data
     // - Cache the tags
     // - Write a service function to do all the below logic and return the accessible tags directly
 
-    // Validate that the session user has the required permissions
-    session_user.has_all_permissions(&["tag:view"])?;
-    // TODO: Remove Tag view permission, that should be given by default for all users
-
     // Get the list of all tags for the session user's organization (No tag-specific filtering applied)
     let tags = tags::list_all_tags(&state, &session_user).await?;
 
     // List only the tags that the session user has permission to view
     let tag_ids = tags.iter().map(|tag| tag.tag_id).collect::<Vec<_>>();
     let accessible_tag_ids = session_user.accessible_tags(&tag_ids);
+
+    // If there are no accessible tags, return all tags (means the user has access to all tags by default)
+    if accessible_tag_ids.is_empty() {
+        return Ok(HttpResponse::Ok().json(tags));
+    }
 
     let final_tags = tags.into_iter()
         .filter(|tag| accessible_tag_ids.contains(&tag.tag_id))

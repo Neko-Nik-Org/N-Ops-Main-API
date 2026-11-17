@@ -6,12 +6,17 @@ use std::time::Duration;
 
 
 
-pub const ALL_AVAILABLE_PERMISSIONS: [&str; 4] = [
+pub const ALL_AVAILABLE_PERMISSIONS: [&str; 5] = [
     // Resource Tag's
-    "tag:view",
     "tag:create",
     "tag:edit",
     "tag:delete",
+
+    // User Role's
+    "user:role:view",
+    "user:role:create",
+    // "user:role:edit",
+    // "user:role:delete"
 ];
 
 
