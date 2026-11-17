@@ -31,7 +31,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(app_state.clone())
             .wrap(Cors::default()
                 .allowed_origin_fn(state::cors_allowed_origin_fn)
-                .allowed_methods(["GET", "POST", "PUT", "DELETE"])
+                .allowed_methods(["GET", "POST", "PUT", "PATCH", "DELETE"])
                 .supports_credentials()
                 .allow_any_header()
                 .max_age(420)
