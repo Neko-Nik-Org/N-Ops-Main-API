@@ -1,4 +1,4 @@
-use super::dto::{CreateNewRoleDto, ListRolesDto, UpdateRoleInfoDto};
+use super::dto::{CreateNewRoleDto, ListRolesDto, UpdateRoleInfoDto, UpdateRolePermissionsDto};
 use deadpool_postgres::Pool as PgPool;
 use crate::errors::PgResult;
 use super::model::UserRole;
@@ -212,6 +212,80 @@ pub async fn update_role_info(db_pool: &PgPool, organization_id: Uuid, role_id: 
             ],
         )
         .await?;
+
+    Ok(())
+}
+
+
+pub async fn update_role_permissions(
+    db_pool: &PgPool,
+    organization_id: Uuid,
+    role_id: i64,
+    update_data: &UpdateRolePermissionsDto,
+) -> PgResult<()> {
+    let mut client = db_pool.get().await?;
+
+    let transaction = client.transaction().await?;
+
+    // First Update all the basic single table role fields update
+    transaction
+        .execute(
+            r#"
+            UPDATE user_role
+            SET permissions = $1,
+                allowed_linux_users = $2,
+                can_approve_approvals = $3,
+                can_bypass_approvals = $4,
+                updated_at = NOW()
+            WHERE organization_id = $5
+                AND role_id = $6
+            "#,
+            &[
+                &update_data.permissions,
+                &update_data.allowed_linux_users,
+                &update_data.can_approve_approvals,
+                &update_data.can_bypass_approvals,
+                &organization_id,
+                &role_id,
+            ],
+        )
+        .await?;
+
+    // For tags, there can be 2 cases
+    // One is empty (means super-admin has access to all tags)
+    // The other case is when there are specific tags assigned to the role
+    // In case of specific tags, make sure only those tags are assigned to the role, else all remove or add accordingly
+    // Remove existing tag mappings
+
+    // Remove all existing tag mappings for the role before inserting the new ones
+    transaction
+        .execute(
+            r#"
+            DELETE FROM role_tag
+            WHERE role_id = $1
+            "#,
+            &[&role_id],
+        )
+        .await?;
+
+    // Insert the new tag mappings (if any)
+    if !update_data.allowed_tags.is_empty() {
+        transaction
+            .execute(
+                r#"
+                INSERT INTO role_tag (role_id, tag_id)
+                SELECT $1, rt.tag_id
+                FROM resource_tag rt
+                WHERE rt.organization_id = $2
+                    AND rt.tag_id = ANY($3)
+                "#,
+                &[&role_id, &organization_id, &update_data.allowed_tags],
+            )
+            .await?;
+    }
+
+    // Commit the transaction after all updates are done
+    transaction.commit().await?;
 
     Ok(())
 }

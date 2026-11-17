@@ -1,4 +1,4 @@
-use super::dto::{CreateNewRoleDto, UpdateRoleInfoDto};
+use super::dto::{CreateNewRoleDto, UpdateRoleInfoDto, UpdateRolePermissionsDto};
 use crate::errors::{ServiceError, ServiceResult};
 use crate::features::users::SessionUser;
 use super::model::RolePermissions;
@@ -112,6 +112,24 @@ pub async fn update_role_info(state: &AppState, session_user: &SessionUser, role
 
     // Call the repository function to update the role info in the database
     repository::update_role_info(&state.pg_pool, session_user.organization_id, role_id, update_data).await?;
+
+    Ok(())
+}
+
+
+/// Update the permissions of an existing role using the provided role ID and update data
+pub async fn update_role_permissions(state: &AppState, session_user: &SessionUser, role_id: i64, update_data: &UpdateRolePermissionsDto) -> ServiceResult<()> {
+    // First fetch the role to ensure it exists and to perform any necessary validations
+    let role = repository::fetch_role(&state.pg_pool, session_user.organization_id, role_id).await?;
+
+    // Validate that the session user has the required permissions to update this role
+    validate_role_restrictions(session_user, &role)?;
+
+    // Validate that the session user with new permission set, still complies with the role restrictions
+    validate_role_restrictions(session_user, update_data)?;
+
+    // Call the repository function to update the role permissions in the database
+    repository::update_role_permissions(&state.pg_pool, session_user.organization_id, role_id, update_data).await?;
 
     Ok(())
 }

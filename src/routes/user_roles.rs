@@ -3,6 +3,7 @@ use crate::features::users::SessionUser;
 use crate::errors::ApiResponse;
 use crate::state::AppState;
 use crate::features::user_roles::{
+    UpdateRolePermissionsDto,
     UpdateRoleInfoDto,
     CreateNewRoleDto,
     ListRolesDto,
@@ -89,8 +90,17 @@ pub async fn update_role_info(session_user: web::ReqData<SessionUser>, path: web
 }
 
 
+#[put("/update/permissions/{role_id}")]
+pub async fn update_role_permissions(session_user: web::ReqData<SessionUser>, path: web::Path<i64>, data: web::Json<UpdateRolePermissionsDto>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let role_id = path.into_inner();
+    let update_data = data.into_inner();
 
-// TODO: Edit/Update user role (3 endpoints)
-// 1. Role Name, description - PATCH
-// 2. Permissions, allowed_linux_users, can_approve_approvals, can_bypass_approvals - PUT
-// 3. Assign/Unassign tags to the role - PUT
+    // Validate that the session user has the required permissions
+    session_user.has_all_permissions(&["user:role:view", "user:role:update"])?;
+
+    // Call the repository function to update the role permissions
+    user_roles::update_role_permissions(&state, &session_user, role_id, &update_data).await?;
+
+    Ok(HttpResponse::Ok().finish())
+}

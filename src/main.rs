@@ -119,8 +119,7 @@ async fn main() -> std::io::Result<()> {
                 .service(user_roles::create_role)
                 .service(user_roles::delete_role)
                 .service(user_roles::update_role_info)
-                // .service(user_roles::update_role_tags)
-                // .service(user_roles::update_role_permissions)
+                .service(user_roles::update_role_permissions)
             )
             // .service(
             //     actix_scope("/api-keys")
