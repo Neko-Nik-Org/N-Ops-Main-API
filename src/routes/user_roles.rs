@@ -4,6 +4,7 @@ use crate::errors::ApiResponse;
 use crate::state::AppState;
 use crate::features::user_roles::{
     CreateNewRoleDto,
+    ListRolesDto,
     self
 };
 
@@ -22,3 +23,54 @@ pub async fn create_role(session_user: web::ReqData<SessionUser>, data: web::Jso
 
     Ok(HttpResponse::Created().finish())
 }
+
+
+#[get("/list")]
+pub async fn list_roles(session_user: web::ReqData<SessionUser>, query: web::Query<ListRolesDto>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let list_roles_query = query.into_inner();
+
+    // Validate that the session user has the required permissions
+    session_user.has_all_permissions(&["user:role:view"])?;
+
+    // List All User Roles
+    // Note: No need to check any tags and permissions. Since its all Read-Only
+    // Let user see all the roles without any restrictions
+    let roles = user_roles::list_roles(&state.pg_pool, session_user.organization_id, &list_roles_query).await?;
+
+    Ok(HttpResponse::Ok().json(roles))
+}
+
+
+#[get("/fetch/{role_id}")]
+pub async fn fetch_role(session_user: web::ReqData<SessionUser>, path: web::Path<i64>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let role_id = path.into_inner();
+
+    // Validate that the session user has the required permissions
+    session_user.has_all_permissions(&["user:role:view"])?;
+
+    // Fetch the role using the provided role_id and the session user's context
+    let role = user_roles::fetch_role(&state.pg_pool, session_user.organization_id, role_id).await?;
+
+    Ok(HttpResponse::Ok().json(role))
+}
+
+
+#[delete("/delete/{role_id}")]
+pub async fn delete_role(session_user: web::ReqData<SessionUser>, path: web::Path<i64>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let role_id = path.into_inner();
+
+    // Validate that the session user has the required permissions
+    session_user.has_all_permissions(&["user:role:view", "user:role:delete"])?;
+
+    // Call the repository function to delete the role
+    user_roles::delete_role(&state, &session_user, role_id).await?;
+
+    Ok(HttpResponse::NoContent().finish())
+}
+
+
+
+// TODO: Edit/Update user role

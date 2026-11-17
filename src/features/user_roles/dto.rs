@@ -16,6 +16,17 @@ pub struct CreateNewRoleDto {
 }
 
 
+#[derive(Deserialize)]
+pub struct ListRolesDto {
+    pub role_name_search: Option<String>,
+    pub limit: i64,
+    pub offset: i64,
+}
+
+
+// ------- Implementations ------- //
+
+
 impl RolePermissions for CreateNewRoleDto {
     fn permissions(&self) -> &[String] {
         &self.permissions

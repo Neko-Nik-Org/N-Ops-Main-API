@@ -114,11 +114,11 @@ async fn main() -> std::io::Result<()> {
             .service(
                 actix_scope("/user/roles")
                 .wrap(from_fn(middleware::user_session::auth_check))
+                .service(user_roles::list_roles)
+                .service(user_roles::fetch_role)
                 .service(user_roles::create_role)
+                .service(user_roles::delete_role)
                 // .service(user_roles::update_user_role)    // Update Any User Role's Properties (Session user should have all sub-set of the role's permissions and all)
-                // .service(user_roles::delete_user_role)    // Delete Any User Role (Session user should have all sub-set of the role's permissions and all)
-                // .service(user_roles::list_user_roles) // List All User Roles (list all, no need to check any tags and permissions. Since its all Read-Only)
-                // .service(user_roles::get_user_role) // Get Any User Role info (list all, no need to check any tags and permissions. Since its all Read-Only)
             )
             // .service(
             //     actix_scope("/api-keys")

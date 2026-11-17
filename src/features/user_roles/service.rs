@@ -1,7 +1,7 @@
-use super::dto::{CreateNewRoleDto};
 use crate::errors::{ServiceError, ServiceResult};
 use crate::features::users::SessionUser;
 use super::model::RolePermissions;
+use super::dto::CreateNewRoleDto;
 use crate::state::AppState;
 use super::repository;
 
@@ -75,6 +75,28 @@ pub async fn create_new_role(state: &AppState, session_user: &SessionUser, role_
 
     // Call the repository function to create the new role in the database
     repository::create_new_role(&state.pg_pool, session_user.organization_id, role_data).await?;
+
+    Ok(())
+}
+
+
+/// Delete an existing role using the provided role ID
+pub async fn delete_role(state: &AppState, session_user: &SessionUser, role_id: i64) -> ServiceResult<()> {
+    // Check if the role can be safely deleted (i.e., no users are associated with it)
+    if !repository::can_delete_safely(&state.pg_pool, session_user.organization_id, role_id).await? {
+        return Err(ServiceError::PreconditionFailed(
+            "Role cannot be deleted because there are users associated with it, delete those users first".into()
+        ));
+    }
+
+    // First fetch the role to ensure it exists and to perform any necessary validations
+    let role = repository::fetch_role(&state.pg_pool, session_user.organization_id, role_id).await?;
+
+    // Validate that the session user has the required permissions to delete this role
+    validate_role_restrictions(session_user, &role)?;
+
+    // Call the repository function to delete the role from the database
+    repository::delete_role(&state.pg_pool, session_user.organization_id, role_id).await?;
 
     Ok(())
 }

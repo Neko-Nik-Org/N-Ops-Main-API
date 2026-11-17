@@ -4,5 +4,6 @@ mod model;
 mod dto;
 
 
-pub use dto::{CreateNewRoleDto};
-pub use service::{create_new_role};
+pub use service::{create_new_role, delete_role};
+pub use dto::{CreateNewRoleDto, ListRolesDto};
+pub use repository::{list_roles, fetch_role};
