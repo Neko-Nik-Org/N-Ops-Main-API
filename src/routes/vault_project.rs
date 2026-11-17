@@ -1,0 +1,40 @@
+use actix_web::{HttpResponse, delete, get, post, put, patch, web};
+use crate::features::users::SessionUser;
+use crate::errors::ApiResponse;
+use crate::state::AppState;
+use crate::features::vault_projects::{
+    VaultProjectDto,
+    self
+};
+
+
+
+#[post("/create")]
+pub async fn create_project(session_user: web::ReqData<SessionUser>, data: web::Json<VaultProjectDto>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let new_project_data = data.into_inner(); 
+
+    // Validate that the session user has the required permissions
+    session_user.has_all_permissions(&["vault:project:view", "vault:project:create"])?;
+
+    // Create the new role using the provided data and the session user's context
+    vault_projects::create_new_project(&state, &session_user, &new_project_data).await?;
+
+    Ok(HttpResponse::Created().finish())
+}
+
+
+#[put("/update/{project_id}")]
+pub async fn update_project(session_user: web::ReqData<SessionUser>, path: web::Path<i64>, data: web::Json<VaultProjectDto>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let new_project_data = data.into_inner();
+    let project_id = path.into_inner();
+
+    // Validate that the session user has the required permissions
+    session_user.has_all_permissions(&["vault:project:view", "vault:project:edit"])?;
+
+    // Update the project using the provided data and the session user's context
+    vault_projects::update_project(&state, &session_user, project_id, &new_project_data).await?;
+
+    Ok(HttpResponse::Ok().finish())
+}

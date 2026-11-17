@@ -1,4 +1,4 @@
-use routes::{health, auth, users, tags, user_roles};
+use routes::{health, auth, users, tags, user_roles, vault_project};
 use actix_web::web::scope as actix_scope;
 use actix_web::middleware::from_fn;
 use actix_web::{App, HttpServer};
@@ -131,15 +131,15 @@ async fn main() -> std::io::Result<()> {
             //     .service(api_keys::list_api_keys) // List All API Keys (by user tag permission)
             //     .service(api_keys::get_api_key) // Get Any API Key info (by user tag permission)
             // )
-            // .service(
-            //     actix_scope("/vault/project")
-            //     .wrap(from_fn(middleware::user_session::auth_check))
-            //     .service(vault_project::create_project)
-            //     .service(vault_project::update_project)
-            //     .service(vault_project::delete_project)
-            //     .service(vault_project::list_projects)
-            //     .service(vault_project::get_project)
-            // )
+            .service(
+                actix_scope("/vault/project")
+                .wrap(from_fn(middleware::user_session::auth_check))
+                .service(vault_project::create_project)
+                .service(vault_project::update_project)
+                // .service(vault_project::delete_project)
+                // .service(vault_project::list_projects)
+                // .service(vault_project::get_project)
+            )
             // .service(
             //     actix_scope("/vault/secret/keys")
             //     .wrap(from_fn(middleware::user_session::auth_check))
