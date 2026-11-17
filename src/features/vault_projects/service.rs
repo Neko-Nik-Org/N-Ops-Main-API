@@ -1,5 +1,5 @@
+use crate::features::users::{SessionUser, fetch_org_info};
 use crate::errors::{ServiceError, ServiceResult};
-use crate::features::users::SessionUser;
 use super::dto::VaultProjectDto;
 use super::model::VaultProject;
 use crate::state::AppState;
@@ -9,6 +9,13 @@ use super::repository;
 
 /// Create a new project using the provided project data
 pub async fn create_new_project(state: &AppState, session_user: &SessionUser, project_data: &VaultProjectDto) -> ServiceResult<()> {
+    // Fetch organization info to check project quota
+    let org_info = fetch_org_info(&state.pg_pool, session_user.organization_id).await?;
+    if org_info.ss_project_limit <= org_info.current_ss_project_count {
+        return Err(ServiceError::Unprocessable("Organization has reached its project quota".into()));
+    }
+
+    // Create the new project in the repository
     let result = repository::create_new_project(
         &state.pg_pool,
         session_user.organization_id,
