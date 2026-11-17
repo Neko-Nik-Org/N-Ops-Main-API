@@ -75,6 +75,8 @@ pub async fn delete_project(session_user: web::ReqData<SessionUser>, path: web::
     // Validate that the session user has the required permissions
     session_user.has_all_permissions(&["vault:project:view", "vault:project:delete"])?;
 
+    // Note: Warn user that on deletion, all associated data with the project will be permanently removed
+
     // Delete the project using the provided project ID and the session user's context
     vault_projects::delete_project(&state, &session_user, project_id).await?;
 
