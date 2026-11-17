@@ -248,7 +248,6 @@ CREATE TABLE vault_secure_notes (
     note_title VARCHAR(100) NOT NULL,
     details JSONB NOT NULL,  -- Additional UI metadata for the secure note
 
-    -- TODO: Is tag required for secure notes?
     is_encrypted BOOLEAN NOT NULL DEFAULT TRUE,  -- Indicates if the note content is encrypted
     note_content TEXT NOT NULL,  -- Encrypted or plain text content of the secure note
 
