@@ -141,15 +141,6 @@ async fn main() -> std::io::Result<()> {
             //     .service(vault_project::get_project)
             // )
             // .service(
-            //     actix_scope("/vault/project/service")
-            //     .wrap(from_fn(middleware::user_session::auth_check))
-            //     .service(vault_project_service::create_service)
-            //     .service(vault_project_service::update_service)
-            //     .service(vault_project_service::delete_service)
-            //     .service(vault_project_service::list_services)
-            //     .service(vault_project_service::get_service)
-            // )
-            // .service(
             //     actix_scope("/vault/secret/keys")
             //     .wrap(from_fn(middleware::user_session::auth_check))
             //     .service(vault_secret_keys::create_env_key)

@@ -8,7 +8,7 @@ Neko Nik Keys Suite Command Center Secrets and Configuration Management Jobs and
 - Secrets, environment variables and configuration with tag separation and project separation
 	- Centralized secrets vault per org
 	- Environment-variable management
-        - project (limited) -> service (unlimited) -> envs/files [tagged] (limited)
+        - project (limited) -> envs/files [tagged] (limited)
         - ENV's / Files will have tagging support, so that no need to have explicit environment references
 	- Configuration file management
 	- Fully Encrypted secret storage with AES-256-GCM (Authenticated Encryption with Associated Data)
@@ -21,7 +21,7 @@ Neko Nik Keys Suite Command Center Secrets and Configuration Management Jobs and
 	- Programming language libs too (Rust, Python, Go, JS)
 	- Support Docker Compose secrets
 	- support both conventional environment variables and proper secrets (non viewable too)
-	- Simple API key based RO permission for specific project or environment or service or envs
+	- Simple API key based RO permission for specific projects + tag (one)
 
 - Linux servers, agents and inventory, lables/names, tags/groups like Test / Prod server etc
 	- From the Agent get and store OS, kernel, architecture and hostname information
@@ -32,7 +32,7 @@ Neko Nik Keys Suite Command Center Secrets and Configuration Management Jobs and
 	- View container resource usage
 	- Start / stop / restart / pull containers
 	- Inspect images, networks and volumes
-	- Manage environment variables per service
+	- Manage environment variables per project
 	- Support Docker Compose secrets
 	- Support deployment rollback
 
@@ -126,7 +126,6 @@ Pricing plan
 - Can limit the following per org
 	- Number of users
 	- Secret store projects
-	- Secret store services 
 	- Secret store env var limit / file limit
 	- Server list/add limit
 

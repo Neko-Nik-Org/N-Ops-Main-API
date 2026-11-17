@@ -170,11 +170,11 @@ CREATE TABLE api_key (
 );
 
 
-CREATE TABLE api_key_vault_service_mapping (
+CREATE TABLE api_key_vault_project (
     api_key_id BIGINT NOT NULL REFERENCES api_key(api_key_id) ON DELETE CASCADE,
-    vault_service_id BIGINT NOT NULL REFERENCES vault_service(service_id) ON DELETE CASCADE,
+    vault_project_id BIGINT NOT NULL REFERENCES vault_project(project_id) ON DELETE CASCADE,
 
-    PRIMARY KEY (api_key_id, vault_service_id)
+    PRIMARY KEY (api_key_id, vault_project_id)  -- Composite primary key to ensure uniqueness
 );
 
 
@@ -196,25 +196,10 @@ CREATE TABLE vault_project (
 );
 
 
--- Vault Project Service
-CREATE TABLE vault_service (
-    service_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    project_id BIGINT NOT NULL REFERENCES vault_project(project_id) ON DELETE CASCADE,
-
-    service_name VARCHAR(100) NOT NULL,
-    details JSONB NOT NULL,  -- Additional details for the vault project service
-
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
-
-    UNIQUE (service_name, project_id)
-);
-
-
 -- Vault Project Service Secret Keys store (Environment variables)
 CREATE TABLE vault_secret_keys (
     secret_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    service_id BIGINT NOT NULL REFERENCES vault_service(service_id) ON DELETE CASCADE,
+    project_id BIGINT NOT NULL REFERENCES vault_project(project_id) ON DELETE CASCADE,
 
     secret_name VARCHAR(100) NOT NULL,
     current_version BIGINT NOT NULL DEFAULT 1,  -- Current version that is in use
@@ -225,8 +210,8 @@ CREATE TABLE vault_secret_keys (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
-    -- Unique secret name per service and resource tag combination
-    UNIQUE (secret_name, service_id, resource_tag)
+    -- Unique secret name per project and resource tag combination
+    UNIQUE (secret_name, project_id, resource_tag)
 );
 
 
@@ -235,9 +220,12 @@ CREATE TABLE vault_secret_key_versions (
     secret_id BIGINT NOT NULL REFERENCES vault_secret_keys(secret_id) ON DELETE CASCADE,
     version_number BIGINT NOT NULL,  -- Version number of the secret key
 
-    is_encrypted BOOLEAN NOT NULL DEFAULT TRUE,  -- Indicates if the secret value is encrypted
-    -- TODO: Consider adding a flag to indicate if the secret value is hidden from the UI or logs
-    -- is_hidden BOOLEAN NOT NULL DEFAULT FALSE,  -- Indicates if the secret value is hidden (not shown in UI or anywhere else)
+    -- Indicates if the secret value is encrypted
+    is_encrypted BOOLEAN NOT NULL DEFAULT TRUE,
+
+    -- Indicates if the secret value is hidden from the UI or logs
+    is_hidden BOOLEAN NOT NULL DEFAULT FALSE,
+
     secret_value TEXT NOT NULL,  -- Encrypted AES-256-GCM secret value or plain text if not encrypted
 
     details JSONB NOT NULL,  -- Additional details like created_by, reason for change, etc.
@@ -246,6 +234,9 @@ CREATE TABLE vault_secret_key_versions (
 
     PRIMARY KEY (secret_id, version_number)
 );
+
+
+-- TODO: vault_config_files, vault_config_file_versions
 
 
 -- Vault Secure Notes
