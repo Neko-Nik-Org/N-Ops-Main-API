@@ -118,7 +118,9 @@ async fn main() -> std::io::Result<()> {
                 .service(user_roles::fetch_role)
                 .service(user_roles::create_role)
                 .service(user_roles::delete_role)
-                // .service(user_roles::update_user_role)    // Update Any User Role's Properties (Session user should have all sub-set of the role's permissions and all)
+                .service(user_roles::update_role_info)
+                // .service(user_roles::update_role_tags)
+                // .service(user_roles::update_role_permissions)
             )
             // .service(
             //     actix_scope("/api-keys")

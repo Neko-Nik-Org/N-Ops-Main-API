@@ -1,7 +1,7 @@
+use super::dto::{CreateNewRoleDto, UpdateRoleInfoDto};
 use crate::errors::{ServiceError, ServiceResult};
 use crate::features::users::SessionUser;
 use super::model::RolePermissions;
-use super::dto::CreateNewRoleDto;
 use crate::state::AppState;
 use super::repository;
 
@@ -97,6 +97,21 @@ pub async fn delete_role(state: &AppState, session_user: &SessionUser, role_id: 
 
     // Call the repository function to delete the role from the database
     repository::delete_role(&state.pg_pool, session_user.organization_id, role_id).await?;
+
+    Ok(())
+}
+
+
+/// Update the information of an existing role using the provided role ID and update data
+pub async fn update_role_info(state: &AppState, session_user: &SessionUser, role_id: i64, update_data: &UpdateRoleInfoDto) -> ServiceResult<()> {
+    // First fetch the role to ensure it exists and to perform any necessary validations
+    let role = repository::fetch_role(&state.pg_pool, session_user.organization_id, role_id).await?;
+
+    // Validate that the session user has the required permissions to update this role
+    validate_role_restrictions(session_user, &role)?;
+
+    // Call the repository function to update the role info in the database
+    repository::update_role_info(&state.pg_pool, session_user.organization_id, role_id, update_data).await?;
 
     Ok(())
 }

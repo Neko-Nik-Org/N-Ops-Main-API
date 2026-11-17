@@ -1,4 +1,4 @@
-use super::dto::{CreateNewRoleDto, ListRolesDto};
+use super::dto::{CreateNewRoleDto, ListRolesDto, UpdateRoleInfoDto};
 use deadpool_postgres::Pool as PgPool;
 use crate::errors::PgResult;
 use super::model::UserRole;
@@ -181,6 +181,32 @@ pub async fn delete_role(db_pool: &PgPool, organization_id: Uuid, role_id: i64) 
                 AND role_id = $2
             "#,
             &[
+                &organization_id,
+                &role_id,
+            ],
+        )
+        .await?;
+
+    Ok(())
+}
+
+
+pub async fn update_role_info(db_pool: &PgPool, organization_id: Uuid, role_id: i64, update_data: &UpdateRoleInfoDto) -> PgResult<()> {
+    let client = db_pool.get().await?;
+
+    client
+        .execute(
+            r#"
+            UPDATE user_role
+            SET role_name = $1,
+                role_description = $2,
+                updated_at = NOW()
+            WHERE organization_id = $3
+                AND role_id = $4
+            "#,
+            &[
+                &update_data.role_name,
+                &update_data.role_description,
                 &organization_id,
                 &role_id,
             ],

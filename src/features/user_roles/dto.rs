@@ -17,6 +17,13 @@ pub struct CreateNewRoleDto {
 
 
 #[derive(Deserialize)]
+pub struct UpdateRoleInfoDto {
+    pub role_name: String,
+    pub role_description: String,
+}
+
+
+#[derive(Deserialize)]
 pub struct ListRolesDto {
     pub role_name_search: Option<String>,
     pub limit: i64,
