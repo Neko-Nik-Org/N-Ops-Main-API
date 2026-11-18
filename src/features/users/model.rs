@@ -83,6 +83,7 @@ pub struct UserProfileInfo {
     // Contact information (Use only if it is verified)
     pub primary_email: String,
     pub is_email_verified: bool,
+    // pub anti_phishing_secret: String,
     pub is_user_active: bool,
     pub is_organization_active: bool,
 
@@ -93,6 +94,41 @@ pub struct UserProfileInfo {
 
     pub can_approve_approvals: bool,
     pub can_bypass_approvals: bool,
+}
+
+
+#[derive(RowFrom, Serialize)]
+pub struct UserProfileListing {
+    pub user_id: i64,
+
+    // Basic user information
+    pub user_name: String,
+    pub display_name: String,
+    pub user_details: JsonValue,
+
+    // Contact information (Use only if it is verified)
+    pub primary_email: String,
+    pub is_email_verified: bool,
+    // pub anti_phishing_secret: String,
+    pub is_active: bool,
+
+    // Security and access control
+    pub role_id: i64,
+
+    // Geo and IP restrictions
+    pub has_ip_restriction: bool,
+    pub has_geo_restriction: bool,
+    pub allowed_ips: Vec<String>,
+    pub allowed_geo_locations: Vec<String>,
+
+    // Two-factor authentication status
+    pub has_totp_2fa: bool,
+    pub has_email_2fa: bool,
+
+    // Timestamps for record tracking
+    pub created_at: ChronoUtc,
+    pub updated_at: ChronoUtc,
+    pub last_login_at: ChronoUtc,
 }
 
 

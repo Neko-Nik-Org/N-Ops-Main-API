@@ -56,3 +56,14 @@ Vault project permissions are related to managing and accessing projects within 
 | vault:project:edit   | Allows editing of existing vault projects |
 | vault:project:delete | Allows deletion of vault projects |
 
+
+## User Permissions
+
+User permissions are related to managing and accessing user accounts within the system.
+
+| Permission | Description |
+|------------|-------------|
+| user:view | Allows viewing of user accounts |
+| user:create | Allows creation of new user accounts |
+| user:edit   | Allows editing of existing user accounts |
+| user:delete | Allows deletion of user accounts |

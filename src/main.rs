@@ -93,17 +93,17 @@ async fn main() -> std::io::Result<()> {
                 .service(users::self_user_name_update)
                 .service(users::send_verification_email)
             )
-            // .service(
-            //     actix_scope("/user/admin")
-            //     .wrap(from_fn(middleware::user_session::auth_check))
-            //     .service(users::create_user)    // Create Any User
-            //     .service(users::update_user)    // Update Any User's Details
-            //     .service(users::reset_password) // Reset Any User's Password
-            //     .service(users::delete_user)    // Delete Any User
-            //     .service(users::list_users) // List All Users
-            //     .service(users::get_user) // Get Any User info
-            //     .service(users::admin_verify_email) // Admin verify any user's email (Bypass user verification)
-            // )
+            .service(
+                actix_scope("/user/admin")
+                .wrap(from_fn(middleware::user_session::auth_check))
+                .service(users::list_users)
+                // .service(users::create_user)    // Create Any User
+                // .service(users::update_user)    // Update Any User's Details
+                // .service(users::reset_password) // Reset Any User's Password
+                // .service(users::delete_user)    // Delete Any User
+                // .service(users::get_user) // Get Any User info
+                // .service(users::admin_verify_email) // Admin verify any user's email (Bypass user verification)
+            )
             .service(
                 actix_scope("/tag")
                 .wrap(from_fn(middleware::user_session::auth_check))

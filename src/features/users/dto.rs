@@ -55,3 +55,11 @@ pub struct UpdateProfileReqDto {
     pub display_name: String,
     pub primary_email: Option<String>,  // If given, the new primary email for the user
 }
+
+
+#[derive(Deserialize)]
+pub struct ListUsersReqDto {
+    pub user_name: Option<String>,  // Filter users by user name (optional)
+    pub limit: i64,
+    pub offset: i64
+}

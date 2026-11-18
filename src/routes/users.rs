@@ -1,5 +1,5 @@
 use crate::cache::redis_cache::{get_redis_cache, set_redis_cache, delete_redis_cache};
-use crate::features::users::{self, SessionUser, UpdateProfileReqDto};
+use crate::features::users::{self, SessionUser, UpdateProfileReqDto, ListUsersReqDto};
 use actix_web::{get, post, put, delete, web, HttpResponse};
 use crate::errors::{ApiResponse, ServiceError};
 use crate::state::AppState;
@@ -222,4 +222,18 @@ pub async fn update_profile(session_user: web::ReqData<SessionUser>, body: web::
     users::update_user_profile(&state, session_user.user_id, &update_request).await?;
 
     Ok(HttpResponse::Ok().body("Profile updated successfully"))
+}
+
+
+#[get("/list")]
+pub async fn list_users(session_user: web::ReqData<SessionUser>, query: web::Query<ListUsersReqDto>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let query = query.into_inner();
+
+    session_user.has_all_permissions(&["user:view"])?;
+
+    // Fetch the list of users from the database
+    let users_list = users::list_all_users(&state.pg_pool, session_user.organization_id, &query).await?;
+
+    Ok(HttpResponse::Ok().json(users_list))
 }

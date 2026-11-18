@@ -1,7 +1,7 @@
-use super::model::{OrgInfo, UserProfileInfo};
+use super::model::{OrgInfo, UserProfileInfo, UserProfileListing};
+use super::dto::{AuthInfoDbDto, ListUsersReqDto};
 use deadpool_postgres::Pool as PgPool;
 use serde_json::Value as JsonValue;
-use super::dto::AuthInfoDbDto;
 use crate::errors::PgResult;
 use std::net::IpAddr;
 
@@ -425,4 +425,51 @@ pub async fn update_user_primary_email(db_pool: &PgPool, user_id: i64, new_prima
         .await?;
 
     Ok(result)
+}
+
+
+pub async fn list_all_users(db_pool: &PgPool, organization_id: uuid::Uuid, query: &ListUsersReqDto) -> PgResult<Vec<UserProfileListing>> {
+    let client = db_pool.get().await?;
+
+    let rows = client.query(
+        r#"
+        SELECT
+            user_id,
+            user_name,
+            display_name,
+            user_details,
+            primary_email,
+            is_email_verified,
+            is_active,
+            role_id,
+            has_ip_restriction,
+            has_geo_restriction,
+            allowed_ips,
+            allowed_geo_locations,
+            has_totp_2fa,
+            has_email_2fa,
+            created_at,
+            updated_at,
+            last_login_at
+        FROM app_user
+        WHERE organization_id = $1
+        AND (
+            $2::TEXT IS NULL
+            OR
+            user_name ILIKE '%' || $2 || '%'
+        )
+        ORDER BY user_name ASC
+        LIMIT $3
+        OFFSET $4
+        "#,
+        &[
+            &organization_id,
+            &query.user_name,
+            &query.limit,
+            &query.offset
+        ],
+    )
+    .await?;
+
+    Ok(UserProfileListing::from_rows(rows))
 }
