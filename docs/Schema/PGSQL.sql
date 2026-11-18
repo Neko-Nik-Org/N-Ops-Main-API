@@ -353,3 +353,14 @@ CREATE TABLE approval_admin (
 
     PRIMARY KEY (approval_id, admin_user_id)
 );
+
+
+CREATE TABLE approval_interaction_users (
+    approval_id BIGINT NOT NULL REFERENCES approval_main(approval_id) ON DELETE CASCADE,
+    user_id BIGINT NOT NULL REFERENCES app_user(user_id) ON DELETE CASCADE,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    PRIMARY KEY (approval_id, user_id)
+);
