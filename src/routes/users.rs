@@ -228,12 +228,26 @@ pub async fn update_profile(session_user: web::ReqData<SessionUser>, body: web::
 #[get("/list")]
 pub async fn list_users(session_user: web::ReqData<SessionUser>, query: web::Query<ListUsersReqDto>, state: web::Data<AppState>) -> ApiResponse {
     let session_user = session_user.into_inner();
-    let query = query.into_inner();
+    let list_users_query = query.into_inner();
 
     session_user.has_all_permissions(&["user:view"])?;
 
     // Fetch the list of users from the database
-    let users_list = users::list_all_users(&state.pg_pool, session_user.organization_id, &query).await?;
+    let users_list = users::list_all_users(&state.pg_pool, session_user.organization_id, &list_users_query).await?;
 
     Ok(HttpResponse::Ok().json(users_list))
+}
+
+
+#[get("/fetch/{user_id}")]
+pub async fn get_user(session_user: web::ReqData<SessionUser>, path: web::Path<i64>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let user_id = path.into_inner();
+
+    session_user.has_all_permissions(&["user:view"])?;
+
+    // Fetch the user by ID from the database
+    let user = users::fetch_user_by_id_listing(&state.pg_pool, session_user.organization_id, user_id).await?;
+
+    Ok(HttpResponse::Ok().json(user))
 }

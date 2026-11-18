@@ -10,10 +10,10 @@ SET permissions = ARRAY(
     SELECT DISTINCT permission
     FROM UNNEST(
         permissions || ARRAY[
-            'vault:project:view',
-            'vault:project:create',
-            'vault:project:edit',
-            'vault:project:delete'
+            'user:view',
+            'user:create',
+            'user:edit',
+            'user:delete'
         ]::TEXT[]
     ) AS permission
 ),

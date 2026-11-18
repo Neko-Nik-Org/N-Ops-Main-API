@@ -9,6 +9,7 @@ pub use dto::{LoginReqDto, UpdateProfileReqDto, ListUsersReqDto};
 pub use model::SessionUser;
 pub use repository::{
     update_user_email_verified,
+    fetch_user_by_id_listing,
     check_username_exists,
     update_last_login_at,
     fetch_user_profile,

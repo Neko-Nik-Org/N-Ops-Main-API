@@ -473,3 +473,38 @@ pub async fn list_all_users(db_pool: &PgPool, organization_id: uuid::Uuid, query
 
     Ok(UserProfileListing::from_rows(rows))
 }
+
+
+pub async fn fetch_user_by_id_listing(db_pool: &PgPool, organization_id: uuid::Uuid, user_id: i64) -> PgResult<Option<UserProfileListing>> {
+    let client = db_pool.get().await?;
+
+    let row = client.query_opt(
+        r#"
+        SELECT
+            user_id,
+            user_name,
+            display_name,
+            user_details,
+            primary_email,
+            is_email_verified,
+            is_active,
+            role_id,
+            has_ip_restriction,
+            has_geo_restriction,
+            allowed_ips,
+            allowed_geo_locations,
+            has_totp_2fa,
+            has_email_2fa,
+            created_at,
+            updated_at,
+            last_login_at
+        FROM app_user
+        WHERE organization_id = $1
+        AND user_id = $2
+        "#,
+        &[&organization_id, &user_id],
+    )
+    .await?;
+
+    Ok(row.map(UserProfileListing::from))
+}
