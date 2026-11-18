@@ -1,16 +1,8 @@
 use actix_web::{http::StatusCode, HttpResponse, ResponseError};
 use super::service::ServiceError;
-use serde::Serialize;
 
 
 pub type ApiResponse = Result<HttpResponse, ServiceError>;
-
-
-#[derive(Debug, Serialize)]
-struct ErrorResp {
-    error: String,
-    code: u16
-}
 
 
 // ------- Implementations ------- //
@@ -40,13 +32,6 @@ impl ResponseError for ServiceError {
     fn error_response(&self) -> HttpResponse {
         let status = self.status_code();
 
-        // Full internal error goes to logs.
-        tracing::error!(
-            error = ?self,
-            status = %status,
-            "Application error"
-        );
-
         // Only safe information goes to the client.
         let message = match self {
             ServiceError::BadRequest(message)
@@ -58,19 +43,34 @@ impl ResponseError for ServiceError {
             | ServiceError::Gone(message) => message.as_str(),
 
             // Hidden internal errors
-            ServiceError::SerDe(_) => "Error parsing data",
-            ServiceError::Reqwest(_) => "Upstream API service error",
-            ServiceError::Redis(_) => "Cache Database error",
-            ServiceError::Pgsql(_) => "SQL Database error",
-            ServiceError::LettreAddress(_) => "Invalid email address",
-            ServiceError::LettreBase(_) => "Email sending error",
-            ServiceError::LettreSmtp(_) => "SMTP server error",
-            ServiceError::RandomGeneration(_) => "Random number generation error",
+            ServiceError::SerDe(_) => "E121: Error parsing data",
+            ServiceError::Reqwest(_) => "E141: Upstream API service error",
+            ServiceError::Redis(_) => "E102: Cache Database error",
+            ServiceError::Pgsql(_) => "E112: SQL Database error",
+            ServiceError::LettreAddress(_) => "E122: Invalid email address",
+            ServiceError::LettreBase(_) => "E131: Email sending error",
+            ServiceError::LettreSmtp(_) => "E132: SMTP server error",
+            ServiceError::RandomGeneration(_) => "E123: Random number generation error",
         };
 
-        HttpResponse::build(status).json(ErrorResp {
-            error: message.to_owned(),
-            code: status.as_u16(),
-        })
+        // Full internal error goes to logs.
+        tracing::error!(
+            error = ?self,
+            status = %status,
+            message = %message,
+            "Application service error"
+        );
+
+        // Extract the error code from the message.
+        let error_code = message
+            .split(':')
+            .next()
+            .unwrap_or("E000");
+
+        HttpResponse::build(status).json(serde_json::json!({
+            "error": message,
+            "code": error_code,
+            "status": status.as_u16()
+        }))
     }
 }

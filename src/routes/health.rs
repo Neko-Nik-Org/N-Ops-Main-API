@@ -11,12 +11,12 @@ use crate::state::AppState;
 async fn full_health_check(state: web::Data<AppState>) -> ApiResponse {
     // PGSQL DB Health Check
     if let Err(_) = pg_health_check(&state.pg_pool).await {
-        return Err(ServiceError::PreconditionFailed("Database is not healthy!".into()));
+        return Err(ServiceError::PreconditionFailed("E111: Database is not healthy!".into()));
     }
 
     // Redis cache health check
     if let Err(_) = redis_cache::redis_health_check(&state.redis_cache).await {
-        return Err(ServiceError::PreconditionFailed("Redis cache is not healthy!".into()));
+        return Err(ServiceError::PreconditionFailed("E101: Redis cache is not healthy!".into()));
     }
 
     Ok(HttpResponse::Ok().body("All services are running!"))

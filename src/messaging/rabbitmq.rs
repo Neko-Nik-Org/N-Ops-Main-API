@@ -47,6 +47,6 @@ pub async fn send_notification_to_rmq<T>(notification_type: &str, payload: &T) -
 
         tracing::error!("Failed to send notification to RMQ: {}", error_text);
 
-        Err(ServiceError::BadRequest(format!("Failed to send notification to RMQ: {}", error_text)))
+        Err(ServiceError::BadRequest(format!("E144: Failed to send notification to RMQ: {}", error_text)))
     }
 }

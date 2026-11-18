@@ -103,42 +103,42 @@ pub fn validate_base64_password(base64_password: &str) -> ServiceResult<()> {
     let raw_password = match String::from_utf8(decode_base64_password(base64_password)) {
         Ok(s) => s,
         Err(_) => return Err(ServiceError::BadRequest(
-            "Invalid base64 password".to_string()
+            "E201: Invalid base64 password".to_string()
         )),
     };
 
     // Should be length range 8-64 characters
     if raw_password.len() < 8 || raw_password.len() > 64 {
         return Err(ServiceError::BadRequest(
-            "Password must be between 8 and 64 characters".to_string()
+            "E202: Password must be between 8 and 64 characters".to_string()
         ));
     }
 
     // At least 1 Uppercase letter
     if raw_password.chars().all(|c| !c.is_uppercase()) {
         return Err(ServiceError::BadRequest(
-            "Password must contain at least one uppercase letter".to_string()
+            "E203: Password must contain at least one uppercase letter".to_string()
         ));
     }
 
     // At least 1 Lowercase letter
     if raw_password.chars().all(|c| !c.is_lowercase()) {
         return Err(ServiceError::BadRequest(
-            "Password must contain at least one lowercase letter".to_string()
+            "E204: Password must contain at least one lowercase letter".to_string()
         ));
     }
 
     // At least 1 Digit
     if raw_password.chars().all(|c| !c.is_digit(10)) {
         return Err(ServiceError::BadRequest(
-            "Password must contain at least one digit".to_string()
+            "E205: Password must contain at least one digit".to_string()
         ));
     }
 
     // At least 1 Special character
     if raw_password.chars().all(|c| c.is_alphanumeric()) {
         return Err(ServiceError::BadRequest(
-            "Password must contain at least one special character".to_string()
+            "E206: Password must contain at least one special character".to_string()
         ));
     }
 
@@ -151,49 +151,49 @@ pub fn validate_username(username: &str) -> ServiceResult<()> {
     // Should be length range 3-99 characters
     if username.len() < 3 || username.len() > 100 {
         return Err(ServiceError::BadRequest(
-            "Username must be between 3 and 100 characters".to_string()
+            "E211: Username must be between 3 and 100 characters".to_string()
         ));
     }
 
     // Should only contain alphanumeric characters and underscores
     if !username.chars().all(|c| c.is_alphanumeric() || c == '_') {
         return Err(ServiceError::BadRequest(
-            "Username can only contain alphanumeric characters and underscores".to_string()
+            "E212: Username can only contain alphanumeric characters and underscores".to_string()
         ));
     }
 
     // Should not start with a digit
     if username.chars().next().map(|c| c.is_digit(10)).unwrap_or(false) {
         return Err(ServiceError::BadRequest(
-            "Username cannot start with a digit".to_string()
+            "E213: Username cannot start with a digit".to_string()
         ));
     }
 
     // Should not contain consecutive underscores
     if username.contains("__") {
         return Err(ServiceError::BadRequest(
-            "Username cannot contain consecutive underscores".to_string()
+            "E214: Username cannot contain consecutive underscores".to_string()
         ));
     }
 
     // Should not start or end with an underscore
     if username.starts_with('_') || username.ends_with('_') {
         return Err(ServiceError::BadRequest(
-            "Username cannot start or end with an underscore".to_string()
+            "E215: Username cannot start or end with an underscore".to_string()
         ));
     }
 
     // Should not contain spaces
     if username.contains(' ') {
         return Err(ServiceError::BadRequest(
-            "Username cannot contain spaces".to_string()
+            "E216: Username cannot contain spaces".to_string()
         ));
     }
 
     // Should not contain any non-ASCII characters
     if !username.is_ascii() {
         return Err(ServiceError::BadRequest(
-            "Username can only contain ASCII characters".to_string()
+            "E217: Username can only contain ASCII characters".to_string()
         ));
     }
 

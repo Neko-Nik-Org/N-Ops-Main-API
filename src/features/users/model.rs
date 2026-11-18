@@ -167,7 +167,7 @@ impl SessionUser {
         if required_permissions.iter().all(|&perm| self.permissions.contains(&perm.to_string())) {
             Ok(())
         } else {
-            Err(ServiceError::Forbidden("Insufficient permissions".into()))
+            Err(ServiceError::Forbidden("E221: Insufficient permissions".into()))
         }
     }
 
@@ -182,7 +182,7 @@ impl SessionUser {
         if self.tags.contains(&tag_id) {
             Ok(())
         } else {
-            Err(ServiceError::Forbidden("Insufficient tag access".into()))
+            Err(ServiceError::Forbidden("E222: Insufficient tag access".into()))
         }
     }
 

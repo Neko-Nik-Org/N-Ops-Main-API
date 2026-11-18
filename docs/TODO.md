@@ -146,6 +146,7 @@ Side panel will have
         - Export/Download audit logs
         - Filter audit logs by date, user, or action type
         - Only for 90 days
+        - Enterprise Error handling with Error codes
         - Can auto export audit logs periodically (Use the Workflow system!)
 
 - Servers (Single view - Admin kind)

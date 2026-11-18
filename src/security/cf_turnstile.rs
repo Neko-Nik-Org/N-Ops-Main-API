@@ -29,13 +29,13 @@ pub async fn verify_turnstile_response(response_token: &str) -> ServiceResult<()
         } else {
             tracing::error!("Failed to verify CAPTCHA response: {:?}", response_json);
 
-            Err(ServiceError::BadRequest("Failed to verify CAPTCHA response".into()))
+            Err(ServiceError::BadRequest("E142: Failed to verify CAPTCHA response".into()))
         }
     } else {
         let error_text = response.text().await?;
 
         tracing::error!("Error verifying CAPTCHA response: {}", error_text);
 
-        Err(ServiceError::BadRequest("Error verifying CAPTCHA response".into()))
+        Err(ServiceError::BadRequest("E143: Error verifying CAPTCHA response".into()))
     }
 }

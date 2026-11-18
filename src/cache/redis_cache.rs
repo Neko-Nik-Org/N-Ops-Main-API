@@ -61,7 +61,7 @@ pub async fn redis_health_check(conn: &MultiplexedConnection) -> ServiceResult<(
     let pong: String = redis::cmd("PING").query_async(&mut redis_conn).await?;
     if pong != "PONG" {
         tracing::warn!("Unexpected PING response from Redis: {}", pong);
-        return Err(ServiceError::PreconditionFailed("Redis cache DB health check failed!".into()));
+        return Err(ServiceError::PreconditionFailed("E101: Redis cache DB health check failed!".into()));
     }
 
     Ok(())
@@ -78,7 +78,7 @@ pub async fn init_redis(url: &str) -> MultiplexedConnection {
     let pong: String = redis::cmd("PING").query_async(&mut conn).await.expect("Failed to ping Redis");
     if pong != "PONG" {
         tracing::warn!("Unexpected PING response from Redis: {}", pong);
-        panic!("Failed to connect to Redis");
+        panic!("E101: Failed to connect to Redis");
     }
 
     conn
