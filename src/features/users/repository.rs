@@ -309,7 +309,7 @@ pub async fn check_username_exists(db_pool: &PgPool, username: &str) -> PgResult
             SELECT EXISTS(
                 SELECT 1
                 FROM app_user
-                WHERE username = $1
+                WHERE user_name = $1
             ) AS username_exists
             "#,
             &[&username],
