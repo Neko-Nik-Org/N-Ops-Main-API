@@ -61,6 +61,9 @@ Vault project permissions are related to managing and accessing projects within 
 
 User permissions are related to managing and accessing user accounts within the system.
 
+> Note: If the user has user:create permission, they can bypass tag and role level restrictions when creating a new user. *So, make sure granting this permission is done carefully and only to trusted users!*
+
+
 | Permission | Description |
 |------------|-------------|
 | user:view | Allows viewing of user accounts |

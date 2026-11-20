@@ -1,5 +1,5 @@
+use super::dto::{AuthInfoDbDto, ListUsersReqDto, CreateUserReqDto};
 use super::model::{OrgInfo, UserProfileInfo, UserProfileListing};
-use super::dto::{AuthInfoDbDto, ListUsersReqDto};
 use deadpool_postgres::Pool as PgPool;
 use serde_json::Value as JsonValue;
 use crate::errors::PgResult;
@@ -507,4 +507,103 @@ pub async fn fetch_user_by_id_listing(db_pool: &PgPool, organization_id: uuid::U
     .await?;
 
     Ok(row.map(UserProfileListing::from))
+}
+
+
+pub async fn create_user(db_pool: &PgPool, organization_id: uuid::Uuid, password_hash: &str, create_request: &CreateUserReqDto) -> PgResult<u64> {
+    let mut client = db_pool.get().await?;
+
+    // Start transaction
+    let transaction = client.transaction().await?;
+
+    // 1. Lock organization and retrieve user limit
+    let org = transaction
+        .query_opt(
+            r#"
+            SELECT user_limit
+            FROM organization
+            WHERE organization_id = $1
+            FOR UPDATE
+            "#,
+            &[&organization_id],
+        )
+        .await?;
+
+    // If the organization does not exist, rollback and return 0
+    let Some(org) = org else {
+        transaction.rollback().await?;
+        return Ok(0);
+    };
+    let user_limit: i32 = org.get("user_limit");
+
+    // 2. Count existing users in the organization
+    let current_users: i64 = transaction
+        .query_one(
+            r#"
+            SELECT COUNT(*)::BIGINT
+            FROM app_user
+            WHERE organization_id = $1
+            "#,
+            &[&organization_id],
+        )
+        .await?
+        .get(0);
+
+    // 3. Check organization user limit
+    if current_users >= user_limit as i64 {
+        transaction.rollback().await?;
+        return Ok(0);
+    }
+
+    // 4. Insert only if the role belongs to this organization
+    let result = transaction
+        .execute(
+            r#"
+            INSERT INTO app_user (
+                organization_id,
+                user_name,
+                password_hash,
+                display_name,
+                primary_email,
+                user_details,
+                ui_info,
+                is_active,
+                role_id,
+                has_ip_restriction,
+                has_geo_restriction,
+                allowed_ips,
+                allowed_geo_locations
+            )
+            SELECT
+                $1, $2, $3, $4, $5, $6,
+                '{}'::jsonb,
+                $7, $8, $9, $10, $11, $12
+            WHERE EXISTS (
+                SELECT 1
+                FROM user_role
+                WHERE organization_id = $1
+                  AND role_id = $8
+            )
+            "#,
+            &[
+                &organization_id,
+                &create_request.user_name,
+                &password_hash,
+                &create_request.display_name,
+                &create_request.primary_email,
+                &create_request.user_details,
+                &create_request.is_active,
+                &create_request.role_id,
+                &create_request.has_ip_restriction,
+                &create_request.has_geo_restriction,
+                &create_request.allowed_ips,
+                &create_request.allowed_geo_locations,
+            ],
+        )
+        .await?;
+
+    // 5. Commit transaction
+    transaction.commit().await?;
+
+    Ok(result)
 }

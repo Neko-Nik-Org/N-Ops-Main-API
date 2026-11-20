@@ -66,6 +66,7 @@ async fn main() -> std::io::Result<()> {
                 .service(auth::user_login)
                 // .service(auth::forgot_password)  // Send an email with a link to reset password
                 // .service(auth::reset_password)  // Reset password using a token sent via email
+                // .service(users::join_org_invite)  // User registration by link (invitation based)
                 // .service(mfa::resend_otp)
                 // .service(mfa::verify_otp)
                 .service(
@@ -96,12 +97,13 @@ async fn main() -> std::io::Result<()> {
             .service(
                 actix_scope("/user/admin")
                 .wrap(from_fn(middleware::user_session::auth_check))
+                .service(users::create_user)
                 .service(users::list_users)
                 .service(users::get_user)
-                // .service(users::create_user)    // Create Any User
                 // .service(users::update_user)    // Update Any User's Details
                 // .service(users::reset_password) // Reset Any User's Password
                 // .service(users::delete_user)    // Delete Any User
+                // .service(users::send_invitation) // Send an invitation to a user to join the organization (email send with link)
                 // .service(users::admin_verify_email) // Admin verify any user's email (Bypass user verification)
             )
             .service(

@@ -1,5 +1,5 @@
+use crate::features::users::{self, SessionUser, UpdateProfileReqDto, ListUsersReqDto, CreateUserReqDto};
 use crate::cache::redis_cache::{get_redis_cache, set_redis_cache, delete_redis_cache};
-use crate::features::users::{self, SessionUser, UpdateProfileReqDto, ListUsersReqDto};
 use actix_web::{get, post, put, delete, web, HttpResponse};
 use crate::errors::{ApiResponse, ServiceError};
 use crate::state::AppState;
@@ -250,4 +250,21 @@ pub async fn get_user(session_user: web::ReqData<SessionUser>, path: web::Path<i
     let user = users::fetch_user_by_id_listing(&state.pg_pool, session_user.organization_id, user_id).await?;
 
     Ok(HttpResponse::Ok().json(user))
+}
+
+
+#[post("/create")]
+pub async fn create_user(session_user: web::ReqData<SessionUser>, body: web::Json<CreateUserReqDto>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let create_request = body.into_inner();
+
+    session_user.has_all_permissions(&["user:view", "user:create", "user:role:view"])?;
+
+    // Note: If the user has user:create permission, they can bypass tag and role level restrictions when creating a new user
+    // So, make sure granting this permission is done carefully and only to trusted users!
+
+    // Create the user in the database
+    users::create_user(&state, &session_user, &create_request).await?;
+
+    Ok(HttpResponse::Ok().body("User created successfully"))
 }

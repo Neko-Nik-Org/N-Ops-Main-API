@@ -1,10 +1,12 @@
 use crate::security::auth_tools::{verify_password_hash, check_ip_range_allowed, validate_base64_password, generate_password_hash, validate_username};
+use super::dto::{LoginReqDto, AuthInfoDbDto, UpdateProfileReqDto, CreateUserReqDto};
 use crate::cache::redis_cache::{set_redis_cache, delete_redis_cache};
-use super::dto::{LoginReqDto, AuthInfoDbDto, UpdateProfileReqDto};
 use crate::errors::{ServiceError, ServiceResult};
 use super::model::SessionUser;
 use crate::state::AppState;
 use super::repository;
+use uuid::Uuid;
+
 
 
 async fn validate_geo_and_ip_restrictions(state: &AppState, client_ip: &str, user_auth_info: &AuthInfoDbDto) -> ServiceResult<()> {
@@ -146,6 +148,32 @@ pub async fn update_user_profile(state: &AppState, user_id: i64, update_request:
         if result == 0 {
             return Err(ServiceError::BadRequest("Failed to update user primary email in the database".into()));
         }
+    }
+
+    Ok(())
+}
+
+
+/// Create a new user in the system
+pub async fn create_user(state: &AppState, session_user: &SessionUser, create_request: &CreateUserReqDto) -> ServiceResult<()> {
+    // Validate the username against the defined username policy
+    validate_username(&create_request.user_name)?;
+
+    // Validate the password against the defined password policy
+    validate_base64_password(&create_request.password)?;
+
+    // Generate the password hash from the provided password
+    let password_hash = generate_password_hash(&create_request.password);
+
+    // Create the user in the repository
+    let result = repository::create_user(
+        &state.pg_pool,
+        session_user.organization_id,
+        &password_hash,
+        &create_request,
+    ).await?;
+    if result == 0 {
+        return Err(ServiceError::BadRequest("Failed to create user in the database".into()));
     }
 
     Ok(())

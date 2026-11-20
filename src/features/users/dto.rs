@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use serde_json::Value as JsonValue;
 use pg_row_derive::RowFrom;
 use uuid::Uuid;
 
@@ -62,4 +63,25 @@ pub struct ListUsersReqDto {
     pub user_name: Option<String>,  // Filter users by user name (optional)
     pub limit: i64,
     pub offset: i64
+}
+
+
+#[derive(Deserialize)]
+pub struct CreateUserReqDto {
+    pub user_name: String,
+    pub display_name: String,
+
+    pub primary_email: String,
+    pub user_details: JsonValue,
+    pub is_active: bool,
+
+    pub role_id: i64,
+    pub password: String,    // Base64 encoded password
+
+    // TODO: Move this to new policy based (Restriction Policy)
+    pub has_ip_restriction: bool,
+    pub has_geo_restriction: bool,
+    pub allowed_ips: Vec<String>,
+    pub allowed_geo_locations: Vec<String>,
+    // TODO: Also add something like enforcement policies like should have 2FA enabled, etc.
 }
