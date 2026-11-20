@@ -608,3 +608,21 @@ pub async fn create_user(db_pool: &PgPool, organization_id: uuid::Uuid, password
 
     Ok(result)
 }
+
+
+pub async fn delete_user(db_pool: &PgPool, organization_id: uuid::Uuid, user_id: i64) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            DELETE FROM app_user
+            WHERE organization_id = $1
+              AND user_id = $2
+            "#,
+            &[&organization_id, &user_id],
+        )
+        .await?;
+
+    Ok(result)
+}

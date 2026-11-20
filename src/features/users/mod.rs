@@ -26,5 +26,6 @@ pub use repository::{
     reset_user_details,
     deactivate_user,
     list_all_users,
-    fetch_org_info
+    fetch_org_info,
+    delete_user
 };

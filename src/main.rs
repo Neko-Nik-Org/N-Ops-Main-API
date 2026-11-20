@@ -99,11 +99,11 @@ async fn main() -> std::io::Result<()> {
                 .wrap(from_fn(middleware::user_session::auth_check))
                 .service(users::set_verify_email)
                 .service(users::reset_password)
+                .service(users::delete_user)
                 .service(users::create_user)
                 .service(users::list_users)
                 .service(users::get_user)
                 // .service(users::update_user)    // Update Any User's Details
-                // .service(users::delete_user)    // Delete Any User
                 // .service(users::send_invitation) // Send an invitation to a user to join the organization (email send with link)
             )
             .service(

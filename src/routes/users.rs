@@ -300,3 +300,23 @@ pub async fn reset_password(session_user: web::ReqData<SessionUser>, path: web::
 
     Ok(HttpResponse::NoContent().finish())
 }
+
+
+#[delete("/delete/{user_id}")]
+pub async fn delete_user(session_user: web::ReqData<SessionUser>, path: web::Path<i64>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let user_id = path.into_inner();
+
+    session_user.has_all_permissions(&["user:view", "user:edit"])?;
+
+    // This will permanently delete the user and its related data from the organization, so use with caution.
+    // Including Shared Notes, Private Notes, and any other user-specific data
+
+    // Admin delete the user from the database
+    let result = users::delete_user(&state.pg_pool, session_user.organization_id, user_id).await?;
+    if result == 0 {
+        return Ok(HttpResponse::ImUsed().body("User already deleted and not present in the organization"));
+    }
+
+    Ok(HttpResponse::NoContent().finish())
+}
