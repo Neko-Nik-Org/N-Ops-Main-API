@@ -66,6 +66,7 @@ pub async fn list_organizations(db_pool: &PgPool, query: ListOrgsDto) -> PgResul
                 $1::TEXT IS NULL
                 OR organization_name ILIKE '%' || $1 || '%'
             )
+            ORDER BY organization_name ASC
             LIMIT $2
             OFFSET $3
             "#,
@@ -121,6 +122,41 @@ pub async fn create_organization(db_pool: &PgPool, encryption_key: &str, org_dat
                 &org_data.ss_keys_limit,
                 &org_data.ss_notes_limit,
             ],
+        )
+        .await?;
+
+    Ok(result)
+}
+
+
+pub async fn delete_organization(db_pool: &PgPool, organization_id: uuid::Uuid) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            DELETE FROM organization
+            WHERE organization_id = $1
+            "#,
+            &[&organization_id],
+        )
+        .await?;
+
+    Ok(result)
+}
+
+
+pub async fn organization_state_change(db_pool: &PgPool, organization_id: uuid::Uuid, is_active: bool) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            UPDATE organization
+            SET is_active = $1
+            WHERE organization_id = $2
+            "#,
+            &[&is_active, &organization_id],
         )
         .await?;
 

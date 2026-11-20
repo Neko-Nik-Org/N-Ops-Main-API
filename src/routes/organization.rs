@@ -40,3 +40,25 @@ pub async fn create_organization(body: web::Json<CreateOrgDto>, state: web::Data
 
     Ok(HttpResponse::Created().finish())
 }
+
+
+#[delete("/delete/{organization_id}")]
+pub async fn delete_organization(path: web::Path<uuid::Uuid>, state: web::Data<AppState>) -> ApiResponse {
+    let organization_id = path.into_inner();
+
+    // Delete the organization using the provided organization_id
+    organization::delete_organization(&state.pg_pool, organization_id).await?;
+
+    Ok(HttpResponse::NoContent().finish())
+}
+
+
+#[put("/state/{organization_id}/{is_active}")]
+pub async fn organization_state_change(path: web::Path<(uuid::Uuid, bool)>, state: web::Data<AppState>) -> ApiResponse {
+    let (organization_id, is_active) = path.into_inner();
+
+    // Change the state of the organization using the provided organization_id and is_active flag
+    organization::organization_state_change(&state.pg_pool, organization_id, is_active).await?;
+
+    Ok(HttpResponse::Ok().finish())
+}
