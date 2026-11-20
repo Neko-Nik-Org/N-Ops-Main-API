@@ -15,21 +15,22 @@ use lettre::{
 };
 
 
-// Email templates for various email types
-
+// Verification Email - Send OTP to user's email
 const VERIFY_EMAIL_HTML: &str = include_str!("../../templates/verify_email/email_otp.html");
-
 const VERIFY_EMAIL_TEXT: &str = include_str!("../../templates/verify_email/email_otp.txt");
 
-const VERIFY_EMAIL_SUCCESS_HTML: &str = include_str!("../../templates/verify_email/email_success.html");
 
+// Verification Email Success - Notify user of successful email verification
+const VERIFY_EMAIL_SUCCESS_HTML: &str = include_str!("../../templates/verify_email/email_success.html");
 const VERIFY_EMAIL_SUCCESS_TEXT: &str = include_str!("../../templates/verify_email/email_success.txt");
 
-const WELCOME_EMAIL_HTML: &str = include_str!("../../templates/initial_email/welcome_email.html");
 
+// Welcome Email - Sent to new users after account creation
+const WELCOME_EMAIL_HTML: &str = include_str!("../../templates/initial_email/welcome_email.html");
 const WELCOME_EMAIL_TEXT: &str = include_str!("../../templates/initial_email/welcome_email.txt");
 
 
+// Internal Email Message Structure
 struct EmailMessage {
     send_to: Mailbox,
     subject: String,
