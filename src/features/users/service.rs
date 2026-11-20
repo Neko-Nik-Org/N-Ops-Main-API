@@ -96,7 +96,7 @@ pub async fn refresh_user_session(state: &AppState, session_user: &SessionUser) 
 
 
 /// Update the password for the given user
-pub async fn update_user_password(state: &AppState, user_id: i64, new_password_base64: &str) -> ServiceResult<()> {
+pub async fn update_user_password(state: &AppState, organization_id: Uuid, user_id: i64, new_password_base64: &str) -> ServiceResult<()> {
     // Validate the new password against the defined password policy
     validate_base64_password(&new_password_base64)?;
 
@@ -104,7 +104,7 @@ pub async fn update_user_password(state: &AppState, user_id: i64, new_password_b
     let new_password_hash = generate_password_hash(&new_password_base64);
 
     // Update the password in the repository
-    let result = repository::update_user_password(&state.pg_pool, user_id, &new_password_hash).await?;
+    let result = repository::update_user_password(&state.pg_pool, organization_id, user_id, &new_password_hash).await?;
     if result == 0 {
         return Err(ServiceError::BadRequest("Failed to update user password in the database".into()));
     }

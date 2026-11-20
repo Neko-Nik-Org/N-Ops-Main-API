@@ -177,7 +177,7 @@ pub async fn self_password(session_user: web::ReqData<SessionUser>, body: web::J
     let new_password_base64 = body.into_inner();
 
     // Update the user's password in the database
-    users::update_user_password(&state, session_user.user_id, &new_password_base64).await?;
+    users::update_user_password(&state, session_user.organization_id, session_user.user_id, &new_password_base64).await?;
 
     Ok(HttpResponse::Ok().body("Password changed successfully"))
 }
@@ -282,6 +282,21 @@ pub async fn set_verify_email(session_user: web::ReqData<SessionUser>, path: web
     if result == 0 {
         return Ok(HttpResponse::NotFound().body("User not found in the organization"));
     }
+
+    Ok(HttpResponse::NoContent().finish())
+}
+
+
+#[put("/reset/password/{user_id}")]
+pub async fn reset_password(session_user: web::ReqData<SessionUser>, path: web::Path<i64>, body: web::Json<String>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let user_id = path.into_inner();
+    let new_password = body.into_inner();   // Base64 encoded new password
+
+    session_user.has_all_permissions(&["user:view", "user:edit"])?;
+
+    // Admin reset - Update the user's password in the database
+    users::update_user_password(&state, session_user.organization_id, user_id, &new_password).await?;
 
     Ok(HttpResponse::NoContent().finish())
 }
