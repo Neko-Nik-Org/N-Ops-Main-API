@@ -57,13 +57,7 @@ async fn main() -> std::io::Result<()> {
             // .service(
             //     actix_scope("/super-admin/user")
             //     .wrap(from_fn(middleware::key_based::admin_auth_check))
-            //     .service(users::admin_create_user)
-            //     .service(users::admin_update_user)
-            //     .service(users::admin_reset_password)
-            //     .service(users::admin_delete_user)
-            //     .service(users::admin_list_users)
-            //     .service(users::admin_get_user)
-            //     .service(users::admin_verify_email)
+            //     .service(users::invite_admin_user)  // Send an email invitation to an admin user (Full access one)
             // )
             .service(
                 actix_scope("/auth")
