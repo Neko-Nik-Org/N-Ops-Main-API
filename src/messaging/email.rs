@@ -103,3 +103,32 @@ pub async fn send_verification_email(session_user: &SessionUser, otp: &str) -> S
     // Send the email using the basic email sending function
     send_basic_email(email_message).await
 }
+
+
+/// Sends a welcome email to new users after account creation
+pub async fn send_welcome_email(display_name: &str, primary_email: &str) -> ServiceResult<()> {
+    // Prepare the HTML and plain text bodies for the welcome email
+    let html_body = WELCOME_EMAIL_HTML
+        .replace("{{DISPLAY_NAME}}", display_name)
+        .replace("2026", "2026");
+
+    let plain_body = WELCOME_EMAIL_TEXT
+        .replace("{{DISPLAY_NAME}}", display_name);
+
+    // Build the recipient mailbox for the email
+    let send_to_email = Mailbox::new(
+        Some(display_name.to_string()),
+        primary_email.parse()?
+    );
+
+    // Build the email message using the recipient mailbox and prepared bodies
+    let email_message = EmailMessage {
+        send_to: send_to_email,
+        subject: "Welcome to Our Service".to_string(),
+        plain_body,
+        html_body,
+    };
+
+    // Send the email using the basic email sending function
+    send_basic_email(email_message).await
+}

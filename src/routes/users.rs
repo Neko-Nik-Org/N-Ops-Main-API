@@ -2,6 +2,7 @@ use crate::features::users::{self, SessionUser, UpdateProfileReqDto, ListUsersRe
 use crate::cache::redis_cache::{get_redis_cache, set_redis_cache, delete_redis_cache};
 use actix_web::{get, post, put, patch, delete, web, HttpResponse};
 use crate::errors::{ApiResponse, ServiceError};
+use crate::messaging::email;
 use crate::state::AppState;
 use crate::security::otp;
 use crate::messaging;
@@ -266,7 +267,10 @@ pub async fn create_user(session_user: web::ReqData<SessionUser>, body: web::Jso
     // Create the user in the database
     users::create_user(&state, &session_user, &create_request).await?;
 
-    Ok(HttpResponse::Ok().body("User created successfully"))
+    // Send welcome email to the newly created user
+    email::send_welcome_email(&create_request.display_name, &create_request.primary_email).await?;
+
+    Ok(HttpResponse::Ok().body("User created successfully and a welcome email sent"))
 }
 
 
