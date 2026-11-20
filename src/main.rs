@@ -50,8 +50,9 @@ async fn main() -> std::io::Result<()> {
                 .service(organization::list_organizations)
                 .service(organization::basic_info_update)
                 .service(organization::get_organization)
+                .service(organization::check_org_name)
                 .service(organization::quota_update)
-                // .service(organization::name_update)
+                .service(organization::name_update)
             )
             // .service(
             //     actix_scope("/super-admin/user")

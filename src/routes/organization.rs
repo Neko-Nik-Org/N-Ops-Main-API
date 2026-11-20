@@ -48,7 +48,10 @@ pub async fn delete_organization(path: web::Path<uuid::Uuid>, state: web::Data<A
     let organization_id = path.into_inner();
 
     // Delete the organization using the provided organization_id
-    organization::delete_organization(&state.pg_pool, organization_id).await?;
+    let result = organization::delete_organization(&state.pg_pool, organization_id).await?;
+    if result == 0 {
+        return Ok(HttpResponse::ImUsed().finish());
+    }
 
     Ok(HttpResponse::NoContent().finish())
 }
@@ -59,7 +62,10 @@ pub async fn organization_state_change(path: web::Path<(uuid::Uuid, bool)>, stat
     let (organization_id, is_active) = path.into_inner();
 
     // Change the state of the organization using the provided organization_id and is_active flag
-    organization::organization_state_change(&state.pg_pool, organization_id, is_active).await?;
+    let result = organization::organization_state_change(&state.pg_pool, organization_id, is_active).await?;
+    if result == 0 {
+        return Ok(HttpResponse::NotFound().finish());
+    }
 
     Ok(HttpResponse::Ok().finish())
 }
@@ -71,7 +77,10 @@ pub async fn billing_info_update(path: web::Path<uuid::Uuid>, body: web::Json<se
     let billing_info = body.into_inner();
 
     // Replace the billing information for the organization using the provided organization_id and billing_info
-    organization::update_organization_billing_info(&state.pg_pool, organization_id, &billing_info).await?;
+    let result = organization::update_organization_billing_info(&state.pg_pool, organization_id, &billing_info).await?;
+    if result == 0 {
+        return Ok(HttpResponse::NotFound().finish());
+    }
 
     Ok(HttpResponse::Ok().finish())
 }
@@ -83,7 +92,10 @@ pub async fn quota_update(path: web::Path<uuid::Uuid>, body: web::Json<UpdateOrg
     let quota_data = body.into_inner();
 
     // Update the quota for the organization using the provided organization_id and quota_data
-    organization::quota_update(&state.pg_pool, organization_id, &quota_data).await?;
+    let result = organization::quota_update(&state.pg_pool, organization_id, &quota_data).await?;
+    if result == 0 {
+        return Ok(HttpResponse::NotFound().finish());
+    }
 
     Ok(HttpResponse::Ok().finish())
 }
@@ -95,7 +107,36 @@ pub async fn basic_info_update(path: web::Path<uuid::Uuid>, body: web::Json<serd
     let basic_info = body.into_inner();
 
     // Update the basic information for the organization using the provided organization_id and basic_info
-    organization::update_organization_info(&state.pg_pool, organization_id, &basic_info).await?;
+    let result = organization::update_organization_info(&state.pg_pool, organization_id, &basic_info).await?;
+    if result == 0 {
+        return Ok(HttpResponse::NotFound().finish());
+    }
+
+    Ok(HttpResponse::Ok().finish())
+}
+
+
+#[get("/check-name/{organization_name}")]
+pub async fn check_org_name(path: web::Path<String>, state: web::Data<AppState>) -> ApiResponse {
+    let organization_name = path.into_inner();
+
+    // Check if the organization name is available
+    let name_exists = organization::check_org_name(&state.pg_pool, &organization_name).await?;
+
+    Ok(HttpResponse::Ok().json(serde_json::json!({ "is_available": !name_exists })))
+}
+
+
+#[put("/update/name/{organization_id}")]
+pub async fn name_update(path: web::Path<uuid::Uuid>, body: web::Json<String>, state: web::Data<AppState>) -> ApiResponse {
+    let organization_id = path.into_inner();
+    let new_name = body.into_inner();
+
+    // Update the name for the organization using the provided organization_id and new_name
+    let result = organization::name_update(&state.pg_pool, organization_id, &new_name).await?;
+    if result == 0 {
+        return Ok(HttpResponse::NotFound().finish());
+    }
 
     Ok(HttpResponse::Ok().finish())
 }

@@ -13,5 +13,7 @@ pub use repository::{
     delete_organization,
     list_organizations,
     get_organization,
-    quota_update
+    check_org_name,
+    quota_update,
+    name_update
 };

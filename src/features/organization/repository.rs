@@ -272,3 +272,44 @@ pub async fn quota_update(db_pool: &PgPool, organization_id: Uuid, new_quota: &U
 
     Ok(result)
 }
+
+
+pub async fn name_update(db_pool: &PgPool, organization_id: Uuid, new_name: &str) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            UPDATE organization
+            SET organization_name = $2
+            WHERE organization_id = $1
+            "#,
+            &[
+                &organization_id,
+                &new_name,
+            ],
+        )
+        .await?;
+
+    Ok(result)
+}
+
+
+pub async fn check_org_name(db_pool: &PgPool, organization_name: &str) -> PgResult<bool> {
+    let client = db_pool.get().await?;
+
+    let row = client
+        .query_one(
+            r#"
+            SELECT EXISTS(
+                SELECT 1
+                FROM organization
+                WHERE organization_name = $1
+            )
+            "#,
+            &[&organization_name],
+        )
+        .await?;
+
+    Ok(row.get(0))
+}
