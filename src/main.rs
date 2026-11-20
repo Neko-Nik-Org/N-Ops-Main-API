@@ -43,9 +43,9 @@ async fn main() -> std::io::Result<()> {
             .service(
                 actix_scope("/super-admin/organization")
                 .wrap(from_fn(middleware::key_based::admin_auth_check))
+                .service(organization::create_organization)
                 .service(organization::list_organizations)
                 .service(organization::get_organization)
-                // .service(organization::create_organization)
                 // .service(organization::update_organization)
                 // .service(organization::delete_organization)
                 // .service(organization::enable_organization)

@@ -14,7 +14,7 @@ pub struct OrganizationInfo {
     pub organization_name: String,
 
     pub organization_info: JsonValue,
-    // pub billing_info: JsonValue,
+    pub billing_info: JsonValue,
     
     pub allocated_ai_credit: i64,
     pub utilized_ai_credit: i64,

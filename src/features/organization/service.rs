@@ -1,80 +1,26 @@
-use super::dto::{CreateResourceTagDto, EditResourceTagDto};
 use crate::errors::{ServiceError, ServiceResult};
-use crate::features::users::SessionUser;
-use super::model::ResourceTag;
+use crate::security::encryption;
+use crate::state::API_SETTINGS;
+use super::dto::{CreateOrgDto};
 use crate::state::AppState;
 use super::repository;
 
 
-
 /// Create a new tag using the provided resource tag data
-pub async fn create_new_tag(state: &AppState, session_user: &SessionUser, tag_data: &CreateResourceTagDto) -> ServiceResult<()> {
-    let result = repository::create_new_tag(
-        &state.pg_pool,
-        session_user.organization_id,
-        tag_data
-    ).await?;
+pub async fn create_organization(state: &AppState, org_data: &CreateOrgDto) -> ServiceResult<()> {
+    // Build the encryption key for the organization
+    let encryption_key = encryption::generate_encryption_key();
 
+    // Encrypt the encryption key with the master encryption key
+    let encrypted_encryption_key = encryption::encrypt(
+        &API_SETTINGS.master_encryption_key,
+        &encryption_key
+    );
+
+    let result = repository::create_organization(&state.pg_pool, &encrypted_encryption_key, org_data).await?;
     if result == 0 {
-        return Err(ServiceError::Unprocessable("Failed to create new tag".into()));
+        return Err(ServiceError::Unprocessable("Failed to create new organization".into()));
     }
 
     Ok(())
-}
-
-
-/// Update an existing tag using the provided resource tag data
-pub async fn update_tag_data(state: &AppState, session_user: &SessionUser, tag_data: &EditResourceTagDto) -> ServiceResult<()> {
-    let result = repository::update_tag_data(
-        &state.pg_pool,
-        session_user.organization_id,
-        tag_data
-    ).await?;
-
-    if result == 0 {
-        return Err(ServiceError::Unprocessable("Failed to update tag".into()));
-    }
-
-    Ok(())
-}
-
-
-/// Delete an existing tag using the provided tag ID
-pub async fn delete_tag(state: &AppState, session_user: &SessionUser, tag_id: i64) -> ServiceResult<()> {
-    let result = repository::delete_tag(
-        &state.pg_pool,
-        session_user.organization_id,
-        tag_id
-    ).await?;
-
-    if result == 0 {
-        return Err(ServiceError::Unprocessable("Failed to delete tag".into()));
-    }
-
-    Ok(())
-}
-
-
-/// Get an existing tag using the provided tag ID
-pub async fn get_tag(state: &AppState, session_user: &SessionUser, tag_id: i64) -> ServiceResult<ResourceTag> {
-    if let Some(tag) = repository::get_tag(
-        &state.pg_pool,
-        session_user.organization_id,
-        tag_id
-    ).await? {
-        Ok(tag)
-    } else {
-        Err(ServiceError::NotFound("Tag not found".into()))
-    }
-}
-
-
-/// List all tags for the session user's organization
-pub async fn list_all_tags(state: &AppState, session_user: &SessionUser) -> ServiceResult<Vec<ResourceTag>> {
-    let tags = repository::list_all_tags(
-        &state.pg_pool,
-        session_user.organization_id
-    ).await?;
-
-    Ok(tags)
 }

@@ -2,6 +2,7 @@ use actix_web::{HttpResponse, delete, get, post, put, web};
 use crate::errors::ApiResponse;
 use crate::state::AppState;
 use crate::features::organization::{
+    CreateOrgDto,
     ListOrgsDto,
     self
 };
@@ -27,4 +28,15 @@ pub async fn list_organizations(query: web::Query<ListOrgsDto>, state: web::Data
     let organizations = organization::list_organizations(&state.pg_pool, list_orgs_query).await?;
 
     Ok(HttpResponse::Ok().json(organizations))
+}
+
+
+#[post("/create")]
+pub async fn create_organization(body: web::Json<CreateOrgDto>, state: web::Data<AppState>) -> ApiResponse {
+    let org_data = body.into_inner();
+
+    // Create a new organization using the provided data
+    organization::create_organization(&state, &org_data).await?;
+
+    Ok(HttpResponse::Created().finish())
 }

@@ -25,20 +25,13 @@ use base64::{
     engine::general_purpose,
     Engine as _,
 };
-use crate::state::API_SETTINGS;
 
-
-
-/// Creates a new AES-256-GCM cipher instance using the AES encryption key from API settings.
-fn cipher() -> Aes256Gcm {
-    Aes256Gcm::new_from_slice(API_SETTINGS.master_encryption_key.as_bytes())
-        .expect("Invalid master encryption key")
-}
 
 
 /// Encrypts the given text using AES-256-GCM and returns the base64-encoded ciphertext
-pub fn encrypt(text: &str) -> String {
-    let cipher = cipher();
+pub fn encrypt(key: &[u8], text: &str) -> String {
+    let cipher = Aes256Gcm::new_from_slice(key)
+        .expect("Invalid encryption key");
 
     let nonce = Aes256Gcm::generate_nonce(&mut OsRng);
 
@@ -55,14 +48,15 @@ pub fn encrypt(text: &str) -> String {
 
 
 /// Decrypts the given base64-encoded ciphertext using AES-256-GCM and returns the original text
-pub fn decrypt(encoded: &str) -> String {
+pub fn decrypt(key: &[u8], encoded: &str) -> String {
     let data = general_purpose::STANDARD
         .decode(encoded)
         .expect("invalid base64");
 
     let (nonce_bytes, cipher_bytes) = data.split_at(12);
 
-    let cipher = cipher();
+    let cipher = Aes256Gcm::new_from_slice(key)
+        .expect("Invalid encryption key");
 
     let decrypted = cipher
         .decrypt(
@@ -73,4 +67,11 @@ pub fn decrypt(encoded: &str) -> String {
 
     String::from_utf8(decrypted)
         .expect("invalid utf8")
+}
+
+
+/// Generate a safe random AES-256 encryption key
+pub fn generate_encryption_key() -> String {
+    let key = Aes256Gcm::generate_key(&mut OsRng);
+    general_purpose::STANDARD.encode(key)
 }
