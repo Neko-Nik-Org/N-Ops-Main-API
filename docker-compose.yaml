@@ -62,7 +62,7 @@ services:
 
       # Self API Configuration
       - ALLOWED_ORIGINS=<ALLOWED_ORIGINS_LIST>
-      - SELF_API_KEY=<SELF_API_KEY>
+      - SUPER_ADMIN_KEY=<SUPER_ADMIN_KEY>
 
     volumes:
       - /ca.crt:/ca.crt:ro

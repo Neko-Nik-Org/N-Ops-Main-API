@@ -1,4 +1,4 @@
-use routes::{health, auth, users, tags, user_roles, vault_project};
+use routes::{health, auth, users, tags, user_roles, vault_project, organization};
 use actix_web::web::scope as actix_scope;
 use actix_web::middleware::from_fn;
 use actix_web::{App, HttpServer};
@@ -40,16 +40,16 @@ async fn main() -> std::io::Result<()> {
                 actix_scope("/health")
                 .service(health::full_health_check)
             )
-            // .service(    // super-admin -> Admin Panel for managing organizations
-            //     actix_scope("/super-admin/organization")
-            //     .wrap(from_fn(middleware::key_based::admin_auth_check))
-            //     .service(organization::create_organization)
-            //     .service(organization::update_organization)
-            //     .service(organization::delete_organization)
-            //     .service(organization::enable_organization)
-            //     .service(organization::list_organizations)
-            //     .service(organization::get_organization)
-            // )
+            .service(
+                actix_scope("/super-admin/organization")
+                .wrap(from_fn(middleware::key_based::admin_auth_check))
+                .service(organization::list_organizations)
+                .service(organization::get_organization)
+                // .service(organization::create_organization)
+                // .service(organization::update_organization)
+                // .service(organization::delete_organization)
+                // .service(organization::enable_organization)
+            )
             // .service(
             //     actix_scope("/super-admin/user")
             //     .wrap(from_fn(middleware::key_based::admin_auth_check))
@@ -105,7 +105,8 @@ async fn main() -> std::io::Result<()> {
                 .service(users::create_user)
                 .service(users::list_users)
                 .service(users::get_user)
-                // .service(users::update_user)    // Update Any User's Details
+                // .service(users::update_user)    // Update User's Details like primary_email, display_name, user_details
+                // .service(users::permissions)    // Update User's Role and Geo / IP restrictions or 2FA methods (disable only)
                 // .service(users::send_invitation) // Send an invitation to a user to join the organization (email send with link)
             )
             .service(

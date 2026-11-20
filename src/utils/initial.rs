@@ -76,7 +76,7 @@ pub struct SmtpSettings {
 
 pub struct ApiSettings {
     pub allowed_origins: Vec<String>,
-    pub self_api_key: String,
+    pub self_super_admin_key: String,
     pub master_encryption_key: String,
     // Additional API settings can be added here as needed
 }
@@ -239,12 +239,12 @@ impl ApiSettings {
             .filter(|items| !items.is_empty())
             .expect("ALLOWED_ORIGINS must be set as a comma-separated list of allowed origins or '*' for allowing all origins");
 
-        let self_api_key = env_var("SELF_API_KEY").expect("SELF_API_KEY must be set");
+        let self_super_admin_key = env_var("SUPER_ADMIN_KEY").expect("SUPER_ADMIN_KEY must be set, to be used for managing organizations");
         let master_encryption_key = env_var("MASTER_ENCRYPTION_KEY").expect("MASTER_ENCRYPTION_KEY must be set");
 
         ApiSettings {
             allowed_origins,
-            self_api_key,
+            self_super_admin_key,
             master_encryption_key
         }
     }

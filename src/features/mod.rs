@@ -1,4 +1,5 @@
 pub mod vault_projects;
+pub mod organization;
 pub mod user_roles;
 pub mod api_keys;
 pub mod users;

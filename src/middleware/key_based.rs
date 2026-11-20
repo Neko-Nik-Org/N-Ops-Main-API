@@ -13,27 +13,27 @@ use crate::state::API_SETTINGS;
 
 
 /// Authentication middleware
-/// Checks for valid API key if provided
+/// Checks for valid API key if provided (Super Admin access - Manage Organizations)
 /// Short-circuits with 401 Unauthorized if checks fail
 /// Otherwise calls the next service in the chain
-pub async fn auth_check<B>(req: ServiceRequest, next: Next<B>) -> Result<ServiceResponse, Error>
+pub async fn admin_auth_check<B>(req: ServiceRequest, next: Next<B>) -> Result<ServiceResponse, Error>
     where B: MessageBody + 'static
 {
     // Fetch the API Key from the Header
     let api_key: Option<String> = req
         .headers()
-        .get("x-nops-api-key")
+        .get("x-nops-admin-key")
         .and_then(|hv| hv.to_str().ok())
         .map(|s| s.to_string());
 
     // See if API key is valid
-    if api_key.is_none() || api_key.unwrap() != *API_SETTINGS.self_api_key {
-        tracing::warn!("API key check failed for request {} {}", req.method(), req.path());
+    if api_key.is_none() || api_key.unwrap() != *API_SETTINGS.self_super_admin_key {
+        tracing::warn!("Admin API key check failed for request {} {}", req.method(), req.path());
 
         // Short-circuit and return 401 Unauthorized
         let resp = HttpResponse::Unauthorized()
             .append_header(("content-type", "text/plain; charset=utf-8"))
-            .body("Unauthorized: Missing or Invalid API Key");
+            .body("Unauthorized: Missing or Invalid Admin Key");
 
         // Convert into a ServiceResponse with a boxed body to satisfy types
         return Ok(req.into_response(resp).map_into_boxed_body());
