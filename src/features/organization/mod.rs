@@ -4,6 +4,14 @@ mod model;
 mod dto;
 
 
-pub use repository::{get_organization, list_organizations, delete_organization, organization_state_change};
-pub use dto::{ListOrgsDto, CreateOrgDto};
-pub use service::{create_organization};
+pub use dto::{ListOrgsDto, CreateOrgDto, UpdateOrgQuotaDto};
+pub use service::create_organization;
+pub use repository::{
+    update_organization_billing_info,
+    organization_state_change,
+    update_organization_info,
+    delete_organization,
+    list_organizations,
+    get_organization,
+    quota_update
+};

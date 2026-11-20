@@ -2,6 +2,7 @@ use actix_web::{HttpResponse, delete, get, post, put, web};
 use crate::errors::ApiResponse;
 use crate::state::AppState;
 use crate::features::organization::{
+    UpdateOrgQuotaDto,
     CreateOrgDto,
     ListOrgsDto,
     self
@@ -59,6 +60,42 @@ pub async fn organization_state_change(path: web::Path<(uuid::Uuid, bool)>, stat
 
     // Change the state of the organization using the provided organization_id and is_active flag
     organization::organization_state_change(&state.pg_pool, organization_id, is_active).await?;
+
+    Ok(HttpResponse::Ok().finish())
+}
+
+
+#[put("/update/billing/{organization_id}")]
+pub async fn billing_info_update(path: web::Path<uuid::Uuid>, body: web::Json<serde_json::Value>, state: web::Data<AppState>) -> ApiResponse {
+    let organization_id = path.into_inner();
+    let billing_info = body.into_inner();
+
+    // Replace the billing information for the organization using the provided organization_id and billing_info
+    organization::update_organization_billing_info(&state.pg_pool, organization_id, &billing_info).await?;
+
+    Ok(HttpResponse::Ok().finish())
+}
+
+
+#[put("/update/quota/{organization_id}")]
+pub async fn quota_update(path: web::Path<uuid::Uuid>, body: web::Json<UpdateOrgQuotaDto>, state: web::Data<AppState>) -> ApiResponse {
+    let organization_id = path.into_inner();
+    let quota_data = body.into_inner();
+
+    // Update the quota for the organization using the provided organization_id and quota_data
+    organization::quota_update(&state.pg_pool, organization_id, &quota_data).await?;
+
+    Ok(HttpResponse::Ok().finish())
+}
+
+
+#[put("/update/basic/{organization_id}")]
+pub async fn basic_info_update(path: web::Path<uuid::Uuid>, body: web::Json<serde_json::Value>, state: web::Data<AppState>) -> ApiResponse {
+    let organization_id = path.into_inner();
+    let basic_info = body.into_inner();
+
+    // Update the basic information for the organization using the provided organization_id and basic_info
+    organization::update_organization_info(&state.pg_pool, organization_id, &basic_info).await?;
 
     Ok(HttpResponse::Ok().finish())
 }

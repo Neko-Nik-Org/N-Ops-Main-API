@@ -1,10 +1,12 @@
-use super::dto::{ListOrgsDto, CreateOrgDto};
+use super::dto::{ListOrgsDto, CreateOrgDto, UpdateOrgQuotaDto};
 use crate::errors::{PgResult, PgPool};
 use super::model::OrganizationInfo;
+use serde_json::Value as JsonValue;
+use uuid::Uuid;
 
 
 
-pub async fn get_organization(db_pool: &PgPool, organization_id: uuid::Uuid) -> PgResult<Option<OrganizationInfo>> {
+pub async fn get_organization(db_pool: &PgPool, organization_id: Uuid) -> PgResult<Option<OrganizationInfo>> {
     let client = db_pool.get().await?;
 
     let row = client
@@ -129,7 +131,7 @@ pub async fn create_organization(db_pool: &PgPool, encryption_key: &str, org_dat
 }
 
 
-pub async fn delete_organization(db_pool: &PgPool, organization_id: uuid::Uuid) -> PgResult<u64> {
+pub async fn delete_organization(db_pool: &PgPool, organization_id: Uuid) -> PgResult<u64> {
     let client = db_pool.get().await?;
 
     let result = client
@@ -146,7 +148,7 @@ pub async fn delete_organization(db_pool: &PgPool, organization_id: uuid::Uuid) 
 }
 
 
-pub async fn organization_state_change(db_pool: &PgPool, organization_id: uuid::Uuid, is_active: bool) -> PgResult<u64> {
+pub async fn organization_state_change(db_pool: &PgPool, organization_id: Uuid, is_active: bool) -> PgResult<u64> {
     let client = db_pool.get().await?;
 
     let result = client
@@ -159,6 +161,114 @@ pub async fn organization_state_change(db_pool: &PgPool, organization_id: uuid::
             &[&is_active, &organization_id],
         )
         .await?;
+
+    Ok(result)
+}
+
+
+pub async fn update_organization_billing_info(db_pool: &PgPool, organization_id: Uuid, billing_info: &JsonValue) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            UPDATE organization
+            SET billing_info = $1
+            WHERE organization_id = $2
+            "#,
+            &[&billing_info, &organization_id],
+        )
+        .await?;
+
+    Ok(result)
+}
+
+
+pub async fn update_organization_info(db_pool: &PgPool, organization_id: Uuid, organization_info: &JsonValue) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            UPDATE organization
+            SET organization_info = $1
+            WHERE organization_id = $2
+            "#,
+            &[&organization_info, &organization_id],
+        )
+        .await?;
+
+    Ok(result)
+}
+
+
+pub async fn quota_update(db_pool: &PgPool, organization_id: Uuid, new_quota: &UpdateOrgQuotaDto) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            UPDATE organization
+            SET
+                allocated_ai_credit = $2,
+                allocated_storage_bytes = $3,
+                user_limit = $4,
+                server_limit = $5,
+                workflow_limit = $6,
+                ss_project_limit = $7,
+                ss_keys_limit = $8,
+                ss_notes_limit = $9
+            WHERE
+                organization_id = $1
+
+                -- All quota values must be at least 1
+                AND $2 >= 1
+                AND $3 >= 1
+                AND $4 >= 1
+                AND $5 >= 1
+                AND $6 >= 1
+                AND $7 >= 1
+                AND $8 >= 1
+                AND $9 >= 1
+
+                -- AI credits cannot go below utilized credits
+                AND $2 >= utilized_ai_credit
+
+                -- Storage cannot go below utilized storage
+                AND $3 >= utilized_storage_bytes
+
+                -- User limit cannot go below existing users
+                AND $4 >= (
+                    SELECT COUNT(*)
+                    FROM app_user
+                    WHERE organization_id = $1
+                )
+
+                -- Project limit cannot go below existing projects
+                AND $7 >= (
+                    SELECT COUNT(*)
+                    FROM vault_project
+                    WHERE organization_id = $1
+                )
+
+                -- TODO: Set similar checks for server_limit, workflow_limit,
+                -- ss_keys_limit, and ss_notes_limit to ensure
+                -- they do not go below existing usage
+            "#,
+            &[
+                &organization_id,
+                &new_quota.allocated_ai_credit,
+                &new_quota.allocated_storage_bytes,
+                &new_quota.user_limit,
+                &new_quota.server_limit,
+                &new_quota.workflow_limit,
+                &new_quota.ss_project_limit,
+                &new_quota.ss_keys_limit,
+                &new_quota.ss_notes_limit,
+            ],
+        )
+        .await?;
+
 
     Ok(result)
 }
