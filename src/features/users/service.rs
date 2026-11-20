@@ -114,7 +114,7 @@ pub async fn update_user_password(state: &AppState, organization_id: Uuid, user_
 
 
 /// Update the username for the given user
-pub async fn update_user_username(state: &AppState, user_id: i64, new_username: &str) -> ServiceResult<()> {
+pub async fn update_user_username(state: &AppState, organization_id: Uuid, user_id: i64, new_username: &str) -> ServiceResult<()> {
     // Validate the new username against the defined username policy
     validate_username(&new_username)?;
 
@@ -125,7 +125,7 @@ pub async fn update_user_username(state: &AppState, user_id: i64, new_username: 
     }
 
     // Update the username in the repository
-    let result = repository::update_user_username(&state.pg_pool, user_id, &new_username).await?;
+    let result = repository::update_user_username(&state.pg_pool, organization_id, user_id, &new_username).await?;
     if result == 0 {
         return Err(ServiceError::BadRequest("Failed to update username in the database".into()));
     }

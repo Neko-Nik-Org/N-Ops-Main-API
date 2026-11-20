@@ -357,7 +357,7 @@ pub async fn update_user_password(db_pool: &PgPool, organization_id: uuid::Uuid,
 }
 
 
-pub async fn update_user_username(db_pool: &PgPool, user_id: i64, new_username: &str) -> PgResult<u64> {
+pub async fn update_user_username(db_pool: &PgPool, organization_id: uuid::Uuid, user_id: i64, new_username: &str) -> PgResult<u64> {
     let client = db_pool.get().await?;
 
     let result = client
@@ -365,9 +365,10 @@ pub async fn update_user_username(db_pool: &PgPool, user_id: i64, new_username: 
             r#"
             UPDATE app_user
             SET user_name = $1, updated_at = NOW()
-            WHERE user_id = $2
+            WHERE organization_id = $2
+                AND user_id = $3
             "#,
-            &[&new_username, &user_id],
+            &[&new_username, &organization_id, &user_id],
         )
         .await?;
 

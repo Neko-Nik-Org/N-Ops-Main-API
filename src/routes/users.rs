@@ -189,7 +189,7 @@ pub async fn self_user_name_update(session_user: web::ReqData<SessionUser>, body
     let new_username = body.into_inner();
 
     // Update the user's username in the database
-    users::update_user_username(&state, session_user.user_id, &new_username).await?;
+    users::update_user_username(&state, session_user.organization_id, session_user.user_id, &new_username).await?;
 
     Ok(HttpResponse::Ok().body("Username changed successfully"))
 }
@@ -334,6 +334,21 @@ pub async fn deactivate_user(session_user: web::ReqData<SessionUser>, path: web:
     if result == 0 {
         return Ok(HttpResponse::ImUsed().body("User already deactivated and not present in the organization"));
     }
+
+    Ok(HttpResponse::NoContent().finish())
+}
+
+
+#[put("/change-username/{user_id}")]
+pub async fn change_username(session_user: web::ReqData<SessionUser>, path: web::Path<i64>, body: web::Json<String>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let user_id = path.into_inner();
+    let new_username = body.into_inner();
+
+    session_user.has_all_permissions(&["user:view", "user:edit"])?;
+
+    // Admin change the user's username in the database
+    users::update_user_username(&state, session_user.organization_id, user_id, &new_username).await?;
 
     Ok(HttpResponse::NoContent().finish())
 }
