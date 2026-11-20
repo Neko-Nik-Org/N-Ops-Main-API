@@ -280,7 +280,7 @@ pub async fn set_verify_email(session_user: web::ReqData<SessionUser>, path: web
     // Admin verify the user's email in the database
     let result = users::update_user_email_verified(&state.pg_pool, session_user.organization_id, user_id, true).await?;
     if result == 0 {
-        return Ok(HttpResponse::ImUsed().body("User email already verified or not found"));
+        return Ok(HttpResponse::NotFound().body("User not found in the organization"));
     }
 
     Ok(HttpResponse::NoContent().finish())
