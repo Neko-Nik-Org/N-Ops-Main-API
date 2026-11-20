@@ -98,6 +98,7 @@ async fn main() -> std::io::Result<()> {
                 actix_scope("/user/admin")
                 .wrap(from_fn(middleware::user_session::auth_check))
                 .service(users::set_verify_email)
+                .service(users::deactivate_user)
                 .service(users::reset_password)
                 .service(users::delete_user)
                 .service(users::create_user)

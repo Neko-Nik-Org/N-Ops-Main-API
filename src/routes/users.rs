@@ -204,7 +204,7 @@ pub async fn self_deactivate(session_user: web::ReqData<SessionUser>, state: web
     delete_redis_cache(&state.redis_cache, &session_key).await?;
 
     // Deactivate the user's account in the database
-    let result = users::deactivate_user(&state.pg_pool, session_user.user_id).await?;
+    let result = users::deactivate_user(&state.pg_pool, session_user.organization_id, session_user.user_id).await?;
     if result == 0 {
         return Ok(HttpResponse::NotFound().body("User not found! Maybe already deactivated or deleted"));
     }
@@ -316,6 +316,23 @@ pub async fn delete_user(session_user: web::ReqData<SessionUser>, path: web::Pat
     let result = users::delete_user(&state.pg_pool, session_user.organization_id, user_id).await?;
     if result == 0 {
         return Ok(HttpResponse::ImUsed().body("User already deleted and not present in the organization"));
+    }
+
+    Ok(HttpResponse::NoContent().finish())
+}
+
+
+#[patch("/deactivate/{user_id}")]
+pub async fn deactivate_user(session_user: web::ReqData<SessionUser>, path: web::Path<i64>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let user_id = path.into_inner();
+
+    session_user.has_all_permissions(&["user:view", "user:edit"])?;
+
+    // Admin deactivate the user in the database
+    let result = users::deactivate_user(&state.pg_pool, session_user.organization_id, user_id).await?;
+    if result == 0 {
+        return Ok(HttpResponse::ImUsed().body("User already deactivated and not present in the organization"));
     }
 
     Ok(HttpResponse::NoContent().finish())

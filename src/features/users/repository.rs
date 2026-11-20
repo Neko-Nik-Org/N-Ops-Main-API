@@ -375,7 +375,7 @@ pub async fn update_user_username(db_pool: &PgPool, user_id: i64, new_username: 
 }
 
 
-pub async fn deactivate_user(db_pool: &PgPool, user_id: i64) -> PgResult<u64> {
+pub async fn deactivate_user(db_pool: &PgPool, organization_id: uuid::Uuid, user_id: i64) -> PgResult<u64> {
     let client = db_pool.get().await?;
 
     let result = client
@@ -383,9 +383,10 @@ pub async fn deactivate_user(db_pool: &PgPool, user_id: i64) -> PgResult<u64> {
             r#"
             UPDATE app_user
             SET is_active = FALSE, updated_at = NOW()
-            WHERE user_id = $1
+            WHERE organization_id = $1
+                AND user_id = $2
             "#,
-            &[&user_id],
+            &[&organization_id, &user_id],
         )
         .await?;
 
