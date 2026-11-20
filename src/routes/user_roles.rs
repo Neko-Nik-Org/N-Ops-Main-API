@@ -81,7 +81,7 @@ pub async fn update_role_info(session_user: web::ReqData<SessionUser>, path: web
     let update_data = data.into_inner();
 
     // Validate that the session user has the required permissions
-    session_user.has_all_permissions(&["user:role:view", "user:role:update"])?;
+    session_user.has_all_permissions(&["user:role:view", "user:role:edit"])?;
 
     // Call the repository function to update the role info
     user_roles::update_role_info(&state, &session_user, role_id, &update_data).await?;
@@ -97,7 +97,7 @@ pub async fn update_role_permissions(session_user: web::ReqData<SessionUser>, pa
     let update_data = data.into_inner();
 
     // Validate that the session user has the required permissions
-    session_user.has_all_permissions(&["user:role:view", "user:role:update"])?;
+    session_user.has_all_permissions(&["user:role:view", "user:role:edit"])?;
 
     // Call the repository function to update the role permissions
     user_roles::update_role_permissions(&state, &session_user, role_id, &update_data).await?;
