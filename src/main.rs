@@ -107,6 +107,19 @@ async fn main() -> std::io::Result<()> {
                 // .service(users::permissions)    // Update User's Role and Geo / IP restrictions or 2FA methods (disable only)
                 // .service(users::send_invitation) // Send an invitation to a user to join the organization (email send with link)
             )
+            // .service(
+            //     actix_scope("/user/2fa")
+            //     .wrap(from_fn(middleware::user_session::auth_check))
+            //     .service(mfa::set_email_2fa)    // Enable/Disable email-based 2FA (Works only if Email is verified)
+            //     .service(mfa::set_totp_2fa)    // Enable/Disable TOTP-based 2FA (Works only if at least one TOTP entry exists)
+            //     .service(mfa::check_totp_code)    // Check a TOTP code for validity by entering it (for each entry / new entry)
+            //     .service(mfa::create_totp_entry)    // Create TOTP entry
+            //     .service(mfa::list_totp_entries)    // List all TOTP entries
+            //     .service(mfa::delete_totp_entry)    // Delete a TOTP entry (Can not delete the last remaining entry if TOTP-based 2FA is enabled)
+            //     .service(mfa::edit_totp_entry)    // Edit a TOTP entry name only
+            //     .service(mfa::generate_new_recovery_codes)    // Generate new recovery codes for 2FA (Show only once)
+            //     .service(mfa::count_recovery_codes)    // Count remaining recovery codes for 2FA (Just returns the count)
+            // )
             .service(
                 actix_scope("/tag")
                 .wrap(from_fn(middleware::user_session::auth_check))
