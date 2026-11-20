@@ -281,7 +281,7 @@ pub async fn fetch_org_info(db_pool: &PgPool, organization_id: uuid::Uuid) -> Pg
 }
 
 
-pub async fn update_user_email_verified(db_pool: &PgPool, user_id: i64, is_email_verified: bool) -> PgResult<u64> {
+pub async fn update_user_email_verified(db_pool: &PgPool, organization_id: uuid::Uuid, user_id: i64, is_email_verified: bool) -> PgResult<u64> {
     let client = db_pool.get().await?;
 
     let result = client
@@ -289,9 +289,10 @@ pub async fn update_user_email_verified(db_pool: &PgPool, user_id: i64, is_email
             r#"
             UPDATE app_user
             SET is_email_verified = $1
-            WHERE user_id = $2
+            WHERE organization_id = $2
+                AND user_id = $3
             "#,
-            &[&is_email_verified, &user_id],
+            &[&is_email_verified, &organization_id, &user_id],
         )
         .await?;
 

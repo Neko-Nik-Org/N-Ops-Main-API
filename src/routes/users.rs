@@ -1,6 +1,6 @@
 use crate::features::users::{self, SessionUser, UpdateProfileReqDto, ListUsersReqDto, CreateUserReqDto};
 use crate::cache::redis_cache::{get_redis_cache, set_redis_cache, delete_redis_cache};
-use actix_web::{get, post, put, delete, web, HttpResponse};
+use actix_web::{get, post, put, patch, delete, web, HttpResponse};
 use crate::errors::{ApiResponse, ServiceError};
 use crate::state::AppState;
 use crate::security::otp;
@@ -144,7 +144,7 @@ pub async fn verify_email(session_user: web::ReqData<SessionUser>, body: web::Js
 
     // At this point, the OTP code is verified successfully
     // Mark the user's email as verified in the database
-    users::update_user_email_verified(&state.pg_pool, session_user.user_id, true).await?;
+    users::update_user_email_verified(&state.pg_pool, session_user.organization_id, session_user.user_id, true).await?;
 
     // Delete the OTP from the cache as it has been successfully used
     delete_redis_cache(&state.redis_cache, &otp_cache_key).await?;
@@ -267,4 +267,21 @@ pub async fn create_user(session_user: web::ReqData<SessionUser>, body: web::Jso
     users::create_user(&state, &session_user, &create_request).await?;
 
     Ok(HttpResponse::Ok().body("User created successfully"))
+}
+
+
+#[patch("/verify-email/{user_id}")]
+pub async fn set_verify_email(session_user: web::ReqData<SessionUser>, path: web::Path<i64>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let user_id = path.into_inner();
+
+    session_user.has_all_permissions(&["user:view", "user:edit"])?;
+
+    // Admin verify the user's email in the database
+    let result = users::update_user_email_verified(&state.pg_pool, session_user.organization_id, user_id, true).await?;
+    if result == 0 {
+        return Ok(HttpResponse::ImUsed().body("User email already verified or not found"));
+    }
+
+    Ok(HttpResponse::NoContent().finish())
 }
