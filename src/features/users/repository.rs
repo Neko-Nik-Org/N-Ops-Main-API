@@ -1,8 +1,7 @@
 use super::dto::{AuthInfoDbDto, ListUsersReqDto, CreateUserReqDto};
 use super::model::{OrgInfo, UserProfileInfo, UserProfileListing};
-use deadpool_postgres::Pool as PgPool;
+use crate::errors::{PgResult, PgError, PgPool};
 use serde_json::Value as JsonValue;
-use crate::errors::PgResult;
 use std::net::IpAddr;
 
 
@@ -532,7 +531,7 @@ pub async fn create_user(db_pool: &PgPool, organization_id: uuid::Uuid, password
     // If the organization does not exist, rollback and return 0
     let Some(org) = org else {
         transaction.rollback().await?;
-        return Ok(0);
+        return Err(PgError::Custom("Organization not found".into()));
     };
     let user_limit: i32 = org.get("user_limit");
 
@@ -552,7 +551,7 @@ pub async fn create_user(db_pool: &PgPool, organization_id: uuid::Uuid, password
     // 3. Check organization user limit
     if current_users >= user_limit as i64 {
         transaction.rollback().await?;
-        return Ok(0);
+        return Err(PgError::Custom("User limit reached".into()));
     }
 
     // 4. Insert only if the role belongs to this organization

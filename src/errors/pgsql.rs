@@ -14,4 +14,7 @@ pub enum PgError {
 
     #[error("PostgreSQL error: {0}")]
     Postgres(#[from] PostgresError),
+
+    #[error("Custom error: {0}")]
+    Custom(String)
 }
