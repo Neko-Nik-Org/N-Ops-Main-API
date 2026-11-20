@@ -1,23 +1,74 @@
 use super::dto::{VaultProjectDto, ListQueryDto};
-use deadpool_postgres::Pool as PgPool;
+use crate::errors::{PgResult, PgError, PgPool};
 use super::model::VaultProject;
-use crate::errors::PgResult;
 use uuid::Uuid;
 
 
 
 pub async fn create_new_project(db_pool: &PgPool, organization_id: Uuid, project_data: &VaultProjectDto) -> PgResult<u64> {
-    let client = db_pool.get().await?;
+    let mut client = db_pool.get().await?;
+    let transaction = client.transaction().await?;
 
-    let result = client
-        .execute(
+    // 1. Lock organization and retrieve project quota
+    let org = transaction
+        .query_opt(
             r#"
-            INSERT INTO vault_project (organization_id, project_name, details)
-            VALUES ($1, $2, $3)
+            SELECT ss_project_limit
+            FROM organization
+            WHERE organization_id = $1
+            FOR UPDATE
             "#,
-            &[&organization_id, &project_data.project_name, &project_data.details],
+            &[&organization_id],
         )
         .await?;
+
+    let Some(org) = org else {
+        transaction.rollback().await?;
+        return Err(PgError::Custom("Organization not found".into()));
+    };
+
+    let project_limit: i32 = org.get("ss_project_limit");
+
+    // 2. Count existing projects
+    let current_projects: i64 = transaction
+        .query_one(
+            r#"
+            SELECT COUNT(*)::BIGINT
+            FROM vault_project
+            WHERE organization_id = $1
+            "#,
+            &[&organization_id],
+        )
+        .await?
+        .get(0);
+
+    // 3. Check project quota
+    if current_projects >= project_limit as i64 {
+        transaction.rollback().await?;
+        return Err(PgError::Custom("Project limit reached".into()));
+    }
+
+    // 4. Insert project
+    let result = transaction
+        .execute(
+            r#"
+            INSERT INTO vault_project (
+                organization_id,
+                project_name,
+                details
+            )
+            VALUES ($1, $2, $3)
+            "#,
+            &[
+                &organization_id,
+                &project_data.project_name,
+                &project_data.details,
+            ],
+        )
+        .await?;
+
+    // 5. Commit transaction
+    transaction.commit().await?;
 
     Ok(result)
 }
