@@ -148,6 +148,7 @@ async fn main() -> std::io::Result<()> {
                 // .service(ar_policy::create_policy)  // Create a new access restriction policy
                 // .service(ar_policy::delete_policy)    // Delete the policy (It will invalidate all users affected by this policy, Cascade effect)
                 // .service(ar_policy::update_policy_info) // Update Name, Description
+                // .service(ar_policy::check_policy_association)    // Check the policy association (Count of users that have this policy, useful to do force delete)
                 // .service(ar_policy::update_policy_enforcement)  // Update the enforcement settings of the policy
             )
             // .service(
