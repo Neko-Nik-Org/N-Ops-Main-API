@@ -1,6 +1,5 @@
 use pg_row_derive::RowFrom;
 use serde::Serialize;
-use uuid::Uuid;
 
 type ChronoUtc = chrono::DateTime<chrono::Utc>;
 
