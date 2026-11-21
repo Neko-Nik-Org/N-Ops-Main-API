@@ -16,6 +16,9 @@ pub struct AuthInfoDbDto {
     pub password_hash: String,
     pub encryption_key: String,
 
+    // Policy information
+    pub enforce_totp_2fa: bool,
+    pub enforce_email_2fa: bool,
     pub has_ip_restriction: bool,
     pub has_geo_restriction: bool,
     pub allowed_ips: Vec<String>,

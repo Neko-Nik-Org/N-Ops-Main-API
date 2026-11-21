@@ -17,15 +17,21 @@ pub async fn get_user_auth_info(db_pool: &PgPool, user_name: &str) -> PgResult<O
                 u.user_id,
                 u.organization_id,
 
-                -- Security and access information
+                -- Security and user access information
                 u.password_hash,
                 o.encryption_key,
-                u.has_ip_restriction,
-                u.has_geo_restriction,
-                u.allowed_ips,
-                u.allowed_geo_locations,
                 u.has_totp_2fa,
                 u.has_email_2fa,
+
+                -- Policy information
+                COALESCE(p.has_ip_restriction, FALSE) AS has_ip_restriction,
+                COALESCE(p.has_geo_restriction, FALSE) AS has_geo_restriction,
+
+                COALESCE(p.allowed_ips, ARRAY[]::TEXT[]) AS allowed_ips,
+                COALESCE(p.allowed_geo_locations, ARRAY[]::TEXT[]) AS allowed_geo_locations,
+
+                COALESCE(p.enforce_totp_2fa, FALSE) AS enforce_totp_2fa,
+                COALESCE(p.enforce_email_2fa, FALSE) AS enforce_email_2fa,
 
                 -- Role information
                 r.permissions,
@@ -66,6 +72,10 @@ pub async fn get_user_auth_info(db_pool: &PgPool, user_name: &str) -> PgResult<O
             INNER JOIN user_role r
                 ON r.role_id = u.role_id
                 AND r.organization_id = u.organization_id
+
+            LEFT JOIN access_restriction_policy p
+                ON p.policy_id = u.access_restriction_policy_id
+                AND p.organization_id = u.organization_id
 
             WHERE
                 u.user_name = $1

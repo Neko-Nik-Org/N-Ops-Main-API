@@ -36,6 +36,11 @@ pub async fn user_login(request: HttpRequest, login_request: web::Json<LoginReqD
     // Create a new user session
     let auth_info = create_user_session(&state, &login_request, client_ip).await?;
 
+    // Check if 2FA enforcement policies are enabled for the user
+    let enforce_email_2fa = auth_info.enforce_email_2fa;
+    let enforce_totp_2fa = auth_info.enforce_totp_2fa;
+    let is_2fa_enforced = enforce_email_2fa || enforce_totp_2fa;
+
     // If 2FA is enabled for the user, do not create the session, require 2FA validation first
     if auth_info.has_email_2fa || auth_info.has_totp_2fa {
         // Generate a new temporary auth token for 2FA validation
@@ -48,6 +53,7 @@ pub async fn user_login(request: HttpRequest, login_request: web::Json<LoginReqD
         return Ok(HttpResponse::Ok().json(serde_json::json!({
             "message": "2FA validation required",
             "is_2fa_required": true,
+            "is_2fa_enforced": is_2fa_enforced,
             "temporary_auth_token": new_token,
             "data": {
                 "display_name": auth_info.display_name,
@@ -56,6 +62,8 @@ pub async fn user_login(request: HttpRequest, login_request: web::Json<LoginReqD
                 "is_email_verified": auth_info.is_email_verified,
                 "has_email_2fa": auth_info.has_email_2fa,
                 "has_totp_2fa": auth_info.has_totp_2fa,
+                "enforce_email_2fa": enforce_email_2fa,
+                "enforce_totp_2fa": enforce_totp_2fa,
                 "last_login_at": auth_info.last_login_at
             }
         })));
@@ -75,6 +83,7 @@ pub async fn user_login(request: HttpRequest, login_request: web::Json<LoginReqD
     Ok(HttpResponse::Ok().json(serde_json::json!({
         "message": "Session created successfully",
         "is_2fa_required": false,
+        "is_2fa_enforced": is_2fa_enforced,
         "session_id": user_session.session_id,
         "data": {
             "user_id": user_session.user_id,
@@ -85,7 +94,9 @@ pub async fn user_login(request: HttpRequest, login_request: web::Json<LoginReqD
             "display_name": user_session.display_name,
             "organization_name": user_session.organization_name,
             "primary_email": user_session.primary_email,
-            "is_email_verified": user_session.is_email_verified
+            "is_email_verified": user_session.is_email_verified,
+            "enforce_email_2fa": enforce_email_2fa,
+            "enforce_totp_2fa": enforce_totp_2fa
         }
     })))
 }

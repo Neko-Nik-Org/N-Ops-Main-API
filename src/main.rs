@@ -1,4 +1,4 @@
-use routes::{health, auth, users, tags, user_roles, vault_project, organization};
+use routes::{health, auth, users, tags, user_roles, vault_project, organization, ar_policy};
 use actix_web::web::scope as actix_scope;
 use actix_web::middleware::from_fn;
 use actix_web::{App, HttpServer};
@@ -104,7 +104,8 @@ async fn main() -> std::io::Result<()> {
                 .service(users::list_users)
                 .service(users::get_user)
                 // .service(users::update_user)    // Update User's Details like primary_email, display_name, user_details
-                // .service(users::permissions)    // Update User's Role and Geo / IP restrictions or 2FA methods (disable only)
+                // .service(users::assign_role)    // Update User's Role and Geo / IP restrictions or 2FA methods (disable only)
+                // .service(users::assign_ar_policy)    // Update User's Role and Geo / IP restrictions or 2FA methods (disable only)
                 // .service(users::send_invitation) // Send an invitation to a user to join the organization (email send with link)
             )
             // .service(
@@ -138,6 +139,16 @@ async fn main() -> std::io::Result<()> {
                 .service(user_roles::delete_role)
                 .service(user_roles::update_role_info)
                 .service(user_roles::update_role_permissions)
+            )
+            .service(
+                actix_scope("/policy/access-restriction")
+                .wrap(from_fn(middleware::user_session::auth_check))
+                .service(ar_policy::fetch_policy)   // Fetch details of a specific access restriction policy
+                // .service(ar_policy::list_policies)  // List all access restriction policies
+                // .service(ar_policy::create_policy)  // Create a new access restriction policy
+                // .service(ar_policy::delete_policy)    // Delete the policy (It will invalidate all users affected by this policy, Cascade effect)
+                // .service(ar_policy::update_policy_info) // Update Name, Description
+                // .service(ar_policy::update_policy_enforcement)  // Update the enforcement settings of the policy
             )
             // .service(
             //     actix_scope("/api-keys")

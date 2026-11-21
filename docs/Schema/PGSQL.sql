@@ -83,13 +83,8 @@ CREATE TABLE app_user (
     -- Role assigned to the user within the organization
     role_id BIGINT NOT NULL REFERENCES user_role(role_id) ON DELETE CASCADE,
 
-    -- TODO: Put the Geo & IP restriction into a separate table for better management (Restriction Policy)
-    -- Geographic or IP-based restrictions for this user (Allowed if either IP or Geo matches)
-    -- In that same policy, add something like enforcement mode (e.g., strict, relaxed) to control how restrictions are applied ?
-    has_ip_restriction BOOLEAN DEFAULT FALSE NOT NULL,  -- Is IP restriction enabled for this user
-    has_geo_restriction BOOLEAN DEFAULT FALSE NOT NULL,  -- Is geographic restriction enabled for this user
-    allowed_ips TEXT[] NOT NULL,  -- List of allowed IP addresses for this user
-    allowed_geo_locations TEXT[] NOT NULL,  -- List of allowed geographic locations for this user
+    -- Access restriction policy applied to this user
+    access_restriction_policy_id BIGINT REFERENCES access_restriction_policy(policy_id) ON DELETE SET NULL,
 
     has_totp_2fa BOOLEAN DEFAULT FALSE NOT NULL,  -- Is TOTP 2FA enabled for this user
     has_email_2fa BOOLEAN DEFAULT FALSE NOT NULL,  -- Is Email 2FA enabled for this user
@@ -137,6 +132,30 @@ CREATE TABLE role_tag (
     tag_id BIGINT NOT NULL REFERENCES resource_tag(tag_id) ON DELETE CASCADE,
 
     PRIMARY KEY (role_id, tag_id)  -- Composite primary key to ensure uniqueness
+);
+
+
+-- Restriction & Enforcement Policy
+CREATE TABLE access_restriction_policy (
+    policy_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    organization_id UUID NOT NULL REFERENCES organization(organization_id) ON DELETE CASCADE,
+
+    policy_name VARCHAR(100) NOT NULL,
+    policy_description TEXT NOT NULL,
+
+    -- Enforcement Policy (Force certain security measures)
+    enforce_totp_2fa BOOLEAN NOT NULL,   -- TODO: Yet to implement (Code part)
+    enforce_email_2fa BOOLEAN NOT NULL,  -- TODO: Yet to implement (Code part)
+
+    -- Restriction Policy
+    -- Geographic or IP-based restrictions (Allowed if either IP or Geo matches)
+    has_ip_restriction BOOLEAN DEFAULT FALSE NOT NULL,  -- Is IP restriction enabled for this user
+    has_geo_restriction BOOLEAN DEFAULT FALSE NOT NULL,  -- Is geographic restriction enabled for this user
+
+    allowed_ips TEXT[] NOT NULL,  -- List of allowed IP addresses for this user
+    allowed_geo_locations TEXT[] NOT NULL,  -- List of allowed geographic locations for this user
+
+    UNIQUE (policy_name, organization_id)  -- Unique policy name per organization
 );
 
 
