@@ -3,8 +3,7 @@ use crate::features::users::SessionUser;
 use crate::errors::ApiResponse;
 use crate::state::AppState;
 use crate::features::ar_policy::{
-    CreateResourceTagDto,
-    EditResourceTagDto,
+    ListPolicyDto,
     self
 };
 
@@ -23,6 +22,21 @@ pub async fn fetch_policy(session_user: web::ReqData<SessionUser>, path: web::Pa
     if policy_data.is_none() {
         return Ok(HttpResponse::NotFound().finish());
     }
+
+    Ok(HttpResponse::Ok().json(policy_data))
+}
+
+
+#[get("/list")]
+pub async fn list_policies(session_user: web::ReqData<SessionUser>, path: web::Query<ListPolicyDto>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let list_policy_dto = path.into_inner();
+
+    // Validate that the session user has the required permissions
+    session_user.has_all_permissions(&["policy:ar:view"])?;
+
+    // Get the tag using the provided data and the session user's context
+    let policy_data = ar_policy::list_policies(&state.pg_pool, session_user.organization_id, list_policy_dto).await?;
 
     Ok(HttpResponse::Ok().json(policy_data))
 }

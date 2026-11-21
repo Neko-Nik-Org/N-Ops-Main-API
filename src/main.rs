@@ -143,8 +143,8 @@ async fn main() -> std::io::Result<()> {
             .service(
                 actix_scope("/policy/access-restriction")
                 .wrap(from_fn(middleware::user_session::auth_check))
-                .service(ar_policy::fetch_policy)   // Fetch details of a specific access restriction policy
-                // .service(ar_policy::list_policies)  // List all access restriction policies
+                .service(ar_policy::fetch_policy)
+                .service(ar_policy::list_policies)  // List all access restriction policies
                 // .service(ar_policy::create_policy)  // Create a new access restriction policy
                 // .service(ar_policy::delete_policy)    // Delete the policy (It will invalidate all users affected by this policy, Cascade effect)
                 // .service(ar_policy::update_policy_info) // Update Name, Description

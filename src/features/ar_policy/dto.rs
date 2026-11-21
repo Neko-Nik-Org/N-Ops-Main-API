@@ -3,15 +3,8 @@ use serde::Deserialize;
 
 
 #[derive(Deserialize)]
-pub struct CreateResourceTagDto {
-    pub tag_name: String,
-    pub tag_description: String,
-}
-
-
-#[derive(Deserialize)]
-pub struct EditResourceTagDto {
-    pub tag_id: i64,
-    pub tag_name: String,
-    pub tag_description: String,
+pub struct ListPolicyDto {
+    pub policy_name: Option<String>,    // Filter policies by name (optional)
+    pub limit: i64,
+    pub offset: i64
 }

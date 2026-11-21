@@ -70,3 +70,15 @@ User permissions are related to managing and accessing user accounts within the 
 | user:create | Allows creation of new user accounts |
 | user:edit   | Allows editing of existing user accounts |
 | user:delete | Allows deletion of user accounts |
+
+
+## Access Restriction Policy Permissions
+
+Access restriction policy permissions are related to managing and accessing access restriction policies within the system.
+
+| Permission | Description |
+|------------|-------------|
+| policy:ar:view | Allows viewing of access restriction policies |
+| policy:ar:create | Allows creation of new access restriction policies |
+| policy:ar:edit   | Allows editing of existing access restriction policies |
+| policy:ar:delete | Allows deletion of access restriction policies |

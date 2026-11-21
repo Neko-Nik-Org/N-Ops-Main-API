@@ -4,6 +4,6 @@ mod model;
 mod dto;
 
 
-pub use dto::{CreateResourceTagDto, EditResourceTagDto};
+pub use dto::{ListPolicyDto};
 // pub use service::{create_new_tag, update_tag_data, delete_tag, get_tag, list_all_tags};
-pub use repository::{get_policy};
+pub use repository::{get_policy, list_policies};
