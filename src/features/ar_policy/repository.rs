@@ -1,7 +1,6 @@
-use deadpool_postgres::Pool as PgPool;
-use super::dto::ListPolicyDto;
+use super::dto::{ListPolicyDto, CreatePolicyDto};
+use crate::errors::{PgResult, PgPool};
 use super::model::PolicyInfo;
-use crate::errors::PgResult;
 
 
 
@@ -67,4 +66,40 @@ pub async fn list_policies(db_pool: &PgPool, organization_id: uuid::Uuid, list_p
         .await?;
 
     Ok(PolicyInfo::from_rows(rows))
+}
+
+
+pub async fn create_policy(db_pool: &PgPool, organization_id: uuid::Uuid, create_policy_dto: CreatePolicyDto) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            INSERT INTO access_restriction_policy (
+                organization_id,
+                policy_name,
+                policy_description,
+                enforce_totp_2fa,
+                enforce_email_2fa,
+                has_ip_restriction,
+                has_geo_restriction,
+                allowed_ips,
+                allowed_geo_locations
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            "#,
+            &[
+                &organization_id,
+                &create_policy_dto.policy_name,
+                &create_policy_dto.description,
+                &create_policy_dto.enforce_totp_2fa,
+                &create_policy_dto.enforce_email_2fa,
+                &create_policy_dto.set_ip_restriction,
+                &create_policy_dto.set_geo_restriction,
+                &create_policy_dto.allowed_ips,
+                &create_policy_dto.allowed_geo_locations,
+            ],
+        )
+        .await?;
+
+    Ok(result)
 }

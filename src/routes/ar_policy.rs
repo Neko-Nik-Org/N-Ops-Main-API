@@ -3,6 +3,7 @@ use crate::features::users::SessionUser;
 use crate::errors::ApiResponse;
 use crate::state::AppState;
 use crate::features::ar_policy::{
+    CreatePolicyDto,
     ListPolicyDto,
     self
 };
@@ -37,6 +38,21 @@ pub async fn list_policies(session_user: web::ReqData<SessionUser>, path: web::Q
 
     // Get the tag using the provided data and the session user's context
     let policy_data = ar_policy::list_policies(&state.pg_pool, session_user.organization_id, list_policy_dto).await?;
+
+    Ok(HttpResponse::Ok().json(policy_data))
+}
+
+
+#[post("/create")]
+pub async fn create_policy(session_user: web::ReqData<SessionUser>, body: web::Json<CreatePolicyDto>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let create_policy_dto = body.into_inner();
+
+    // Validate that the session user has the required permissions
+    session_user.has_all_permissions(&["policy:ar:view", "policy:ar:create"])?;
+
+    // Create the policy using the provided data and the session user's context
+    let policy_data = ar_policy::create_policy(&state.pg_pool, session_user.organization_id, create_policy_dto).await?;
 
     Ok(HttpResponse::Ok().json(policy_data))
 }
