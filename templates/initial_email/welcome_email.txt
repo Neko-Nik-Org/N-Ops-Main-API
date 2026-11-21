@@ -1,0 +1,36 @@
+Welcome to N-Ops
+
+Hi {{DISPLAY_NAME}},
+
+Your account is ready. N-Ops brings your servers, secrets, containers and automation together in one place.
+
+Get started:
+- Add your servers
+- Keep secrets in Vault
+- Automate with Workflows
+
+Sign in to N-Ops to take your first step.
+
+Best regards,
+The N-Ops team
+
+This is an automated message, please do not reply.
+
+------------------------------------------------------------
+Anti-phishing code: {{ANTI_PHISHING_CODE}}
+To stay secure, check this code in every email from N-Ops.
+
+Disclaimer: N-Ops will never ask for your password, verification
+codes, SSH keys or Vault secrets by email, phone or chat. Never
+share them with anyone, including people who say they are from
+N-Ops. This email is intended only for the person it was sent to.
+If you received it by mistake, please delete it.
+
+Kindly note: Be careful of phishing sites. Before you enter your
+password or a verification code, make sure you are on your
+organisation's official N-Ops address.
+
+You have received this email as a registered user of N-Ops.
+Built by Neko Nik (https://nekonik.org/) and Powered by YSPL (https://www.yukthi.com/).
+
+© {{COPYRIGHT_YEARS}} Neko Nik. All rights reserved.
