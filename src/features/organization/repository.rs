@@ -88,11 +88,13 @@ pub async fn create_organization(db_pool: &PgPool, encryption_key: &str, org_dat
     let client = db_pool.get().await?;
 
     let default_zero: i64 = 0;
+    let new_org_id = uuid::Uuid::new_v4();
 
     let result = client
         .execute(
             r#"
             INSERT INTO organization (
+                organization_id,
                 encryption_key,
                 organization_name,
                 organization_info,
@@ -109,9 +111,10 @@ pub async fn create_organization(db_pool: &PgPool, encryption_key: &str, org_dat
                 ss_keys_limit,
                 ss_notes_limit
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
             "#,
             &[
+                &new_org_id,
                 &encryption_key,    // This is encrypted with the master encryption key
                 &org_data.organization_name,
                 &org_data.organization_info,
