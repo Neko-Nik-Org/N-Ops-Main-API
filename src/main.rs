@@ -100,9 +100,8 @@ async fn main() -> std::io::Result<()> {
                 .service(users::list_users)
                 .service(users::get_user)
                 // .service(users::update_user)    // Update User's Details like primary_email, display_name, user_details
-                // .service(users::assign_role)    // Update User's Role and Geo / IP restrictions or 2FA methods (disable only)
-                // .service(users::assign_ar_policy)    // Update User's Role and Geo / IP restrictions or 2FA methods (disable only)
-                // .service(users::send_invitation) // Send an invitation to a user to join the organization (email send with link)
+                // .service(users::assign_role)    // Re-Assign a role to a user (Cant remove obvioulsy)
+                // .service(users::assign_ar_policy)    // Assign/Remove/Re-Assign an access restriction policy to a user
             )
             // .service(
             //     actix_scope("/user/2fa")
