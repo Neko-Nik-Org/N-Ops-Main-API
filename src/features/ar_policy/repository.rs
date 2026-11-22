@@ -124,3 +124,21 @@ pub async fn count_policy_associations(db_pool: &PgPool, organization_id: uuid::
 
     Ok(row.get("association_count"))
 }
+
+
+pub async fn delete_policy(db_pool: &PgPool, organization_id: uuid::Uuid, policy_id: i64) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            DELETE FROM access_restriction_policy
+            WHERE organization_id = $1
+              AND policy_id = $2
+            "#,
+            &[&organization_id, &policy_id],
+        )
+        .await?;
+
+    Ok(result)
+}

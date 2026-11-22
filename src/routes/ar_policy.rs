@@ -71,3 +71,18 @@ pub async fn check_policy_association(session_user: web::ReqData<SessionUser>, p
 
     Ok(HttpResponse::Ok().json(association_count))
 }
+
+
+#[delete("/delete/{policy_id}")]
+pub async fn delete_policy(session_user: web::ReqData<SessionUser>, path: web::Path<i64>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let policy_id = path.into_inner();
+
+    // Validate that the session user has the required permissions
+    session_user.has_all_permissions(&["policy:ar:view", "policy:ar:delete"])?;
+
+    // Delete the policy using the provided data and the session user's context
+    ar_policy::delete_policy(&state.pg_pool, session_user.organization_id, policy_id).await?;
+
+    Ok(HttpResponse::NoContent().finish())
+}
