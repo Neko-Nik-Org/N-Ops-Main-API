@@ -5,6 +5,7 @@ use crate::state::AppState;
 use crate::features::ar_policy::{
     UpdatePolicyBaseInfoDto,
     CreatePolicyDto,
+    UpdatePolicyDto,
     ListPolicyDto,
     self
 };
@@ -53,9 +54,12 @@ pub async fn create_policy(session_user: web::ReqData<SessionUser>, body: web::J
     session_user.has_all_permissions(&["policy:ar:view", "policy:ar:create"])?;
 
     // Create the policy using the provided data and the session user's context
-    let policy_data = ar_policy::create_policy(&state.pg_pool, session_user.organization_id, create_policy_dto).await?;
+    let result = ar_policy::create_policy(&state.pg_pool, session_user.organization_id, create_policy_dto).await?;
+    if result == 0 {
+        return Ok(HttpResponse::NotAcceptable().json("Failed to create policy"));
+    }
 
-    Ok(HttpResponse::Ok().json(policy_data))
+    Ok(HttpResponse::Created().finish())
 }
 
 
@@ -99,23 +103,30 @@ pub async fn update_policy_info(session_user: web::ReqData<SessionUser>, path: w
     session_user.has_all_permissions(&["policy:ar:view", "policy:ar:update"])?;
 
     // Update the policy using the provided data and the session user's context
-    let policy_data = ar_policy::update_policy_base_info(&state.pg_pool, session_user.organization_id, policy_id, update_policy_dto).await?;
+    let result = ar_policy::update_policy_base_info(&state.pg_pool, session_user.organization_id, policy_id, update_policy_dto).await?;
+    if result == 0 {
+        return Ok(HttpResponse::NotAcceptable().json("Failed to update policy"));
+    }
 
-    Ok(HttpResponse::Ok().json(policy_data))
+    Ok(HttpResponse::Ok().finish())
 }
 
 
 #[patch("/update/{policy_id}")]
-pub async fn update_policy_enforcement(session_user: web::ReqData<SessionUser>, path: web::Path<i64>, body: web::Json<UpdatePolicyBaseInfoDto>, state: web::Data<AppState>) -> ApiResponse {
+pub async fn update_policy_enforcement(session_user: web::ReqData<SessionUser>, path: web::Path<i64>, body: web::Json<UpdatePolicyDto>, state: web::Data<AppState>) -> ApiResponse {
     let session_user = session_user.into_inner();
     let policy_id = path.into_inner();
-    let update_policy_dto = body.into_inner();
+    let update_full_policy_dto = body.into_inner();
 
     // Validate that the session user has the required permissions
     session_user.has_all_permissions(&["policy:ar:view", "policy:ar:update"])?;
 
     // Update the enforcement settings of the policy
-    let policy_data = ar_policy::update_policy_base_info(&state.pg_pool, session_user.organization_id, policy_id, update_policy_dto).await?;
+    let result = ar_policy::update_full_policy(&state.pg_pool, session_user.organization_id, policy_id, update_full_policy_dto).await?;
 
-    Ok(HttpResponse::Ok().json(policy_data))
+    if result == 0 {
+        return Ok(HttpResponse::NotAcceptable().json("Failed to update policy"));
+    }
+
+    Ok(HttpResponse::Ok().finish())
 }

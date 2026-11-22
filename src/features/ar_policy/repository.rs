@@ -1,4 +1,4 @@
-use super::dto::{ListPolicyDto, CreatePolicyDto, UpdatePolicyBaseInfoDto};
+use super::dto::{ListPolicyDto, CreatePolicyDto, UpdatePolicyBaseInfoDto, UpdatePolicyDto};
 use crate::errors::{PgResult, PgPool};
 use super::model::PolicyInfo;
 
@@ -159,6 +159,39 @@ pub async fn update_policy_base_info(db_pool: &PgPool, organization_id: uuid::Uu
             &[
                 &name_info.policy_name,
                 &name_info.description,
+                &organization_id,
+                &policy_id,
+            ],
+        )
+        .await?;
+
+    Ok(result)
+}
+
+
+pub async fn update_full_policy(db_pool: &PgPool, organization_id: uuid::Uuid, policy_id: i64, full_policy_info: UpdatePolicyDto) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            UPDATE access_restriction_policy
+            SET enforce_totp_2fa = $1,
+                enforce_email_2fa = $2,
+                set_ip_restriction = $3,
+                set_geo_restriction = $4,
+                allowed_ips = $5,
+                allowed_geo_locations = $6
+            WHERE organization_id = $7
+              AND policy_id = $8
+            "#,
+            &[
+                &full_policy_info.enforce_totp_2fa,
+                &full_policy_info.enforce_email_2fa,
+                &full_policy_info.set_ip_restriction,
+                &full_policy_info.set_geo_restriction,
+                &full_policy_info.allowed_ips,
+                &full_policy_info.allowed_geo_locations,
                 &organization_id,
                 &policy_id,
             ],
