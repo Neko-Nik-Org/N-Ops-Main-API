@@ -53,18 +53,14 @@ async fn main() -> std::io::Result<()> {
                 .service(organization::check_org_name)
                 .service(organization::quota_update)
                 .service(organization::name_update)
+                // .service(invite::admin_invite)  // Create a new full permission invite for an admin user (Send email with invite code)
             )
-            // .service(
-            //     actix_scope("/super-admin/user")
-            //     .wrap(from_fn(middleware::key_based::admin_auth_check))
-            //     .service(users::invite_admin_user)  // Send an email invitation to an admin user (Full access one)
-            // )
             .service(
                 actix_scope("/auth")
                 .service(auth::user_login)
                 // .service(auth::forgot_password)  // Send an email with a link to reset password
                 // .service(auth::reset_password)  // Reset password using a token sent via email
-                // .service(users::join_org_invite)  // User registration by link (invitation based)
+                // .service(invite::join_invite)  // User registration by link (invitation based)
                 // .service(mfa::resend_otp)
                 // .service(mfa::verify_otp)
                 .service(
@@ -130,6 +126,15 @@ async fn main() -> std::io::Result<()> {
                 .service(tags::list_tags)
                 .service(tags::get_tag)
             )
+            // .service(
+            //     actix_scope("/invite")
+            //     .wrap(from_fn(middleware::user_session::auth_check))
+            //     .service(invite::delete_invite) // Delete an existing invite by ID, send cancellation email if necessary?
+            //     .service(invite::resend_invite) // Resend an existing invite email
+            //     .service(invite::list_invites)  // List all existing pending invites
+            //     .service(invite::new_invite)    // Send email with invite code "{UI}/invite/{invitation_id}/{invitation_code}"
+            //     .service(invite::get_invite)    // Get details of a specific invite by ID
+            // )
             .service(
                 actix_scope("/user/roles")
                 .wrap(from_fn(middleware::user_session::auth_check))

@@ -1,4 +1,4 @@
-use crate::utils::initial::{ApiSettings, AppSettings, RmqSettings, CfTurnstileSettings, SmtpSettings, OtpSettings};
+use crate::utils::initial::{ApiSettings, AppSettings, RmqSettings, CfTurnstileSettings, SmtpSettings, OtpSettings, OrgInviteSettings};
 use crate::cache::moka_cache::{AppCache, moka_builder};
 use crate::database::pool::{init_pg_pool, warm_pool};
 use crate::cache::redis_cache::init_redis;
@@ -41,6 +41,11 @@ pub static SMTP_SETTINGS: LazyLock<SmtpSettings> = LazyLock::new(|| {
 
 pub static OTP_SETTINGS: LazyLock<OtpSettings> = LazyLock::new(|| {
     OtpSettings::from_env()
+});
+
+
+pub static ORG_INVITE_SETTINGS: LazyLock<OrgInviteSettings> = LazyLock::new(|| {
+    OrgInviteSettings::from_env()
 });
 
 
