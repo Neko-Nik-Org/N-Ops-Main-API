@@ -1,4 +1,4 @@
-use super::dto::{ListPolicyDto, CreatePolicyDto};
+use super::dto::{ListPolicyDto, CreatePolicyDto, UpdatePolicyBaseInfoDto};
 use crate::errors::{PgResult, PgPool};
 use super::model::PolicyInfo;
 
@@ -137,6 +137,31 @@ pub async fn delete_policy(db_pool: &PgPool, organization_id: uuid::Uuid, policy
               AND policy_id = $2
             "#,
             &[&organization_id, &policy_id],
+        )
+        .await?;
+
+    Ok(result)
+}
+
+
+pub async fn update_policy_base_info(db_pool: &PgPool, organization_id: uuid::Uuid, policy_id: i64, name_info: UpdatePolicyBaseInfoDto) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            UPDATE access_restriction_policy
+            SET policy_name = $1,
+                policy_description = $2
+            WHERE organization_id = $3
+              AND policy_id = $4
+            "#,
+            &[
+                &name_info.policy_name,
+                &name_info.description,
+                &organization_id,
+                &policy_id,
+            ],
         )
         .await?;
 

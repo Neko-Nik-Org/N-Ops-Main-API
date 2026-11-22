@@ -24,3 +24,10 @@ pub struct CreatePolicyDto {
     pub allowed_ips: Vec<String>,
     pub allowed_geo_locations: Vec<String>
 }
+
+
+#[derive(Deserialize)]
+pub struct UpdatePolicyBaseInfoDto {
+    pub policy_name: String,
+    pub description: String
+}

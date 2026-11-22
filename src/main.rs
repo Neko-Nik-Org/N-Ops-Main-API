@@ -147,9 +147,9 @@ async fn main() -> std::io::Result<()> {
                 .service(ar_policy::list_policies)
                 .service(ar_policy::create_policy)
                 .service(ar_policy::delete_policy)
+                .service(ar_policy::update_policy_info)
                 .service(ar_policy::check_policy_association)
-                // .service(ar_policy::update_policy_info) // Update Name, Description
-                // .service(ar_policy::update_policy_enforcement)  // Update the enforcement settings of the policy
+                .service(ar_policy::update_policy_enforcement)
             )
             // .service(
             //     actix_scope("/api-keys")
