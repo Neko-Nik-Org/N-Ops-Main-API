@@ -103,3 +103,24 @@ pub async fn create_policy(db_pool: &PgPool, organization_id: uuid::Uuid, create
 
     Ok(result)
 }
+
+
+pub async fn count_policy_associations(db_pool: &PgPool, organization_id: uuid::Uuid, policy_id: i64) -> PgResult<i64> {
+    let client = db_pool.get().await?;
+
+    let row = client
+        .query_one(
+            r#"
+            SELECT COUNT(*) AS association_count
+            FROM app_user au
+            JOIN access_restriction_policy arp
+                ON arp.policy_id = au.access_restriction_policy_id
+            WHERE arp.organization_id = $1
+              AND arp.policy_id = $2
+            "#,
+            &[&organization_id, &policy_id],
+        )
+        .await?;
+
+    Ok(row.get("association_count"))
+}

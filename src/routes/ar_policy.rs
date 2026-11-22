@@ -56,3 +56,18 @@ pub async fn create_policy(session_user: web::ReqData<SessionUser>, body: web::J
 
     Ok(HttpResponse::Ok().json(policy_data))
 }
+
+
+#[get("/check/{policy_id}")]
+pub async fn check_policy_association(session_user: web::ReqData<SessionUser>, path: web::Path<i64>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let policy_id = path.into_inner();
+
+    // Validate that the session user has the required permissions
+    session_user.has_all_permissions(&["policy:ar:view"])?;
+
+    // Check the policy association (Count of users that have this policy, useful to do force delete and to know the impact)
+    let association_count = ar_policy::count_policy_associations(&state.pg_pool, session_user.organization_id, policy_id).await?;
+
+    Ok(HttpResponse::Ok().json(association_count))
+}
