@@ -87,6 +87,8 @@ pub async fn list_organizations(db_pool: &PgPool, query: ListOrgsDto) -> PgResul
 pub async fn create_organization(db_pool: &PgPool, encryption_key: &str, org_data: &CreateOrgDto) -> PgResult<u64> {
     let client = db_pool.get().await?;
 
+    let default_zero: i64 = 0;
+
     let result = client
         .execute(
             r#"
@@ -107,7 +109,7 @@ pub async fn create_organization(db_pool: &PgPool, encryption_key: &str, org_dat
                 ss_keys_limit,
                 ss_notes_limit
             )
-            VALUES ($1, $2, $3, $4, $5, 0::BIGINT, $6, 0::BIGINT, $7, $8, $9, $10, $11, $12, $13)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
             "#,
             &[
                 &encryption_key,    // This is encrypted with the master encryption key
@@ -115,7 +117,9 @@ pub async fn create_organization(db_pool: &PgPool, encryption_key: &str, org_dat
                 &org_data.organization_info,
                 &org_data.billing_info,
                 &org_data.allocated_ai_credit,
+                &default_zero,
                 &org_data.allocated_storage_bytes,
+                &default_zero,
                 &org_data.is_active,
                 &org_data.user_limit,
                 &org_data.server_limit,
