@@ -100,7 +100,7 @@ pub async fn update_policy_info(session_user: web::ReqData<SessionUser>, path: w
     let update_policy_dto = body.into_inner();
 
     // Validate that the session user has the required permissions
-    session_user.has_all_permissions(&["policy:ar:view", "policy:ar:update"])?;
+    session_user.has_all_permissions(&["policy:ar:view", "policy:ar:edit"])?;
 
     // Update the policy using the provided data and the session user's context
     let result = ar_policy::update_policy_base_info(&state.pg_pool, session_user.organization_id, policy_id, update_policy_dto).await?;
@@ -119,7 +119,7 @@ pub async fn update_policy_enforcement(session_user: web::ReqData<SessionUser>, 
     let update_full_policy_dto = body.into_inner();
 
     // Validate that the session user has the required permissions
-    session_user.has_all_permissions(&["policy:ar:view", "policy:ar:update"])?;
+    session_user.has_all_permissions(&["policy:ar:view", "policy:ar:edit"])?;
 
     // Update the enforcement settings of the policy
     let result = ar_policy::update_full_policy(&state.pg_pool, session_user.organization_id, policy_id, update_full_policy_dto).await?;
