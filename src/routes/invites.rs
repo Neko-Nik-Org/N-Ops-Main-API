@@ -65,3 +65,16 @@ pub async fn join_invite(path: web::Path<String>, body: web::Json<CreateUserReqD
 
     Ok(HttpResponse::Ok().finish())
 }
+
+
+#[post("/invite/{organization_id}/admin")]
+pub async fn admin_invite(path: web::Path<uuid::Uuid>, body: web::Json<String>, state: web::Data<AppState>) -> ApiResponse {
+    let organization_id = path.into_inner();
+    let email = body.into_inner();
+
+    // Send a new admin invite to the specified email with the generated invitation code
+    // It will also create a Role for the admin user if it doesn't already exist
+    user_invite::send_admin_invite(&state, organization_id, email).await?;
+
+    Ok(HttpResponse::Created().finish())
+}

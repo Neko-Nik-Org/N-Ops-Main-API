@@ -74,7 +74,7 @@ pub async fn create_new_role(state: &AppState, session_user: &SessionUser, role_
     validate_role_restrictions(session_user, role_data)?;
 
     // Call the repository function to create the new role in the database
-    repository::create_new_role(&state.pg_pool, session_user.organization_id, role_data).await?;
+    let _ = repository::create_role(&state.pg_pool, session_user.organization_id, role_data).await?;
 
     Ok(())
 }

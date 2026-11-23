@@ -3,7 +3,6 @@ use actix_web::web::scope as actix_scope;
 use actix_web::middleware::from_fn;
 use actix_web::{App, HttpServer};
 use std::env::var as env_var;
-use std::thread::scope;
 use actix_cors::Cors;
 
 
@@ -54,7 +53,7 @@ async fn main() -> std::io::Result<()> {
                 .service(organization::check_org_name)
                 .service(organization::quota_update)
                 .service(organization::name_update)
-                // .service(invite::admin_invite)  // Create a new full permission invite for an admin user (Send email with invite code)
+                .service(invites::admin_invite)
             )
             .service(
                 actix_scope("/auth")

@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 
 
-pub async fn create_new_role(db_pool: &PgPool, organization_id: Uuid, role_data: &CreateNewRoleDto) -> PgResult<()> {
+pub async fn create_role(db_pool: &PgPool, organization_id: Uuid, role_data: &CreateNewRoleDto) -> PgResult<i64> {
     let mut client = db_pool.get().await?;
 
     // Start transaction
@@ -63,7 +63,7 @@ pub async fn create_new_role(db_pool: &PgPool, organization_id: Uuid, role_data:
     // 3. Commit transaction
     transaction.commit().await?;
 
-    Ok(())
+    Ok(role_id)
 }
 
 
@@ -288,4 +288,22 @@ pub async fn update_role_permissions(
     transaction.commit().await?;
 
     Ok(())
+}
+
+
+pub async fn check_role_exists(db_pool: &PgPool, organization_id: Uuid, role_name: &str) -> PgResult<Option<i64>> {
+    let client = db_pool.get().await?;
+
+    let row = client
+        .query_opt(
+            r#"
+            SELECT role_id
+            FROM user_role
+            WHERE organization_id = $1
+                AND role_name = $2
+            "#,
+            &[&organization_id, &role_name],
+        ).await?;
+
+    Ok(row.map(|r| r.get("role_id")))
 }
