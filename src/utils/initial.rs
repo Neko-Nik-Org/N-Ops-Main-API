@@ -20,6 +20,16 @@ pub const ALL_AVAILABLE_PERMISSIONS: [&str; 5] = [
 ];
 
 
+// Anti-Phishing Words (Used for generating unique codes to prevent phishing attacks)
+pub const ANTI_PISHING_WORDS: [&str; 25] = [
+    "cat", "tiger", "rocket", "moon", "coffee",
+    "dragon", "pixel", "neko", "cloud", "ocean",
+    "forest", "silver", "orange", "planet", "cosmos",
+    "shadow", "crystal", "falcon", "winter", "sunset",
+    "nebula", "asteroid", "galaxy", "meteor", "comet"
+];
+
+
 pub struct PgSettings {
     pub url: String,
     pub conn_timeout: u64,

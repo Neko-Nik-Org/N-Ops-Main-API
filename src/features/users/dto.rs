@@ -81,10 +81,5 @@ pub struct CreateUserReqDto {
     pub role_id: i64,
     pub password: String,    // Base64 encoded password
 
-    // TODO: Move this to new policy based (Restriction Policy)
-    pub has_ip_restriction: bool,
-    pub has_geo_restriction: bool,
-    pub allowed_ips: Vec<String>,
-    pub allowed_geo_locations: Vec<String>,
-    // TODO: Also add something like enforcement policies like should have 2FA enabled, etc.
+    pub access_restriction_policy_id: Option<i64>,
 }

@@ -455,10 +455,7 @@ pub async fn list_all_users(db_pool: &PgPool, organization_id: uuid::Uuid, query
             is_email_verified,
             is_active,
             role_id,
-            has_ip_restriction,
-            has_geo_restriction,
-            allowed_ips,
-            allowed_geo_locations,
+            access_restriction_policy_id,
             has_totp_2fa,
             has_email_2fa,
             created_at,
@@ -502,10 +499,7 @@ pub async fn fetch_user_by_id_listing(db_pool: &PgPool, organization_id: uuid::U
             is_email_verified,
             is_active,
             role_id,
-            has_ip_restriction,
-            has_geo_restriction,
-            allowed_ips,
-            allowed_geo_locations,
+            access_restriction_policy_id,
             has_totp_2fa,
             has_email_2fa,
             created_at,
@@ -582,15 +576,12 @@ pub async fn create_user(db_pool: &PgPool, organization_id: uuid::Uuid, password
                 ui_info,
                 is_active,
                 role_id,
-                has_ip_restriction,
-                has_geo_restriction,
-                allowed_ips,
-                allowed_geo_locations
+                access_restriction_policy_id
             )
             SELECT
                 $1, $2, $3, $4, $5, $6,
                 '{}'::jsonb,
-                $7, $8, $9, $10, $11, $12
+                $7, $8, $9
             WHERE EXISTS (
                 SELECT 1
                 FROM user_role
@@ -607,10 +598,7 @@ pub async fn create_user(db_pool: &PgPool, organization_id: uuid::Uuid, password
                 &create_request.user_details,
                 &create_request.is_active,
                 &create_request.role_id,
-                &create_request.has_ip_restriction,
-                &create_request.has_geo_restriction,
-                &create_request.allowed_ips,
-                &create_request.allowed_geo_locations,
+                &create_request.access_restriction_policy_id,
             ],
         )
         .await?;

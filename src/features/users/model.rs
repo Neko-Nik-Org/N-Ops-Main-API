@@ -115,11 +115,8 @@ pub struct UserProfileListing {
     // Security and access control
     pub role_id: i64,
 
-    // Geo and IP restrictions
-    pub has_ip_restriction: bool,
-    pub has_geo_restriction: bool,
-    pub allowed_ips: Vec<String>,
-    pub allowed_geo_locations: Vec<String>,
+    // Geo and IP restrictions + Enforcements policy
+    pub access_restriction_policy_id: Option<i64>,
 
     // Two-factor authentication status
     pub has_totp_2fa: bool,
