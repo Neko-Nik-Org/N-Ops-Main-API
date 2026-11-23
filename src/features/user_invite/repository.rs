@@ -113,3 +113,21 @@ pub async fn check_invite_possible(db_pool: &PgPool, email: &str) -> PgResult<bo
 
     Ok(row.get("invite_possible"))
 }
+
+
+pub async fn delete_invitation(db_pool: &PgPool, organization_id: uuid::Uuid, invitation_id: i64) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            DELETE FROM organization_invitation
+            WHERE organization_id = $1
+                AND invitation_id = $2
+            "#,
+            &[&organization_id, &invitation_id],
+        )
+        .await?;
+
+    Ok(result)
+}

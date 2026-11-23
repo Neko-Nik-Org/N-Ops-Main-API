@@ -128,10 +128,9 @@ async fn main() -> std::io::Result<()> {
             .service(
                 actix_scope("/invite")
                 .wrap(from_fn(middleware::user_session::auth_check))
+                .service(invites::delete_invite)
                 .service(invites::list_invites)
                 .service(invites::new_invite)
-                // .service(invites::delete_invite) // Delete an existing invite by ID, send cancellation email if necessary?
-                // .service(invites::resend_invite) // Resend an existing invite email
             )
             .service(
                 actix_scope("/user/roles")
