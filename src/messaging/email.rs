@@ -8,6 +8,7 @@ use crate::errors::ServiceResult;
 use lettre::message::Mailbox;
 use utils::EmailMessage;
 
+type ChronoUtc = chrono::DateTime<chrono::Utc>;
 
 
 /// Sends a verification email containing an OTP to the specified session user's email address
@@ -63,7 +64,14 @@ pub async fn send_welcome_email(display_name: &str, primary_email: &str) -> Serv
 
 
 /// Sends an invite email to the specified email address with the provided invitation code
-pub async fn send_invite_email(invite_to_email: &str, invitation_code: &str, invited_by: &str, org_name: &str) -> ServiceResult<()> {
+pub async fn send_invite_email(
+    invite_to_email: &str,
+    invitation_notes: &str,
+    expiration_datetime: &ChronoUtc,
+    invitation_code: &str,
+    invited_by: &str,
+    org_name: &str
+) -> ServiceResult<()> {
     // Build the recipient mailbox for the email
     let send_to_email = Mailbox::new(
         None,
@@ -85,16 +93,35 @@ pub async fn send_invite_email(invite_to_email: &str, invitation_code: &str, inv
         BASE64_STANDARD.encode(invitation_details.to_string())
     );
 
+    let expires_at = expiration_datetime.format("%-d %b %Y, %H:%M UTC").to_string();
+    let notes: String = invitation_notes
+        .trim()
+        .replace("\r\n", "\n")
+        .chars()
+        .take(500)
+        .collect();
+    let has_notes = !notes.is_empty();
+
+    // Determine if there are any invitation notes to include in the email
+    let invite_email_html = templates::INVITE_EMAIL_HTML.to_string();
+    let invite_email_text = templates::INVITE_EMAIL_TEXT.to_string();
+
+    // Remove the optional notes section if there are no notes ({{#NOTES}} ... {{/NOTES}})
+    let invite_email_text = utils::notes_section(&invite_email_text, has_notes);
+    let invite_email_html = utils::notes_section(&invite_email_html, has_notes);
+
     // Build the email message
     let email_message = EmailMessage::new(
         send_to_email,
         format!("N-Ops: You're Invited to Join {}", org_name),
-        templates::INVITE_EMAIL_TEXT,
-        templates::INVITE_EMAIL_HTML,
+        &invite_email_text,
+        &invite_email_html,
         &[
             ("{{ORG_NAME}}", org_name),
             ("{{INVITED_BY}}", invited_by),
             ("{{INVITE_URL}}", &invitation_url),
+            ("{{EXPIRES_AT}}", &expires_at),
+            ("{{INVITATION_NOTES}}", &notes),
         ]
     );
 

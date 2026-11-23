@@ -40,6 +40,8 @@ pub async fn send_new_invite(state: &AppState, session_user: &SessionUser, invit
     // Send the email
     email::send_invite_email(
         &invite_data.invite_to_email,
+        &invite_data.invitation_notes,
+        &invite_data.expiration_datetime,
         &invitation_code,
         &session_user.display_name,
         &session_user.organization_name

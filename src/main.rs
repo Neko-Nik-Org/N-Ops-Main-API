@@ -57,10 +57,10 @@ async fn main() -> std::io::Result<()> {
             )
             .service(
                 actix_scope("/auth")
+                // .service(invites::join_invite)  // User registration by link (invitation based)
                 .service(auth::user_login)
                 // .service(auth::forgot_password)  // Send an email with a link to reset password
                 // .service(auth::reset_password)  // Reset password using a token sent via email
-                // .service(invite::join_invite)  // User registration by link (invitation based)
                 // .service(mfa::resend_otp)
                 // .service(mfa::verify_otp)
                 .service(

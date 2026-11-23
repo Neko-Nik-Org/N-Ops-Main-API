@@ -30,15 +30,30 @@ pub struct EmailMessage {
 }
 
 
+/// Keeps the optional notes section ({{#NOTES}} ... {{/NOTES}}) or removes it
+pub fn notes_section(template: &str, show: bool) -> String {
+    if show {
+        return template.replace("{{#NOTES}}", "").replace("{{/NOTES}}", "");
+    }
+    match (template.find("{{#NOTES}}"), template.find("{{/NOTES}}")) {
+        (Some(start), Some(end)) => {
+            format!("{}{}", &template[..start], &template[end + "{{/NOTES}}".len()..])
+        }
+        _ => template.to_string(),
+    }
+}
+
+
 impl EmailMessage {
     /// Escapes characters that have a meaning in HTML
     fn escape_html(value: &str) -> String {
         value
-            .replace('&', "&amp;")
-            .replace('<', "&lt;")
-            .replace('>', "&gt;")
-            .replace('"', "&quot;")
-            .replace('\'', "&#39;")
+            .replace('&', "&amp;")  // Escape ampersand for HTML
+            .replace('<', "&lt;")   // Escape less-than for HTML
+            .replace('>', "&gt;")   // Escape greater-than for HTML
+            .replace('"', "&quot;") // Escape double quote for HTML
+            .replace('\'', "&#39;") // Escape single quote for HTML
+            .replace('\n', "<br>")  // Replace new lines with <br> for HTML
     }
 
     /// Creates a new `EmailMessage` with the specified recipient, subject, template, and replacements.

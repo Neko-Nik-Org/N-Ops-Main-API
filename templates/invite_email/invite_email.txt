@@ -6,8 +6,12 @@ Hi there,
 
 Organisation: {{ORG_NAME}}
 Invited by:   {{INVITED_BY}}
+Expires on:   {{EXPIRES_AT}}
 
-Accept the invitation:
+{{#NOTES}}Note from {{INVITED_BY}}:
+{{INVITATION_NOTES}}
+
+{{/NOTES}}Accept the invitation:
 {{INVITE_URL}}
 
 If you weren't expecting this invitation, you can safely ignore this email.

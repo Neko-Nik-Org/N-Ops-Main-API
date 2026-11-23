@@ -25,7 +25,7 @@ pub async fn list_invites(session_user: web::ReqData<SessionUser>, path: web::Qu
 }
 
 
-#[post("/invite")]
+#[post("/new")]
 pub async fn new_invite(session_user: web::ReqData<SessionUser>, body: web::Json<NewInviteDto>, state: web::Data<AppState>) -> ApiResponse {
     let session_user = session_user.into_inner();
     let new_invite_dto = body.into_inner();
