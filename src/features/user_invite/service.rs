@@ -75,7 +75,7 @@ pub async fn join_invite(state: &AppState, invitation_code: String, user_data: C
         display_name: user_data.display_name,
         primary_email: invite_details.email,
         user_details: user_data.user_details,
-        is_active: user_data.is_active,
+        is_active: true,
         role_id: invite_details.role_id,
         password: user_data.password,
         access_restriction_policy_id: invite_details.access_restriction_policy_id,
