@@ -66,6 +66,7 @@ pub struct OtpSettings {
 
 
 pub struct OrgInviteSettings {
+    pub base_url: String,
     pub secret_chars: Vec<char>,
     pub secret_chars_len: u32,
     pub invite_code_length: usize,
@@ -334,6 +335,7 @@ impl OtpSettings {
 
 impl OrgInviteSettings {
     pub fn from_env() -> Self {
+        let base_url = env_var("ORG_INVITE_BASE_URL").expect("ORG_INVITE_BASE_URL must be set");
         let secret_charset = env_var("ORG_INVITE_SECRET_CHARSET").expect("ORG_INVITE_SECRET_CHARSET must be set");
         
         // Collect the characters from the allowed secret character set into a vector
@@ -352,6 +354,7 @@ impl OrgInviteSettings {
         const INVITE_CODE_LENGTH: usize = 9;
 
         OrgInviteSettings {
+            base_url,
             secret_chars,
             secret_chars_len,
             invite_code_length: INVITE_CODE_LENGTH,

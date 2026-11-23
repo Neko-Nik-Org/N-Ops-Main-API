@@ -11,3 +11,8 @@ pub const VERIFY_EMAIL_SUCCESS_TEXT: &str = include_str!("../../../templates/ver
 // Welcome email - sent to new users after account creation
 pub const WELCOME_EMAIL_HTML: &str = include_str!("../../../templates/initial_email/welcome_email.html");
 pub const WELCOME_EMAIL_TEXT: &str = include_str!("../../../templates/initial_email/welcome_email.txt");
+
+
+// Invite email - sent to users with an invitation code
+pub const INVITE_EMAIL_HTML: &str = include_str!("../../../templates/invite_email/invite_email.html");
+pub const INVITE_EMAIL_TEXT: &str = include_str!("../../../templates/invite_email/invite_email.txt");

@@ -166,7 +166,7 @@ CREATE TABLE organization_invitation (
 
     email VARCHAR(254) UNIQUE NOT NULL,
     invitation_notes TEXT,  -- Optional notes or message for the invitation
-    invitation_code_hash CHAR(64) NOT NULL, -- HMAC-SHA-256 hash of the invitation code
+    invitation_code_hash CHAR(64) UNIQUE NOT NULL, -- HMAC-SHA-256 hash of the invitation code
 
     role_id BIGINT NOT NULL REFERENCES user_role(role_id) ON DELETE CASCADE,
     access_restriction_policy_id BIGINT REFERENCES access_restriction_policy(policy_id) ON DELETE SET NULL,

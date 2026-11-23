@@ -1,0 +1,34 @@
+You've been invited to join {{ORG_NAME}}
+
+Hi there,
+
+{{INVITED_BY}} has invited you to join {{ORG_NAME}} on N-Ops. Accept the invitation to join the organisation. If you don't have an N-Ops account yet, you can sign up from the same page.
+
+Organisation: {{ORG_NAME}}
+Invited by:   {{INVITED_BY}}
+
+Accept the invitation:
+{{INVITE_URL}}
+
+If you weren't expecting this invitation, you can safely ignore this email.
+
+Best regards,
+The N-Ops team
+
+This is an automated message, please do not reply.
+
+------------------------------------------------------------
+Disclaimer: N-Ops will never ask for your password, verification
+codes, SSH keys or Vault secrets by email, phone or chat. Never
+share them with anyone, including people who say they are from
+N-Ops. This email is intended only for the person it was sent to.
+If you received it by mistake, please delete it.
+
+Kindly note: Be careful of phishing sites. Before you enter your
+password or a verification code, make sure you are on your
+organisation's official N-Ops address.
+
+You received this email because {{INVITED_BY}} invited you to join {{ORG_NAME}} on N-Ops.
+Built by Neko Nik (https://nekonik.org/) and Powered by YSPL (https://www.yukthi.com/).
+
+© {{COPYRIGHT_YEARS}} Neko Nik. All rights reserved.

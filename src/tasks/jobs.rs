@@ -1,10 +1,12 @@
 use crate::features::api_keys::clean_expired_api_keys;
+use crate::features::user_invite::delete_old_invites;
 use deadpool_postgres::Pool as PgPool;
 use std::future::Future;
 use std::time::Duration;
 
 
 const API_KEYS_CLEANUP_INTERVAL: u64 = 3 * 60 * 60;
+const DELETE_OLD_INVITES_INTERVAL: u64 = 2 * 60 * 60;
 
 
 async fn run_every<F, Fut, E>(seconds: u64, mut job: F)
@@ -30,6 +32,16 @@ pub async fn clean_expired_api_keys_job(pg_pool: PgPool) {
 
     run_every(API_KEYS_CLEANUP_INTERVAL, || {
         clean_expired_api_keys(&pg_pool)
+    })
+    .await;
+}
+
+
+pub async fn delete_old_invites_job(pg_pool: PgPool) {
+    tracing::info!("Starting delete_old_invites job");
+
+    run_every(API_KEYS_CLEANUP_INTERVAL, || {
+        delete_old_invites(&pg_pool)
     })
     .await;
 }

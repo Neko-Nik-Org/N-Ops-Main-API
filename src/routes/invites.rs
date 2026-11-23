@@ -4,27 +4,10 @@ use crate::errors::ApiResponse;
 use crate::state::AppState;
 use crate::features::user_invite::{
     ListInvitesDto,
+    NewInviteDto,
     self
 };
 
-
-
-// #[get("/get/{policy_id}")]
-// pub async fn fetch_policy(session_user: web::ReqData<SessionUser>, path: web::Path<i64>, state: web::Data<AppState>) -> ApiResponse {
-//     let session_user = session_user.into_inner();
-//     let policy_id = path.into_inner();
-
-//     // Validate that the session user has the required permissions
-//     session_user.has_all_permissions(&["policy:ar:view"])?;
-
-//     // Get the tag using the provided data and the session user's context
-//     let policy_data = ar_policy::get_policy(&state.pg_pool, session_user.organization_id, policy_id).await?;
-//     if policy_data.is_none() {
-//         return Ok(HttpResponse::NotFound().finish());
-//     }
-
-//     Ok(HttpResponse::Ok().json(policy_data))
-// }
 
 
 #[get("/list")]
@@ -42,22 +25,19 @@ pub async fn list_invites(session_user: web::ReqData<SessionUser>, path: web::Qu
 }
 
 
-// #[post("/create")]
-// pub async fn create_policy(session_user: web::ReqData<SessionUser>, body: web::Json<CreatePolicyDto>, state: web::Data<AppState>) -> ApiResponse {
-//     let session_user = session_user.into_inner();
-//     let create_policy_dto = body.into_inner();
+#[post("/invite")]
+pub async fn new_invite(session_user: web::ReqData<SessionUser>, body: web::Json<NewInviteDto>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let new_invite_dto = body.into_inner();
 
-//     // Validate that the session user has the required permissions
-//     session_user.has_all_permissions(&["policy:ar:view", "policy:ar:create"])?;
+    // Validate that the session user has the required permissions
+    session_user.has_all_permissions(&["user:invite:create", "user:create"])?;
 
-//     // Create the policy using the provided data and the session user's context
-//     let result = ar_policy::create_policy(&state.pg_pool, session_user.organization_id, create_policy_dto).await?;
-//     if result == 0 {
-//         return Ok(HttpResponse::NotAcceptable().json("Failed to create policy"));
-//     }
+    // Send a new invite to the specified email with the generated invitation code
+    user_invite::send_new_invite(&state, &session_user, new_invite_dto).await?;
 
-//     Ok(HttpResponse::Created().finish())
-// }
+    Ok(HttpResponse::Created().finish())
+}
 
 
 // #[get("/check/{policy_id}")]
