@@ -155,7 +155,7 @@ pub async fn update_user_profile(state: &AppState, user_id: i64, update_request:
 
 
 /// Create a new user in the system
-pub async fn create_user(state: &AppState, session_user: &SessionUser, create_request: &CreateUserReqDto) -> ServiceResult<()> {
+pub async fn create_user(state: &AppState, organization_id: Uuid, create_request: &CreateUserReqDto) -> ServiceResult<()> {
     // Validate the username against the defined username policy
     validate_username(&create_request.user_name)?;
 
@@ -168,7 +168,7 @@ pub async fn create_user(state: &AppState, session_user: &SessionUser, create_re
     // Create the user in the repository
     let result = repository::create_user(
         &state.pg_pool,
-        session_user.organization_id,
+        organization_id,
         &password_hash,
         &create_request,
     ).await?;

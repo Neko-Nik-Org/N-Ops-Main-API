@@ -1,5 +1,5 @@
 use super::dto::{ListInvitesDto, NewInviteDto};
-use crate::errors::{PgResult, PgPool};
+use crate::errors::{PgResult, PgPool, PgError};
 use super::model::InviteInfo;
 
 
@@ -12,6 +12,7 @@ pub async fn list_invites(db_pool: &PgPool, organization_id: uuid::Uuid, list_in
             r#"
             SELECT
                 invitation_id,
+                organization_id,
                 email,
                 invitation_notes,
                 role_id,
@@ -39,9 +40,45 @@ pub async fn list_invites(db_pool: &PgPool, organization_id: uuid::Uuid, list_in
 
 
 pub async fn create_invite(db_pool: &PgPool, organization_id: uuid::Uuid, invitation_code_hash: String, new_invite: &NewInviteDto) -> PgResult<u64> {
-    let client = db_pool.get().await?;
+    let mut client = db_pool.get().await?;
 
-    let result = client
+    // Start transaction
+    let transaction = client.transaction().await?;
+
+    // 1. Ensure the role & access restriction policy belong to this organization
+    let belongs_to_org = transaction
+        .query_opt(
+            r#"
+            SELECT 1
+            FROM user_role ur
+            LEFT JOIN access_restriction_policy arp
+                ON arp.organization_id = ur.organization_id
+               AND arp.access_restriction_policy_id = $2
+            WHERE ur.organization_id = $1
+              AND ur.role_id = $3
+              AND (
+                  $2::BIGINT IS NULL
+                  OR arp.access_restriction_policy_id IS NOT NULL
+              )
+            "#,
+            &[
+                &organization_id,
+                &new_invite.access_restriction_policy_id,
+                &new_invite.role_id,
+            ],
+        )
+        .await?;
+
+    if belongs_to_org.is_none() {
+        transaction.rollback().await?;
+
+        return Err(PgError::Custom(
+            "Role or access restriction policy does not belong to the organization".into(),
+        ));
+    }
+
+    // 2. Create invitation
+    let result = transaction
         .execute(
             r#"
             INSERT INTO organization_invitation (
@@ -65,6 +102,9 @@ pub async fn create_invite(db_pool: &PgPool, organization_id: uuid::Uuid, invita
             ],
         )
         .await?;
+
+    // 3. Commit transaction
+    transaction.commit().await?;
 
     Ok(result)
 }
@@ -130,4 +170,31 @@ pub async fn delete_invitation(db_pool: &PgPool, organization_id: uuid::Uuid, in
         .await?;
 
     Ok(result)
+}
+
+
+pub async fn get_invite_details_by_code(db_pool: &PgPool, invitation_code_hash: &str) -> PgResult<Option<InviteInfo>> {
+    let client = db_pool.get().await?;
+
+    let row = client
+        .query_opt(
+            r#"
+            SELECT
+                invitation_id,
+                organization_id,
+                email,
+                invitation_notes,
+                role_id,
+                access_restriction_policy_id,
+                invited_at,
+                expires_at
+            FROM organization_invitation
+            WHERE invitation_code_hash = $1
+                AND expires_at > NOW()
+            "#,
+            &[&invitation_code_hash],
+        )
+        .await?;
+
+    Ok(row.map(InviteInfo::from))
 }

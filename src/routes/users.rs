@@ -264,7 +264,7 @@ pub async fn create_user(session_user: web::ReqData<SessionUser>, body: web::Jso
     // So, make sure granting this permission is done carefully and only to trusted users!
 
     // Create the user in the database
-    users::create_user(&state, &session_user, &create_request).await?;
+    users::create_user(&state, session_user.organization_id, &create_request).await?;
 
     // Send welcome email to the newly created user
     messaging::email::send_welcome_email(&create_request.display_name, &create_request.primary_email).await?;

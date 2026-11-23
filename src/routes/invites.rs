@@ -1,5 +1,5 @@
+use crate::features::users::{SessionUser, CreateUserReqDto};
 use actix_web::{HttpResponse, delete, get, post, web};
-use crate::features::users::SessionUser;
 use crate::errors::ApiResponse;
 use crate::state::AppState;
 use crate::features::user_invite::{
@@ -52,4 +52,16 @@ pub async fn delete_invite(session_user: web::ReqData<SessionUser>, path: web::P
     user_invite::delete_invitation(&state.pg_pool, session_user.organization_id, invitation_id).await?;
 
     Ok(HttpResponse::NoContent().finish())
+}
+
+
+#[post("/join/{invitation_code}")]
+pub async fn join_invite(path: web::Path<String>, body: web::Json<CreateUserReqDto>, state: web::Data<AppState>) -> ApiResponse {
+    let invitation_code = path.into_inner();
+    let create_user_req = body.into_inner();
+
+    // Process the join invite using the provided data
+    user_invite::join_invite(&state, invitation_code, create_user_req).await?;
+
+    Ok(HttpResponse::Ok().finish())
 }

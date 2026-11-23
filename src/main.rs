@@ -3,6 +3,7 @@ use actix_web::web::scope as actix_scope;
 use actix_web::middleware::from_fn;
 use actix_web::{App, HttpServer};
 use std::env::var as env_var;
+use std::thread::scope;
 use actix_cors::Cors;
 
 
@@ -57,7 +58,6 @@ async fn main() -> std::io::Result<()> {
             )
             .service(
                 actix_scope("/auth")
-                // .service(invites::join_invite)  // User registration by link (invitation based)
                 .service(auth::user_login)
                 // .service(auth::forgot_password)  // Send an email with a link to reset password
                 // .service(auth::reset_password)  // Reset password using a token sent via email
@@ -127,10 +127,14 @@ async fn main() -> std::io::Result<()> {
             )
             .service(
                 actix_scope("/invite")
-                .wrap(from_fn(middleware::user_session::auth_check))
-                .service(invites::delete_invite)
-                .service(invites::list_invites)
-                .service(invites::new_invite)
+                .service(invites::join_invite)
+                .service(
+                    actix_scope("")
+                    .wrap(from_fn(middleware::user_session::auth_check))
+                    .service(invites::delete_invite)
+                    .service(invites::list_invites)
+                    .service(invites::new_invite)
+                )
             )
             .service(
                 actix_scope("/user/roles")
