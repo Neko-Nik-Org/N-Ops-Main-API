@@ -81,6 +81,11 @@ pub async fn join_invite(state: &AppState, invitation_code: String, user_data: C
         access_restriction_policy_id: invite_details.access_restriction_policy_id,
     };
 
+    // TODO: Generate anti-phishing secret for the user (Encrypted)
+    // let anti_phishing_secret = generate_anti_phishing_secret();
+    // use crate::security::encryption;
+    // let encrypted_anti_phishing_secret = encryption::encrypt(&anti_phishing_secret);
+
     // Create the user using the constructed request
     create_user(&state, invite_details.organization_id, &create_request).await?;
 

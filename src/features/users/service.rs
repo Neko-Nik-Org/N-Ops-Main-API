@@ -165,6 +165,11 @@ pub async fn create_user(state: &AppState, organization_id: Uuid, create_request
     // Generate the password hash from the provided password
     let password_hash = generate_password_hash(&create_request.password);
 
+    // TODO: Generate anti-phishing secret for the user (Encrypted)
+    // let anti_phishing_secret = generate_anti_phishing_secret();
+    // use crate::security::encryption;
+    // let encrypted_anti_phishing_secret = encryption::encrypt(&anti_phishing_secret);
+
     // Create the user in the repository
     let result = repository::create_user(
         &state.pg_pool,
