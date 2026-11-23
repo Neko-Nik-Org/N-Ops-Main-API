@@ -91,19 +91,19 @@ async fn main() -> std::io::Result<()> {
                 actix_scope("/user/admin")
                 .wrap(from_fn(middleware::user_session::auth_check))
                 .service(users::set_verify_email)
+                .service(users::assign_ar_policy)
                 .service(users::deactivate_user)
                 .service(users::change_username)
                 .service(users::reset_password)
                 .service(users::delete_user)
                 .service(users::create_user)
+                .service(users::assign_role)
                 .service(users::list_users)
                 .service(users::get_user)
                 // .service(users::update_user)    // Update User's Details like primary_email, display_name, user_details
-                // .service(users::assign_role)    // Re-Assign a role to a user (Cant remove obvioulsy)
-                // .service(users::assign_ar_policy)    // Assign/Remove/Re-Assign an access restriction policy to a user
             )
             // .service(
-            //     actix_scope("/user/2fa")
+            //     actix_scope("/mfa")
             //     .wrap(from_fn(middleware::user_session::auth_check))
             //     .service(mfa::set_email_2fa)    // Enable/Disable email-based 2FA (Works only if Email is verified)
             //     .service(mfa::set_totp_2fa)    // Enable/Disable TOTP-based 2FA (Works only if at least one TOTP entry exists)

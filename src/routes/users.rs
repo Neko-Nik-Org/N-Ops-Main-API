@@ -1,4 +1,4 @@
-use crate::features::users::{self, SessionUser, UpdateProfileReqDto, ListUsersReqDto, CreateUserReqDto};
+use crate::features::users::{self, SessionUser, UpdateProfileReqDto, ListUsersReqDto, CreateUserReqDto, AssignArPolicyReqDto};
 use crate::cache::redis_cache::{get_redis_cache, set_redis_cache, delete_redis_cache};
 use actix_web::{get, post, put, patch, delete, web, HttpResponse};
 use crate::errors::{ApiResponse, ServiceError};
@@ -352,6 +352,45 @@ pub async fn change_username(session_user: web::ReqData<SessionUser>, path: web:
 
     // Admin change the user's username in the database
     users::update_user_username(&state, session_user.organization_id, user_id, &new_username).await?;
+
+    Ok(HttpResponse::NoContent().finish())
+}
+
+
+#[put("/role/{user_id}/assign/{role_id}")]
+pub async fn assign_role(session_user: web::ReqData<SessionUser>, path: web::Path<(i64, i64)>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let (user_id, role_id) = path.into_inner();
+
+    session_user.has_all_permissions(&["user:view", "user:edit", "user:role:view"])?;
+
+    // Can not self-assign roles to oneself
+    if session_user.user_id == user_id {
+        return Ok(HttpResponse::BadRequest().body("Cannot re-assign role to oneself"));
+    }
+
+    // Admin assign the role to the user in the database
+    users::reassign_role_to_user(&state.pg_pool, session_user.organization_id, user_id, role_id).await?;
+
+    Ok(HttpResponse::NoContent().finish())
+}
+
+
+#[put("/ar-policy/{user_id}/assign")]
+pub async fn assign_ar_policy(session_user: web::ReqData<SessionUser>, path: web::Path<i64>, query: web::Query<AssignArPolicyReqDto>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let user_id = path.into_inner();
+    let access_restriction_policy_id = query.access_restriction_policy_id;
+
+    session_user.has_all_permissions(&["user:view", "user:edit", "policy:ar:view"])?;
+
+    // Can not self-assign AR policies to oneself
+    if session_user.user_id == user_id {
+        return Ok(HttpResponse::BadRequest().body("Cannot update Access Restriction policy to oneself"));
+    }
+
+    // Admin assign the AR policy to the user in the database
+    users::update_access_restriction_policy_to_user(&state.pg_pool, session_user.organization_id, user_id, access_restriction_policy_id).await?;
 
     Ok(HttpResponse::NoContent().finish())
 }

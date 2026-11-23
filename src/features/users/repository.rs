@@ -655,3 +655,53 @@ pub async fn delete_user(db_pool: &PgPool, organization_id: uuid::Uuid, user_id:
 
     Ok(result)
 }
+
+
+pub async fn reassign_role_to_user(db_pool: &PgPool, organization_id: uuid::Uuid, user_id: i64, role_id: i64) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            UPDATE app_user
+            SET role_id = $3
+            WHERE organization_id = $1
+                AND user_id = $2
+                AND EXISTS (
+                    SELECT 1
+                    FROM user_role
+                    WHERE organization_id = $1
+                        AND role_id = $3
+                )
+            "#,
+            &[&organization_id, &user_id, &role_id],
+        )
+        .await?;
+
+    Ok(result)
+}
+
+
+pub async fn update_access_restriction_policy_to_user(db_pool: &PgPool, organization_id: uuid::Uuid, user_id: i64, access_restriction_policy_id: Option<i64>) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            UPDATE app_user
+            SET access_restriction_policy_id = $3
+            WHERE organization_id = $1
+                AND user_id = $2
+                AND EXISTS (
+                    SELECT 1
+                    FROM access_restriction_policy
+                    WHERE organization_id = $1
+                        AND policy_id = $3
+                )
+            "#,
+            &[&organization_id, &user_id, &access_restriction_policy_id],
+        )
+        .await?;
+
+    Ok(result)
+}

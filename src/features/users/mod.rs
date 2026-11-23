@@ -4,7 +4,7 @@ mod model;
 mod dto;
 
 
-pub use dto::{LoginReqDto, UpdateProfileReqDto, ListUsersReqDto, CreateUserReqDto};
+pub use dto::{LoginReqDto, UpdateProfileReqDto, ListUsersReqDto, CreateUserReqDto, AssignArPolicyReqDto};
 pub use model::SessionUser;
 pub use service::{
     refresh_user_session,
@@ -15,8 +15,10 @@ pub use service::{
     create_user
 };
 pub use repository::{
+    update_access_restriction_policy_to_user,
     update_user_email_verified,
     fetch_user_by_id_listing,
+    reassign_role_to_user,
     check_username_exists,
     update_last_login_at,
     fetch_user_profile,

@@ -83,3 +83,9 @@ pub struct CreateUserReqDto {
 
     pub access_restriction_policy_id: Option<i64>,
 }
+
+
+#[derive(Deserialize)]
+pub struct AssignArPolicyReqDto {
+    pub access_restriction_policy_id: Option<i64>,
+}
