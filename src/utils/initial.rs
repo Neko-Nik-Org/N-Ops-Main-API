@@ -71,7 +71,6 @@ pub struct OrgInviteSettings {
     pub secret_chars_len: u32,
     pub invite_code_length: usize,
     pub hash_secret: String,
-    pub max_expiration_time: Duration,
 }
 
 
@@ -346,11 +345,6 @@ impl OrgInviteSettings {
         let hash_secret = env_var("ORG_INVITE_HASH_SECRET")
             .expect("ORG_INVITE_HASH_SECRET must be set, generate using 'openssl rand -hex 32'");
 
-        let max_expiration_time = env_var("ORG_INVITE_MAX_EXPIRATION_HOURS")
-            .expect("ORG_INVITE_MAX_EXPIRATION_HOURS must be set")
-            .parse::<u16>()
-            .expect("ORG_INVITE_MAX_EXPIRATION_HOURS must be a valid u16");
-
         const INVITE_CODE_LENGTH: usize = 9;
 
         OrgInviteSettings {
@@ -359,7 +353,6 @@ impl OrgInviteSettings {
             secret_chars_len,
             invite_code_length: INVITE_CODE_LENGTH,
             hash_secret,
-            max_expiration_time: Duration::from_hours(max_expiration_time as u64)
         }
     }
 }
