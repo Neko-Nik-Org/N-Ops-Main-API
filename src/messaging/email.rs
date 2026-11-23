@@ -81,6 +81,7 @@ pub async fn send_invite_email(
     // Build the invitation details as a JSON object
     let invitation_details = serde_json::json!({
         "invitation_code": invitation_code,
+        "email": invite_to_email,
         "invited_by": invited_by,
         "org_name": org_name
     });
