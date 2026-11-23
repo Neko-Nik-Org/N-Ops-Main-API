@@ -570,12 +570,12 @@ pub async fn create_user(db_pool: &PgPool, organization_id: uuid::Uuid, password
             FROM user_role ur
             LEFT JOIN access_restriction_policy arp
                 ON arp.organization_id = ur.organization_id
-            AND arp.access_restriction_policy_id = $2
+            AND arp.policy_id = $2
             WHERE ur.organization_id = $1
             AND ur.role_id = $3
             AND (
                 $2::BIGINT IS NULL
-                OR arp.access_restriction_policy_id IS NOT NULL
+                OR arp.policy_id IS NOT NULL
             )
             "#,
             &[
