@@ -1,5 +1,6 @@
 pub mod vault_projects;
 pub mod organization;
+pub mod user_invite;
 pub mod user_roles;
 pub mod ar_policy;
 pub mod api_keys;

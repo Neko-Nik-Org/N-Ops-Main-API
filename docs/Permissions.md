@@ -82,3 +82,14 @@ Access restriction policy permissions are related to managing and accessing acce
 | policy:ar:create | Allows creation of new access restriction policies |
 | policy:ar:edit   | Allows editing of existing access restriction policies |
 | policy:ar:delete | Allows deletion of access restriction policies |
+
+
+## Organization Invitation Permissions
+
+User invitation permissions are related to managing and accessing organization invitations within the system.
+
+| Permission | Description |
+|------------|-------------|
+| user:invite:view | Allows viewing of organization invitations |
+| user:invite:create | Allows sending/re-sending new organization invitations |
+| user:invite:delete | Allows deletion of organization invitations |

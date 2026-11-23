@@ -1,4 +1,4 @@
-use routes::{health, auth, users, tags, user_roles, vault_project, organization, ar_policy};
+use routes::{health, auth, users, tags, user_roles, vault_project, organization, ar_policy, invites};
 use actix_web::web::scope as actix_scope;
 use actix_web::middleware::from_fn;
 use actix_web::{App, HttpServer};
@@ -125,15 +125,15 @@ async fn main() -> std::io::Result<()> {
                 .service(tags::list_tags)
                 .service(tags::get_tag)
             )
-            // .service(
-            //     actix_scope("/invite")
-            //     .wrap(from_fn(middleware::user_session::auth_check))
-            //     .service(invite::delete_invite) // Delete an existing invite by ID, send cancellation email if necessary?
-            //     .service(invite::resend_invite) // Resend an existing invite email
-            //     .service(invite::list_invites)  // List all existing pending invites
-            //     .service(invite::new_invite)    // Send email with invite code "{UI}/invite/{invitation_id}/{invitation_code}"
-            //     .service(invite::get_invite)    // Get details of a specific invite by ID
-            // )
+            .service(
+                actix_scope("/invite")
+                .wrap(from_fn(middleware::user_session::auth_check))
+                .service(invites::list_invites)  // List all existing pending invites
+                // .service(invites::delete_invite) // Delete an existing invite by ID, send cancellation email if necessary?
+                // .service(invites::resend_invite) // Resend an existing invite email
+                // .service(invites::new_invite)    // Send email with invite code "{UI}/invite/{invitation_id}/{invitation_code}"
+                // .service(invites::get_invite)    // Get details of a specific invite by ID
+            )
             .service(
                 actix_scope("/user/roles")
                 .wrap(from_fn(middleware::user_session::auth_check))
