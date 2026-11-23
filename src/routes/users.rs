@@ -1,4 +1,4 @@
-use crate::features::users::{self, SessionUser, UpdateProfileReqDto, ListUsersReqDto, CreateUserReqDto, AssignArPolicyReqDto};
+use crate::features::users::{self, SessionUser, UpdateProfileReqDto, ListUsersReqDto, CreateUserReqDto, AssignArPolicyReqDto, UpdateProfileAdminReqDto};
 use crate::cache::redis_cache::{get_redis_cache, set_redis_cache, delete_redis_cache};
 use actix_web::{get, post, put, patch, delete, web, HttpResponse};
 use crate::errors::{ApiResponse, ServiceError};
@@ -62,7 +62,7 @@ pub async fn set_user_details(session_user: web::ReqData<SessionUser>, data: web
     let user_details = data.into_inner(); 
 
     // Update the user details for the session user
-    let updated_user_details = users::reset_user_details(&state.pg_pool, session_user.user_id, &user_details).await?;
+    let updated_user_details = users::reset_user_details(&state.pg_pool, session_user.organization_id, session_user.user_id, &user_details).await?;
     if updated_user_details == 0 {
         return Err(ServiceError::BadRequest("Failed to update user details".into()));
     }
@@ -219,7 +219,7 @@ pub async fn update_profile(session_user: web::ReqData<SessionUser>, body: web::
     let update_request = body.into_inner();
 
     // Update the user's profile in the database
-    users::update_user_profile(&state, session_user.user_id, &update_request).await?;
+    users::update_user_profile(&state, session_user.organization_id, session_user.user_id, &update_request).await?;
 
     Ok(HttpResponse::Ok().body("Profile updated successfully"))
 }
@@ -391,6 +391,21 @@ pub async fn assign_ar_policy(session_user: web::ReqData<SessionUser>, path: web
 
     // Admin assign the AR policy to the user in the database
     users::update_access_restriction_policy_to_user(&state.pg_pool, session_user.organization_id, user_id, access_restriction_policy_id).await?;
+
+    Ok(HttpResponse::NoContent().finish())
+}
+
+
+#[put("/update/{user_id}")]
+pub async fn update_user(session_user: web::ReqData<SessionUser>, path: web::Path<i64>, body: web::Json<UpdateProfileAdminReqDto>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let user_id = path.into_inner();
+    let update_req = body.into_inner();
+
+    session_user.has_all_permissions(&["user:view", "user:edit"])?;
+
+    // Admin update the user's profile in the database
+    users::update_user_profile_admin(&state, session_user.organization_id, user_id, &update_req).await?;
 
     Ok(HttpResponse::NoContent().finish())
 }

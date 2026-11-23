@@ -98,9 +98,9 @@ async fn main() -> std::io::Result<()> {
                 .service(users::delete_user)
                 .service(users::create_user)
                 .service(users::assign_role)
+                .service(users::update_user)
                 .service(users::list_users)
                 .service(users::get_user)
-                // .service(users::update_user)    // Update User's Details like primary_email, display_name, user_details
             )
             // .service(
             //     actix_scope("/mfa")

@@ -4,9 +4,10 @@ mod model;
 mod dto;
 
 
-pub use dto::{LoginReqDto, UpdateProfileReqDto, ListUsersReqDto, CreateUserReqDto, AssignArPolicyReqDto};
+pub use dto::{LoginReqDto, UpdateProfileReqDto, ListUsersReqDto, CreateUserReqDto, AssignArPolicyReqDto, UpdateProfileAdminReqDto};
 pub use model::SessionUser;
 pub use service::{
+    update_user_profile_admin,
     refresh_user_session,
     update_user_password,
     update_user_username,

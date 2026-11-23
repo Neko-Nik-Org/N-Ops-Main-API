@@ -1,5 +1,5 @@
 use crate::security::auth_tools::{verify_password_hash, check_ip_range_allowed, validate_base64_password, generate_password_hash, validate_username};
-use super::dto::{LoginReqDto, AuthInfoDbDto, UpdateProfileReqDto, CreateUserReqDto};
+use super::dto::{LoginReqDto, AuthInfoDbDto, UpdateProfileReqDto, CreateUserReqDto, UpdateProfileAdminReqDto};
 use crate::cache::redis_cache::{set_redis_cache, delete_redis_cache};
 use crate::errors::{ServiceError, ServiceResult};
 use super::model::SessionUser;
@@ -135,16 +135,16 @@ pub async fn update_user_username(state: &AppState, organization_id: Uuid, user_
 
 
 /// Update the profile for the given user
-pub async fn update_user_profile(state: &AppState, user_id: i64, update_request: &UpdateProfileReqDto) -> ServiceResult<()> {
+pub async fn update_user_profile(state: &AppState, organization_id: Uuid, user_id: i64, update_request: &UpdateProfileReqDto) -> ServiceResult<()> {
     // Update user display name
-    let result = repository::update_user_display_name(&state.pg_pool, user_id, &update_request.display_name).await?;
+    let result = repository::update_user_display_name(&state.pg_pool, organization_id, user_id, &update_request.display_name).await?;
     if result == 0 {
         return Err(ServiceError::BadRequest("Failed to update user display name in the database".into()));
     }
 
     // Update user primary email if provided
     if let Some(primary_email) = &update_request.primary_email {
-        let result = repository::update_user_primary_email(&state.pg_pool, user_id, primary_email).await?;
+        let result = repository::update_user_primary_email(&state.pg_pool, organization_id, user_id, primary_email).await?;
         if result == 0 {
             return Err(ServiceError::BadRequest("Failed to update user primary email in the database".into()));
         }
@@ -174,6 +174,32 @@ pub async fn create_user(state: &AppState, organization_id: Uuid, create_request
     ).await?;
     if result == 0 {
         return Err(ServiceError::BadRequest("Failed to create user in the database".into()));
+    }
+
+    Ok(())
+}
+
+
+/// Update the profile for the given user as an admin
+pub async fn update_user_profile_admin(state: &AppState, organization_id: Uuid, user_id: i64, update_request: &UpdateProfileAdminReqDto) -> ServiceResult<()> {
+    // Update user display name
+    let result = repository::update_user_display_name(&state.pg_pool, organization_id, user_id, &update_request.display_name).await?;
+    if result == 0 {
+        return Err(ServiceError::BadRequest("Failed to update user display name in the database".into()));
+    }
+
+    // Update user primary email if provided
+    if let Some(primary_email) = &update_request.primary_email {
+        let result = repository::update_user_primary_email(&state.pg_pool, organization_id, user_id, primary_email).await?;
+        if result == 0 {
+            return Err(ServiceError::BadRequest("Failed to update user primary email in the database".into()));
+        }
+    }
+
+    // Update user details
+    let result = repository::reset_user_details(&state.pg_pool, organization_id, user_id, &update_request.user_details).await?;
+    if result == 0 {
+        return Err(ServiceError::BadRequest("Failed to update user details in the database".into()));
     }
 
     Ok(())

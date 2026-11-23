@@ -222,7 +222,7 @@ pub async fn fetch_user_details(db_pool: &PgPool, user_id: i64) -> PgResult<Json
 }
 
 
-pub async fn reset_user_details(db_pool: &PgPool, user_id: i64, user_details: &JsonValue) -> PgResult<u64> {
+pub async fn reset_user_details(db_pool: &PgPool, organization_id: uuid::Uuid, user_id: i64, user_details: &JsonValue) -> PgResult<u64> {
     let client = db_pool.get().await?;
 
     let result = client
@@ -230,9 +230,10 @@ pub async fn reset_user_details(db_pool: &PgPool, user_id: i64, user_details: &J
             r#"
             UPDATE app_user
             SET user_details = $1
-            WHERE user_id = $2
+            WHERE organization_id = $2
+                AND user_id = $3
             "#,
-            &[user_details, &user_id],
+            &[user_details, &organization_id, &user_id],
         )
         .await?;
 
@@ -405,7 +406,7 @@ pub async fn deactivate_user(db_pool: &PgPool, organization_id: uuid::Uuid, user
 }
 
 
-pub async fn update_user_display_name(db_pool: &PgPool, user_id: i64, new_display_name: &str) -> PgResult<u64> {
+pub async fn update_user_display_name(db_pool: &PgPool, organization_id: uuid::Uuid, user_id: i64, new_display_name: &str) -> PgResult<u64> {
     let client = db_pool.get().await?;
 
     let result = client
@@ -413,9 +414,10 @@ pub async fn update_user_display_name(db_pool: &PgPool, user_id: i64, new_displa
             r#"
             UPDATE app_user
             SET display_name = $1, updated_at = NOW()
-            WHERE user_id = $2
+            WHERE organization_id = $2
+                AND user_id = $3
             "#,
-            &[&new_display_name, &user_id],
+            &[&new_display_name, &organization_id, &user_id],
         )
         .await?;
 
@@ -423,7 +425,7 @@ pub async fn update_user_display_name(db_pool: &PgPool, user_id: i64, new_displa
 }
 
 
-pub async fn update_user_primary_email(db_pool: &PgPool, user_id: i64, new_primary_email: &str) -> PgResult<u64> {
+pub async fn update_user_primary_email(db_pool: &PgPool, organization_id: uuid::Uuid, user_id: i64, new_primary_email: &str) -> PgResult<u64> {
     let client = db_pool.get().await?;
 
     let result = client
@@ -431,9 +433,10 @@ pub async fn update_user_primary_email(db_pool: &PgPool, user_id: i64, new_prima
             r#"
             UPDATE app_user
             SET primary_email = $1, is_email_verified = FALSE, updated_at = NOW()
-            WHERE user_id = $2
+            WHERE organization_id = $2
+                AND user_id = $3
             "#,
-            &[&new_primary_email, &user_id],
+            &[&new_primary_email, &organization_id, &user_id],
         )
         .await?;
 

@@ -62,6 +62,14 @@ pub struct UpdateProfileReqDto {
 
 
 #[derive(Deserialize)]
+pub struct UpdateProfileAdminReqDto {
+    pub display_name: String,
+    pub primary_email: Option<String>,  // If given, the new primary email for the user
+    pub user_details: JsonValue,
+}
+
+
+#[derive(Deserialize)]
 pub struct ListUsersReqDto {
     pub user_name: Option<String>,  // Filter users by user name (optional)
     pub limit: i64,
