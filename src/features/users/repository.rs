@@ -562,7 +562,36 @@ pub async fn create_user(db_pool: &PgPool, organization_id: uuid::Uuid, password
         return Err(PgError::Custom("User limit reached".into()));
     }
 
-    // 4. Insert only if the role belongs to this organization
+    // 4. Ensure the role & access restriction policy belong to this organization
+    let belongs_to_org = transaction
+        .query_opt(
+            r#"
+            SELECT 1
+            FROM user_role ur
+            LEFT JOIN access_restriction_policy arp
+                ON arp.organization_id = ur.organization_id
+            AND arp.access_restriction_policy_id = $2
+            WHERE ur.organization_id = $1
+            AND ur.role_id = $3
+            AND (
+                $2::BIGINT IS NULL
+                OR arp.access_restriction_policy_id IS NOT NULL
+            )
+            "#,
+            &[
+                &organization_id,
+                &create_request.access_restriction_policy_id,
+                &create_request.role_id,
+            ],
+        )
+        .await?;
+
+    if belongs_to_org.is_none() {
+        transaction.rollback().await?;
+        return Err(PgError::Custom("Role or access restriction policy does not belong to the organization".into()));
+    }
+
+    // 5. Insert only if the role belongs to this organization
     let result = transaction
         .execute(
             r#"
