@@ -270,7 +270,7 @@ pub async fn fetch_anti_phishing_code(state: &AppState, organization_id: Uuid, u
     let encrypted_anti_phishing_code = repository::fetch_anti_phishing_code(&state.pg_pool, organization_id, user_id).await?;
 
     // Decrypt the anti-phishing code using the organization's encryption key
-    let anti_phishing_code = decrypt_with_org_key(&state, &organization_id, &encrypted_anti_phishing_code).await?;
+    let anti_phishing_secret = decrypt_with_org_key(&state, &organization_id, &encrypted_anti_phishing_code).await?;
 
-    Ok(anti_phishing_code)
+    Ok(anti_phishing_secret)
 }

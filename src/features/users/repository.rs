@@ -718,7 +718,7 @@ pub async fn fetch_anti_phishing_code(db_pool: &PgPool, organization_id: uuid::U
     let row = client
         .query_one(
             r#"
-            SELECT anti_phishing_code
+            SELECT anti_phishing_secret
             FROM app_user
             WHERE organization_id = $1
               AND user_id = $2
@@ -727,6 +727,6 @@ pub async fn fetch_anti_phishing_code(db_pool: &PgPool, organization_id: uuid::U
         )
         .await?;
 
-    let anti_phishing_code: String = row.get("anti_phishing_code");
-    Ok(anti_phishing_code)
+    let anti_phishing_secret: String = row.get("anti_phishing_secret");
+    Ok(anti_phishing_secret)
 }

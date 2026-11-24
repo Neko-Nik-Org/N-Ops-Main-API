@@ -12,7 +12,7 @@ type ChronoUtc = chrono::DateTime<chrono::Utc>;
 
 
 /// Sends a verification email containing an OTP to the specified session user's email address
-pub async fn send_verification_email(session_user: &SessionUser, otp: &str, anti_phishing_code: &str) -> ServiceResult<()> {
+pub async fn send_verification_email(session_user: &SessionUser, otp: &str, anti_phishing_secret: &str) -> ServiceResult<()> {
     // Build the recipient mailbox for the email
     let send_to_email = Mailbox::new(
         Some(session_user.display_name.clone()),
@@ -27,7 +27,7 @@ pub async fn send_verification_email(session_user: &SessionUser, otp: &str, anti
         templates::VERIFY_EMAIL_HTML,
         &[
             ("{{DISPLAY_NAME}}", &session_user.display_name),
-            ("{{ANTI_PHISHING_CODE}}", anti_phishing_code),
+            ("{{ANTI_PHISHING_SECRET}}", anti_phishing_secret),
             ("{{OTP_VALIDITY}}", "5 minutes"),
             ("{{OTP}}", &otp),
         ]
@@ -39,7 +39,7 @@ pub async fn send_verification_email(session_user: &SessionUser, otp: &str, anti
 
 
 /// Sends a welcome email to new users after account creation
-pub async fn send_welcome_email(org_name: &str, display_name: &str, primary_email: &str, anti_phishing_code: &str) -> ServiceResult<()> {
+pub async fn send_welcome_email(org_name: &str, display_name: &str, primary_email: &str, anti_phishing_secret: &str) -> ServiceResult<()> {
     // Build the recipient mailbox for the email
     let send_to_email = Mailbox::new(
         Some(display_name.to_string()),
@@ -54,7 +54,7 @@ pub async fn send_welcome_email(org_name: &str, display_name: &str, primary_emai
         templates::WELCOME_EMAIL_HTML,
         &[
             ("{{DISPLAY_NAME}}", display_name),
-            ("{{ANTI_PHISHING_CODE}}", anti_phishing_code),
+            ("{{ANTI_PHISHING_SECRET}}", anti_phishing_secret),
         ]
     );
 

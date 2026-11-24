@@ -14,7 +14,7 @@ The N-Ops team
 This is an automated message, please do not reply.
 
 ------------------------------------------------------------
-Anti-phishing code: {{ANTI_PHISHING_CODE}}
+Anti-phishing code: {{ANTI_PHISHING_SECRET}}
 To stay secure, check this code in every email from N-Ops.
 
 Disclaimer: N-Ops will never ask for your password, verification

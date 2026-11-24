@@ -91,7 +91,7 @@ pub async fn send_verification_email(session_user: web::ReqData<SessionUser>, st
     }
 
     // Fetch the anti-phishing code for the session user
-    let anti_phishing_code = users::fetch_anti_phishing_code(&state, session_user.organization_id, session_user.user_id).await?;
+    let anti_phishing_secret = users::fetch_anti_phishing_code(&state, session_user.organization_id, session_user.user_id).await?;
 
     // Generate a verification code for the session user
     let verification_code = otp::generate_otp(7)?;
@@ -109,7 +109,7 @@ pub async fn send_verification_email(session_user: web::ReqData<SessionUser>, st
     set_redis_cache(&state.redis_cache, &otp_cache_key, &otp_hash, 5 * 60).await?;
 
     // Send the verification email to the user's email address
-    messaging::email::send_verification_email(&session_user, &verification_code, &anti_phishing_code).await?;
+    messaging::email::send_verification_email(&session_user, &verification_code, &anti_phishing_secret).await?;
 
     Ok(HttpResponse::Created().finish())
 }
