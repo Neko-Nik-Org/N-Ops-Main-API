@@ -178,8 +178,8 @@ pub async fn update_full_policy(db_pool: &PgPool, organization_id: uuid::Uuid, p
             UPDATE access_restriction_policy
             SET enforce_totp_2fa = $1,
                 enforce_email_2fa = $2,
-                set_ip_restriction = $3,
-                set_geo_restriction = $4,
+                has_ip_restriction = $3,
+                has_geo_restriction = $4,
                 allowed_ips = $5,
                 allowed_geo_locations = $6
             WHERE organization_id = $7
