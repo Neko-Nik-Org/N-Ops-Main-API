@@ -57,8 +57,8 @@ async fn main() -> std::io::Result<()> {
             )
             .service(
                 actix_scope("/auth")
-                .service(auth::device_refresh)    // Refresh a device session using a refresh token (Generates a short-lived 3 Hrs session token)
-                .service(auth::device_login)    // Login using a device token [Generates a refresh token]
+                // .service(auth::device_refresh)    // Refresh a device session using a refresh token (Generates a short-lived 3 Hrs session token)
+                // .service(auth::device_login)    // Login using a device token [Generates a refresh token]
                 .service(auth::user_login)
                 // .service(auth::forgot_password)  // Send an email with a link to reset password
                 // .service(auth::reset_password)  // Reset password using a token sent via email
@@ -69,7 +69,7 @@ async fn main() -> std::io::Result<()> {
                     .wrap(from_fn(middleware::user_session::auth_check))
                     .service(auth::refresh_session)
                     .service(auth::verify_session)
-                    .service(auth::device_logout)  // Logout from a device session
+                    // .service(auth::device_logout)  // Logout from a device session
                     .service(auth::user_logout)
                 )
             )
@@ -107,16 +107,16 @@ async fn main() -> std::io::Result<()> {
                 .service(users::list_users)
                 .service(users::get_user)
             )
-            .service(
-                actix_scope("/user/devices")
-                .wrap(from_fn(middleware::user_session::auth_check))
-                .service(devices::list_all_devices) // List all devices for the authenticated user
-                .service(devices::get_device)   // Get details of a specific device
-                .service(devices::revoke_user_device)   // Revoke a user's device access
-                .service(devices::generate_device_token)  // QR code to scan or Code to copy-paste for device authentication
-                .service(devices::delete_device_token)    // Delete a generated device token - Invalidates the token immediately
-                .service(devices::check_device_token) // UI will poll every 2 seconds to check the device token validity
-            )
+            // .service(
+            //     actix_scope("/user/devices")
+            //     .wrap(from_fn(middleware::user_session::auth_check))
+            //     .service(devices::list_all_devices) // List all devices for the authenticated user
+            //     .service(devices::get_device)   // Get details of a specific device
+            //     .service(devices::revoke_user_device)   // Revoke a user's device access
+            //     .service(devices::generate_device_token)  // QR code to scan or Code to copy-paste for device authentication
+            //     .service(devices::delete_device_token)    // Delete a generated device token - Invalidates the token immediately
+            //     .service(devices::check_device_token) // UI will poll every 2 seconds to check the device token validity
+            // )
             // .service(
             //     actix_scope("/mfa")
             //     .wrap(from_fn(middleware::user_session::auth_check))
