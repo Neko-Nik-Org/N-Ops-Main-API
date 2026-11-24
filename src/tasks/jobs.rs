@@ -40,7 +40,7 @@ pub async fn clean_expired_api_keys_job(pg_pool: PgPool) {
 pub async fn delete_old_invites_job(pg_pool: PgPool) {
     tracing::info!("Starting delete_old_invites job");
 
-    run_every(API_KEYS_CLEANUP_INTERVAL, || {
+    run_every(DELETE_OLD_INVITES_INTERVAL, || {
         delete_old_invites(&pg_pool)
     })
     .await;
