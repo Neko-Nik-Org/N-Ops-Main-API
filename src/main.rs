@@ -85,7 +85,7 @@ async fn main() -> std::io::Result<()> {
                 .service(users::get_user_details)
                 .service(users::set_user_details)
                 .service(users::self_user_name_update)
-                // .service(users::read_anti_phishing_code) // Self read anti-phishing code
+                .service(users::read_anti_phishing_code)
                 .service(users::send_verification_email)
                 // .service(users::update_anti_phishing_code)   // Self update anti-phishing code
             )

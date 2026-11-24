@@ -409,3 +409,13 @@ pub async fn update_user(session_user: web::ReqData<SessionUser>, path: web::Pat
 
     Ok(HttpResponse::NoContent().finish())
 }
+
+
+#[get("/anti-phishing-secret")]
+pub async fn read_anti_phishing_code(session_user: web::ReqData<SessionUser>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+
+    let anti_phishing_secret = users::fetch_anti_phishing_code(&state, session_user.organization_id, session_user.user_id).await?;
+
+    Ok(HttpResponse::Ok().json(anti_phishing_secret))
+}
