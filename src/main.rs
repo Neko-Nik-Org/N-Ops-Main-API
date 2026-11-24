@@ -87,7 +87,7 @@ async fn main() -> std::io::Result<()> {
                 .service(users::self_user_name_update)
                 .service(users::read_anti_phishing_code)
                 .service(users::send_verification_email)
-                // .service(users::update_anti_phishing_code)   // Self update anti-phishing code
+                .service(users::update_anti_phishing_code)
             )
             .service(
                 actix_scope("/user/admin")

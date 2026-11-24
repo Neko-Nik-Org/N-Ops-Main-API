@@ -229,7 +229,7 @@ pub async fn reset_user_details(db_pool: &PgPool, organization_id: uuid::Uuid, u
         .execute(
             r#"
             UPDATE app_user
-            SET user_details = $1
+            SET user_details = $1, updated_at = NOW()
             WHERE organization_id = $2
                 AND user_id = $3
             "#,
@@ -669,7 +669,7 @@ pub async fn reassign_role_to_user(db_pool: &PgPool, organization_id: uuid::Uuid
         .execute(
             r#"
             UPDATE app_user
-            SET role_id = $3
+            SET role_id = $3, updated_at = NOW()
             WHERE organization_id = $1
                 AND user_id = $2
                 AND EXISTS (
@@ -694,7 +694,7 @@ pub async fn update_access_restriction_policy_to_user(db_pool: &PgPool, organiza
         .execute(
             r#"
             UPDATE app_user
-            SET access_restriction_policy_id = $3
+            SET access_restriction_policy_id = $3, updated_at = NOW()
             WHERE organization_id = $1
                 AND user_id = $2
                 AND EXISTS (
@@ -729,4 +729,23 @@ pub async fn fetch_anti_phishing_code(db_pool: &PgPool, organization_id: uuid::U
 
     let anti_phishing_secret: String = row.get("anti_phishing_secret");
     Ok(anti_phishing_secret)
+}
+
+
+pub async fn update_anti_phishing_code(db_pool: &PgPool, organization_id: uuid::Uuid, user_id: i64, encrypted_anti_phishing_secret: &str) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            UPDATE app_user
+            SET anti_phishing_secret = $3, updated_at = NOW()
+            WHERE organization_id = $1
+              AND user_id = $2
+            "#,
+            &[&organization_id, &user_id, &encrypted_anti_phishing_secret],
+        )
+        .await?;
+
+    Ok(result)
 }

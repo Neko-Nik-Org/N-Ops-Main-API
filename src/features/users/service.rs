@@ -274,3 +274,18 @@ pub async fn fetch_anti_phishing_code(state: &AppState, organization_id: Uuid, u
 
     Ok(anti_phishing_secret)
 }
+
+
+/// Update the anti-phishing code for the given user
+pub async fn update_anti_phishing_code(state: &AppState, organization_id: Uuid, user_id: i64, new_secret: &str) -> ServiceResult<()> {
+    // Encrypt the new anti-phishing secret using the organization's encryption key
+    let encrypted_anti_phishing_secret = encrypt_with_org_key(&state, &organization_id, new_secret).await?;
+
+    // Update the encrypted anti-phishing secret in the repository
+    let result = repository::update_anti_phishing_code(&state.pg_pool, organization_id, user_id, &encrypted_anti_phishing_secret).await?;
+    if result == 0 {
+        return Err(ServiceError::BadRequest("Failed to update anti-phishing secret in the database".into()));
+    }
+
+    Ok(())
+}

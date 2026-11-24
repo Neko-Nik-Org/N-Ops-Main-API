@@ -419,3 +419,25 @@ pub async fn read_anti_phishing_code(session_user: web::ReqData<SessionUser>, st
 
     Ok(HttpResponse::Ok().json(anti_phishing_secret))
 }
+
+
+#[put("/anti-phishing-secret")]
+pub async fn update_anti_phishing_code(session_user: web::ReqData<SessionUser>, body: web::Json<String>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let new_secret = body.into_inner();
+
+    // Validate the length of the new anti-phishing secret (must be between 4 and 16 characters)
+    if new_secret.len() < 4 || new_secret.len() > 16 {
+        return Ok(HttpResponse::BadRequest().body("Anti-phishing secret must be between 4 and 16 characters long"));
+    }
+
+    // Can only have alphanumeric and '-'/'_' characters
+    if !new_secret.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_') {
+        return Ok(HttpResponse::BadRequest().body("Anti-phishing secret can only contain alphanumeric characters, '-' and '_'"));
+    }
+
+    // Update the anti-phishing secret for the user in the database
+    users::update_anti_phishing_code(&state, session_user.organization_id, session_user.user_id, &new_secret).await?;
+
+    Ok(HttpResponse::NoContent().finish())
+}
