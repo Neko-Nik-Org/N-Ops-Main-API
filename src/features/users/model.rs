@@ -27,6 +27,7 @@ pub struct SessionUser {
     // Security and access information
     pub encryption_key: String,
     pub allow_refresh: bool,    // Indicates if the session can be refreshed
+    pub allow_device_logins: bool,
 
     pub allowed_linux_users: Vec<String>,
     pub permissions: Vec<String>,
@@ -138,6 +139,7 @@ impl SessionUser {
             organization_id: auth_info.organization_id,
 
             allow_refresh,
+            allow_device_logins: auth_info.allow_device_logins,
             encryption_key: auth_info.encryption_key,
 
             allowed_linux_users: auth_info.allowed_linux_users,

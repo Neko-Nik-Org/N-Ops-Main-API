@@ -1,80 +1,58 @@
-use super::dto::{CreateResourceTagDto, EditResourceTagDto};
+use crate::cache::redis_cache::{delete_redis_cache, get_redis_cache};
 use crate::errors::{ServiceError, ServiceResult};
 use crate::features::users::SessionUser;
-use super::model::ResourceTag;
+use super::dto::CreateDeviceSessionDto;
+use super::model::DeviceSession;
 use crate::state::AppState;
 use super::repository;
 
 
 
-/// Create a new tag using the provided resource tag data
-pub async fn create_new_tag(state: &AppState, session_user: &SessionUser, tag_data: &CreateResourceTagDto) -> ServiceResult<()> {
-    let result = repository::create_new_tag(
-        &state.pg_pool,
-        session_user.organization_id,
-        tag_data
-    ).await?;
-
-    if result == 0 {
-        return Err(ServiceError::Unprocessable("Failed to create new tag".into()));
+/// Generate a new device token for the session user
+pub async fn generate_device_token(state: &AppState, session_user: SessionUser) -> ServiceResult<String> {
+    // 1. Check if the user is allowed to login from a new device
+    if !session_user.allow_device_logins {
+        return Err(ServiceError::Forbidden("Device logins are not allowed for your account".into()));
     }
+
+    // 2. Check if there are any existing generated device tokens for the user
+    // If so, dont allow generating a new token until the existing token is revoked or expired
+
+    // 3. Generate a new device token for the user
+
+    // 4. Store the generated device token (Hashed) in the Redis-cache (Max 5 Minutes TTL)
+
+    // 5. Return the generated device token to the caller
+    todo!("Generate and return the device token");
+
+    Ok("TODO".into())
+}
+
+
+/// Revoke an existing device token for the session user
+pub async fn revoke_device_token(state: &AppState, session_user: SessionUser) -> ServiceResult<()> {
+    // Check if the user is allowed to even have device tokens
+    if !session_user.allow_device_logins {
+        return Err(ServiceError::Forbidden("Device logins are not enabled for your account".into()));
+    }
+
+    // Generate the key for the device token in the Redis-cache
+    let device_token_key = format!("device_token:{}", session_user.user_id);
+
+    // Revoke the device token for the user by deleting it from the Redis-cache
+    delete_redis_cache(&state.redis_cache, &device_token_key).await?;
 
     Ok(())
 }
 
 
-/// Update an existing tag using the provided resource tag data
-pub async fn update_tag_data(state: &AppState, session_user: &SessionUser, tag_data: &EditResourceTagDto) -> ServiceResult<()> {
-    let result = repository::update_tag_data(
-        &state.pg_pool,
-        session_user.organization_id,
-        tag_data
-    ).await?;
+/// Check if a device token is valid for the session user
+pub async fn check_device_token(state: &AppState, session_user: SessionUser) -> ServiceResult<bool> {
+    // Generate the key for the device token in the Redis-cache
+    let device_token_key = format!("device_token:{}", session_user.user_id);
 
-    if result == 0 {
-        return Err(ServiceError::Unprocessable("Failed to update tag".into()));
-    }
+    // Check if the device token exists in the Redis-cache
+    let device_token: Option<String> = get_redis_cache(&state.redis_cache, &device_token_key).await?;
 
-    Ok(())
-}
-
-
-/// Delete an existing tag using the provided tag ID
-pub async fn delete_tag(state: &AppState, session_user: &SessionUser, tag_id: i64) -> ServiceResult<()> {
-    let result = repository::delete_tag(
-        &state.pg_pool,
-        session_user.organization_id,
-        tag_id
-    ).await?;
-
-    if result == 0 {
-        return Err(ServiceError::Unprocessable("Failed to delete tag".into()));
-    }
-
-    Ok(())
-}
-
-
-/// Get an existing tag using the provided tag ID
-pub async fn get_tag(state: &AppState, session_user: &SessionUser, tag_id: i64) -> ServiceResult<ResourceTag> {
-    if let Some(tag) = repository::get_tag(
-        &state.pg_pool,
-        session_user.organization_id,
-        tag_id
-    ).await? {
-        Ok(tag)
-    } else {
-        Err(ServiceError::NotFound("Tag not found".into()))
-    }
-}
-
-
-/// List all tags for the session user's organization
-pub async fn list_all_tags(state: &AppState, session_user: &SessionUser) -> ServiceResult<Vec<ResourceTag>> {
-    let tags = repository::list_all_tags(
-        &state.pg_pool,
-        session_user.organization_id
-    ).await?;
-
-    Ok(tags)
+    Ok(device_token.is_some())
 }
