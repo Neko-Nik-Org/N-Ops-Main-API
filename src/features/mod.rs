@@ -4,5 +4,6 @@ pub mod user_invite;
 pub mod user_roles;
 pub mod ar_policy;
 pub mod api_keys;
+pub mod devices;
 pub mod users;
 pub mod tags;

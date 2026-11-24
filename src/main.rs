@@ -1,4 +1,4 @@
-use routes::{health, auth, users, tags, user_roles, vault_project, organization, ar_policy, invites};
+use routes::{health, auth, users, tags, user_roles, vault_project, organization, ar_policy, invites, devices};
 use actix_web::web::scope as actix_scope;
 use actix_web::middleware::from_fn;
 use actix_web::{App, HttpServer};
@@ -107,16 +107,16 @@ async fn main() -> std::io::Result<()> {
                 .service(users::list_users)
                 .service(users::get_user)
             )
-            // .service(
-            //     actix_scope("/user/devices")
-            //     .wrap(from_fn(middleware::user_session::auth_check))
-            //     .service(devices::list_all_devices) // List all devices for the authenticated user
-            //     .service(devices::get_device)   // Get details of a specific device
-            //     .service(devices::revoke_user_device)   // Revoke a user's device access
-            //     .service(devices::generate_device_token)  // QR code to scan or Code to copy-paste for device authentication
-            //     .service(devices::delete_device_token)    // Delete a generated device token - Invalidates the token immediately
-            //     .service(devices::check_device_token) // UI will poll every 2 seconds to check the device token validity
-            // )
+            .service(
+                actix_scope("/user/devices")
+                .wrap(from_fn(middleware::user_session::auth_check))
+                .service(devices::list_all_devices) // List all devices for the authenticated user
+                .service(devices::get_device)   // Get details of a specific device
+                // .service(devices::revoke_user_device)   // Revoke a user's device access
+                // .service(devices::generate_device_token)  // QR code to scan or Code to copy-paste for device authentication
+                // .service(devices::delete_device_token)    // Delete a generated device token - Invalidates the token immediately
+                // .service(devices::check_device_token) // UI will poll every 2 seconds to check the device token validity
+            )
             // .service(
             //     actix_scope("/mfa")
             //     .wrap(from_fn(middleware::user_session::auth_check))
