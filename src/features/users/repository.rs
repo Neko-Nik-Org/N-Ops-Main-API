@@ -27,6 +27,8 @@ pub async fn get_user_auth_info(db_pool: &PgPool, user_name: &str) -> PgResult<O
                 COALESCE(p.has_ip_restriction, FALSE) AS has_ip_restriction,
                 COALESCE(p.has_geo_restriction, FALSE) AS has_geo_restriction,
 
+                COALESCE(p.allow_device_logins, FALSE) AS allow_device_logins,
+
                 COALESCE(p.allowed_ips, ARRAY[]::TEXT[]) AS allowed_ips,
                 COALESCE(p.allowed_geo_locations, ARRAY[]::TEXT[]) AS allowed_geo_locations,
 

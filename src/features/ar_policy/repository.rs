@@ -16,6 +16,7 @@ pub async fn get_policy(db_pool: &PgPool, organization_id: uuid::Uuid, policy_id
                 policy_description,
                 enforce_totp_2fa,
                 enforce_email_2fa,
+                allow_device_logins,
                 has_ip_restriction,
                 has_geo_restriction,
                 allowed_ips,
@@ -45,6 +46,7 @@ pub async fn list_policies(db_pool: &PgPool, organization_id: uuid::Uuid, list_p
                 policy_description,
                 enforce_totp_2fa,
                 enforce_email_2fa,
+                allow_device_logins,
                 has_ip_restriction,
                 has_geo_restriction,
                 allowed_ips,
@@ -81,11 +83,12 @@ pub async fn create_policy(db_pool: &PgPool, organization_id: uuid::Uuid, create
                 policy_description,
                 enforce_totp_2fa,
                 enforce_email_2fa,
+                allow_device_logins,
                 has_ip_restriction,
                 has_geo_restriction,
                 allowed_ips,
                 allowed_geo_locations
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
             "#,
             &[
                 &organization_id,
@@ -93,6 +96,7 @@ pub async fn create_policy(db_pool: &PgPool, organization_id: uuid::Uuid, create
                 &create_policy_dto.description,
                 &create_policy_dto.enforce_totp_2fa,
                 &create_policy_dto.enforce_email_2fa,
+                &create_policy_dto.allow_device_logins,
                 &create_policy_dto.set_ip_restriction,
                 &create_policy_dto.set_geo_restriction,
                 &create_policy_dto.allowed_ips,
@@ -180,16 +184,18 @@ pub async fn update_full_policy(db_pool: &PgPool, organization_id: uuid::Uuid, p
                 enforce_email_2fa = $2,
                 has_ip_restriction = $3,
                 has_geo_restriction = $4,
-                allowed_ips = $5,
-                allowed_geo_locations = $6
-            WHERE organization_id = $7
-              AND policy_id = $8
+                allow_device_logins = $5,
+                allowed_ips = $6,
+                allowed_geo_locations = $7
+            WHERE organization_id = $8
+              AND policy_id = $9
             "#,
             &[
                 &full_policy_info.enforce_totp_2fa,
                 &full_policy_info.enforce_email_2fa,
                 &full_policy_info.set_ip_restriction,
                 &full_policy_info.set_geo_restriction,
+                &full_policy_info.allow_device_logins,
                 &full_policy_info.allowed_ips,
                 &full_policy_info.allowed_geo_locations,
                 &organization_id,

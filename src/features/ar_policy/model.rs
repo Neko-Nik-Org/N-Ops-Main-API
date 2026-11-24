@@ -13,6 +13,8 @@ pub struct PolicyInfo {
     pub enforce_totp_2fa: bool,
     pub enforce_email_2fa: bool,
 
+    pub allow_device_logins: bool,
+
     pub has_ip_restriction: bool,
     pub has_geo_restriction: bool,
 

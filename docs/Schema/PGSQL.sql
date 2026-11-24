@@ -100,6 +100,9 @@ CREATE TABLE app_user (
 );
 
 
+---------------- Roles and Policies ----------------
+
+
 -- Roles within an organization
 CREATE TABLE user_role (
     role_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -147,6 +150,9 @@ CREATE TABLE access_restriction_policy (
     enforce_totp_2fa BOOLEAN NOT NULL,   -- TODO: Yet to implement (Code part)
     enforce_email_2fa BOOLEAN NOT NULL,  -- TODO: Yet to implement (Code part)
 
+    -- Allow Device logins (User can login from apps - Long-lived sessions)
+    allow_device_logins BOOLEAN DEFAULT TRUE NOT NULL,  -- Is device login allowed for this user
+
     -- Restriction Policy
     -- Geographic or IP-based restrictions (Allowed if either IP or Geo matches)
     has_ip_restriction BOOLEAN DEFAULT FALSE NOT NULL,  -- Is IP restriction enabled for this user
@@ -157,6 +163,36 @@ CREATE TABLE access_restriction_policy (
 
     UNIQUE (policy_name, organization_id)  -- Unique policy name per organization
 );
+
+
+---------------- App's and Devices ----------------
+
+
+-- Long-lived sessions for devices
+CREATE TABLE device_session (
+    session_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES app_user(user_id) ON DELETE CASCADE,  -- User associated with the device session
+
+    device_name VARCHAR(100) NOT NULL,  -- Name of the device
+    device_type VARCHAR(50) NOT NULL,   -- Type of the device (e.g., smartphone, tablet, laptop)
+    device_identifier VARCHAR(100) NOT NULL,  -- Unique identifier for the device (e.g., UUID, serial number)
+    device_details JSONB NOT NULL,  -- Additional details about the device (e.g., OS version, app version)
+
+    -- Refresh token hash for the session
+    session_token_hash CHAR(64) UNIQUE NOT NULL,  -- HMAC-SHA-256 hash of the session token
+
+    -- FCM (Firebase Cloud Messaging) token for push notifications
+    fcm_token TEXT,
+
+    -- APNS (Apple Push Notification Service) token for push notifications
+    apns_token TEXT,
+
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    last_accessed_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL -- If inactive for 7 days, delete the session
+);
+
+
+---------------- Invitations ----------------
 
 
 -- Invitations for organization membership

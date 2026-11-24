@@ -18,6 +18,8 @@ pub struct CreatePolicyDto {
     pub enforce_totp_2fa: bool,
     pub enforce_email_2fa: bool,
 
+    pub allow_device_logins: bool,
+
     pub set_ip_restriction: bool,
     pub set_geo_restriction: bool,
 
@@ -37,6 +39,8 @@ pub struct UpdatePolicyBaseInfoDto {
 pub struct UpdatePolicyDto {
     pub enforce_totp_2fa: bool,
     pub enforce_email_2fa: bool,
+
+    pub allow_device_logins: bool,
 
     pub set_ip_restriction: bool,
     pub set_geo_restriction: bool,
