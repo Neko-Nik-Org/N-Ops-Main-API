@@ -8,6 +8,7 @@ pub use dto::{LoginReqDto, UpdateProfileReqDto, ListUsersReqDto, CreateUserReqDt
 pub use model::SessionUser;
 pub use service::{
     update_user_profile_admin,
+    fetch_anti_phishing_code,
     refresh_user_session,
     update_user_password,
     update_user_username,

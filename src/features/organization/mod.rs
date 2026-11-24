@@ -4,8 +4,8 @@ mod model;
 mod dto;
 
 
+pub use service::{create_organization, encrypt_with_org_key, decrypt_with_org_key};
 pub use dto::{ListOrgsDto, CreateOrgDto, UpdateOrgQuotaDto};
-pub use service::create_organization;
 pub use repository::{
     update_organization_billing_info,
     organization_state_change,

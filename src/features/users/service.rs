@@ -1,10 +1,13 @@
 use crate::security::auth_tools::{verify_password_hash, check_ip_range_allowed, validate_base64_password, generate_password_hash, validate_username};
 use super::dto::{LoginReqDto, AuthInfoDbDto, UpdateProfileReqDto, CreateUserReqDto, UpdateProfileAdminReqDto};
+use crate::features::organization::{decrypt_with_org_key, encrypt_with_org_key};
 use crate::cache::redis_cache::{set_redis_cache, delete_redis_cache};
 use crate::errors::{ServiceError, ServiceResult};
+use crate::state::{AppState, API_SETTINGS};
+use rand::{TryRng, rngs::SysRng};
 use super::model::SessionUser;
-use crate::state::AppState;
 use super::repository;
+use crate::messaging;
 use uuid::Uuid;
 
 
@@ -30,6 +33,44 @@ async fn validate_geo_and_ip_restrictions(state: &AppState, client_ip: &str, use
     }
 
     Ok(())
+}
+
+
+/// Generate a cryptographically secure anti-phishing code
+fn generate_anti_phishing_code() -> ServiceResult<String> {
+    // Retrieve the list of anti-phishing words from the API settings
+    let anti_phishing_words = &API_SETTINGS.anti_phishing_words;
+    const WORD_COUNT: usize = 2;    // Number of words to include in the anti-phishing code
+
+    let mut rng = SysRng;
+    let words_len: u32 = anti_phishing_words.len() as u32;
+
+    // Rejection sampling avoids modulo bias
+    let upper_bound = u32::MAX - (u32::MAX % words_len);
+
+    // Prepare a vector to hold the selected words of the anti-phishing code
+    let mut words = Vec::with_capacity(WORD_COUNT);
+
+    // Generate each word of the anti-phishing code using rejection sampling
+    for _ in 0..WORD_COUNT {
+        // Loop until a valid random index is found
+        let index = loop {
+            // Requests a random 32-bit number from the system RNG
+            let random_number = rng.try_next_u32()?;
+
+            // Check if the random number is within the acceptable range
+            // If it is within the acceptable range, it can be used to determine the index
+            if random_number < upper_bound {
+                break (random_number % words_len) as usize;
+            }
+        };
+
+        // Append the selected anti-phishing word to the list of words
+        words.push(anti_phishing_words[index].clone());
+    }
+
+    // Join the selected words with a hyphen to form the anti-phishing code
+    Ok(words.join("-"))
 }
 
 
@@ -154,8 +195,8 @@ pub async fn update_user_profile(state: &AppState, organization_id: Uuid, user_i
 }
 
 
-/// Create a new user in the system
-pub async fn create_user(state: &AppState, organization_id: Uuid, create_request: &CreateUserReqDto) -> ServiceResult<()> {
+/// Create a new user in the system (Returns anti-phishing secret)
+pub async fn create_user(state: &AppState, organization_id: Uuid, organization_name: &str, create_request: &CreateUserReqDto) -> ServiceResult<()> {
     // Validate the username against the defined username policy
     validate_username(&create_request.user_name)?;
 
@@ -165,21 +206,33 @@ pub async fn create_user(state: &AppState, organization_id: Uuid, create_request
     // Generate the password hash from the provided password
     let password_hash = generate_password_hash(&create_request.password);
 
-    // TODO: Generate anti-phishing secret for the user (Encrypted)
-    // let anti_phishing_secret = generate_anti_phishing_secret();
-    // use crate::security::encryption;
-    // let encrypted_anti_phishing_secret = encryption::encrypt(&anti_phishing_secret);
+    // Generate anti-phishing secret for the user (Encrypted)
+    let anti_phishing_secret = generate_anti_phishing_code()?;
+    let encrypted_anti_phishing_secret = encrypt_with_org_key(
+        &state,
+        &organization_id,
+        &anti_phishing_secret
+    ).await?;
 
     // Create the user in the repository
     let result = repository::create_user(
         &state.pg_pool,
         organization_id,
         &password_hash,
+        &encrypted_anti_phishing_secret,
         &create_request,
     ).await?;
     if result == 0 {
         return Err(ServiceError::BadRequest("Failed to create user in the database".into()));
     }
+
+    // Once all are successfully done, send welcome email to the newly created user
+    messaging::email::send_welcome_email(
+        &organization_name,
+        &create_request.display_name,
+        &create_request.primary_email,
+        &anti_phishing_secret
+    ).await?;
 
     Ok(())
 }
@@ -208,4 +261,16 @@ pub async fn update_user_profile_admin(state: &AppState, organization_id: Uuid, 
     }
 
     Ok(())
+}
+
+
+/// Fetch the anti-phishing code for the given user
+pub async fn fetch_anti_phishing_code(state: &AppState, organization_id: Uuid, user_id: i64) -> ServiceResult<String> {
+    // Fetch the encrypted anti-phishing code from the repository
+    let encrypted_anti_phishing_code = repository::fetch_anti_phishing_code(&state.pg_pool, organization_id, user_id).await?;
+
+    // Decrypt the anti-phishing code using the organization's encryption key
+    let anti_phishing_code = decrypt_with_org_key(&state, &organization_id, &encrypted_anti_phishing_code).await?;
+
+    Ok(anti_phishing_code)
 }

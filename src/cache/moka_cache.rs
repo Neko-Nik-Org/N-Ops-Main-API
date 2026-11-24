@@ -7,40 +7,48 @@ use std::sync::Arc;
 pub type Key = Arc<str>;
 
 /// Typed cache storing shared values
-pub type AppCache<T> = Cache<Key, Arc<T>>;
+pub type MokaCache<T> = Cache<Key, Arc<T>>;
 
 
 /// Insert a shared value into the cache
-pub async fn cache_data<T>(cache: &AppCache<T>, key: &str, value: Arc<T>)
+pub async fn set_in_mem_cache<T>(cache: &MokaCache<T>, key: &str, value: Arc<T>)
     where
         T: Send + Sync + 'static,
 {
-    cache.insert(Arc::<str>::from(key), value).await;
+    cache.insert(key.into(), value).await;
 }
 
 
 /// Retrieve a shared value from the cache
-pub async fn get_cached_data<T>(cache: &AppCache<T>, key: &str) -> Option<Arc<T>>
+pub async fn get_in_mem_cache<T>(cache: &MokaCache<T>, key: &str) -> Option<Arc<T>>
     where
         T: Send + Sync + 'static,
 {
-    cache.get(&Arc::<str>::from(key)).await
+    cache.get(key).await
 }
 
 
 /// Remove a value from the cache
-pub async fn remove_cached_data<T>(cache: &AppCache<T>, key: &str)
+pub async fn remove_in_mem_cache<T>(cache: &MokaCache<T>, key: &str)
     where
         T: Send + Sync + 'static,
 {
-    cache.invalidate(&Arc::<str>::from(key)).await;
+    cache.invalidate(key).await;
 }
 
 
 /// Create a new Moka cache with the specified size and expiration time
-pub fn moka_builder<T: Send + Sync + 'static>(cache_size: u64, expiration_time: Duration) -> AppCache<T> {
-    AppCache::builder()
+pub fn build_ttl_cache<T: Send + Sync + 'static>(cache_size: u64, expiration_time: Duration) -> MokaCache<T> {
+    MokaCache::builder()
         .max_capacity(cache_size)
         .time_to_live(expiration_time)
+        .build()
+}
+
+
+pub fn build_idle_policy_cache<T: Send + Sync + 'static>(cache_size: u64, idle_time: Duration) -> MokaCache<T> {
+    MokaCache::builder()
+        .max_capacity(cache_size)
+        .time_to_idle(idle_time)
         .build()
 }

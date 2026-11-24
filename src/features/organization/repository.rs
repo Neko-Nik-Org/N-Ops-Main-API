@@ -320,3 +320,23 @@ pub async fn check_org_name(db_pool: &PgPool, organization_name: &str) -> PgResu
 
     Ok(row.get(0))
 }
+
+
+pub async fn get_encryption_key(db_pool: &PgPool, organization_id: &Uuid) -> PgResult<Option<String>> {
+    let client = db_pool.get().await?;
+
+    let row = client
+        .query_opt(
+            r#"
+            SELECT encryption_key
+            FROM organization
+            WHERE
+                organization_id = $1
+                AND is_active = TRUE
+            "#,
+            &[&organization_id],
+        )
+        .await?;
+
+    Ok(row.map(|r| r.get("encryption_key")))
+}

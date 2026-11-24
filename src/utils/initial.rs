@@ -43,16 +43,6 @@ pub const ALL_AVAILABLE_PERMISSIONS: [&str; 22] = [
 ];
 
 
-// Anti-Phishing Words (Used for generating unique codes to prevent phishing attacks)
-pub const ANTI_PISHING_WORDS: [&str; 25] = [
-    "cat", "tiger", "rocket", "moon", "coffee",
-    "dragon", "pixel", "neko", "cloud", "ocean",
-    "forest", "silver", "orange", "planet", "cosmos",
-    "shadow", "crystal", "falcon", "winter", "sunset",
-    "nebula", "asteroid", "galaxy", "meteor", "comet"
-];
-
-
 pub struct PgSettings {
     pub url: String,
     pub conn_timeout: u64,
@@ -68,15 +58,27 @@ pub struct PgSettings {
 }
 
 
-pub struct MokaSettings {
+pub struct MokaExpSettings {
     pub cache_size: u64,
     pub expiration_time: Duration,
 }
 
 
+pub struct MokaIdleSettings {
+    pub cache_size: u64,
+    pub idle_time: Duration,
+}
+
+
+pub struct InMemCacheSettings {
+    pub org_encryption_keys: MokaIdleSettings,
+    pub number_based: MokaExpSettings,
+}
+
+
 pub struct AppSettings {
     pub pg_settings: PgSettings,
-    pub cache_settings: MokaSettings,
+    pub in_mem_cache_settings: InMemCacheSettings,
     pub redis_url: String,
 }
 
@@ -120,6 +122,7 @@ pub struct ApiSettings {
     pub allowed_origins: Vec<String>,
     pub self_super_admin_key: String,
     pub master_encryption_key: Vec<u8>,
+    pub anti_phishing_words: Vec<String>,
     // Additional API settings can be added here as needed
 }
 
@@ -213,20 +216,49 @@ impl PgSettings {
 }
 
 
-impl MokaSettings {
-    fn from_env() -> Self {
-        let cache_size = env_var("CACHE_SIZE")
+impl MokaExpSettings {
+    fn from_env(env_var_prefix: &str) -> Self {
+        let cache_size = env_var(&format!("IN_MEM_{}_CACHE_SIZE", env_var_prefix))
             .ok()
             .and_then(|s| s.parse().ok())
-            .expect("CACHE_SIZE must be a positive integer of type u64");
-        let expiration_time = env_var("CACHE_EXPIRATION_TIME")
+            .expect(&format!("IN_MEM_{}_CACHE_SIZE must be a positive integer of type u64", env_var_prefix));
+        let expiration_time = env_var(&format!("IN_MEM_{}_CACHE_EXPIRATION_TIME", env_var_prefix))
             .ok()
             .and_then(|s| s.parse().ok())
-            .expect("CACHE_EXPIRATION_TIME must be a positive integer of type u64");
+            .expect(&format!("IN_MEM_{}_CACHE_EXPIRATION_TIME must be a positive integer of type u64", env_var_prefix));
 
-        MokaSettings {
+        MokaExpSettings {
             cache_size,
             expiration_time: Duration::from_secs(expiration_time),
+        }
+    }
+}
+
+
+impl MokaIdleSettings {
+    fn from_env(env_var_prefix: &str) -> Self {
+        let cache_size = env_var(&format!("IN_MEM_{}_CACHE_SIZE", env_var_prefix))
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .expect(&format!("IN_MEM_{}_CACHE_SIZE must be a positive integer of type u64", env_var_prefix));
+        let idle_time = env_var(&format!("IN_MEM_{}_CACHE_IDLE_TIME", env_var_prefix))
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .expect(&format!("IN_MEM_{}_CACHE_IDLE_TIME must be a positive integer of type u64", env_var_prefix));
+
+        MokaIdleSettings {
+            cache_size,
+            idle_time: Duration::from_secs(idle_time),
+        }
+    }
+}
+
+
+impl InMemCacheSettings {
+    fn from_env() -> Self {
+        InMemCacheSettings {
+            org_encryption_keys: MokaIdleSettings::from_env("ORG_ENCRYPTION_KEYS"),
+            number_based: MokaExpSettings::from_env("NUMBER_BASED"),
         }
     }
 }
@@ -238,7 +270,7 @@ impl AppSettings {
 
         AppSettings {
             pg_settings: PgSettings::from_env(),
-            cache_settings: MokaSettings::from_env(),
+            in_mem_cache_settings: InMemCacheSettings::from_env(),
             redis_url,
         }
     }
@@ -289,10 +321,24 @@ impl ApiSettings {
             .decode(&base64_master_encryption_key)
             .expect("Failed to decode MASTER_ENCRYPTION_KEY from base64");
 
+        // Convert the anti-phishing words to a vector of strings (input should be a comma-separated list in the environment variable)
+        let anti_phishing_words = env_var("ANTI_PHISHING_WORDS")
+            .ok()
+            .map(|s| {
+                s.split(',')
+                    .map(|entry| entry.trim())
+                    .filter(|entry| !entry.is_empty())
+                    .map(|entry| entry.to_string())
+                    .collect::<Vec<String>>()
+            })
+            .filter(|items| !items.is_empty())
+            .expect("ANTI_PHISHING_WORDS must be set as a comma-separated list of words");
+
         ApiSettings {
             allowed_origins,
             self_super_admin_key,
-            master_encryption_key
+            master_encryption_key,
+            anti_phishing_words,
         }
     }
 }

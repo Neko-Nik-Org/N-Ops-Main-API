@@ -68,6 +68,9 @@ pub async fn join_invite(state: &AppState, invitation_code: String, user_data: C
     }
     let invite_details = invite_details.unwrap();
 
+    // Fetch the organization information for the organization associated with the invite
+    let org_info = fetch_org_info(&state.pg_pool, invite_details.organization_id).await?;
+
     // At this point, invite_details contains the valid invitation information
     // Build the request to create a new user based on the invite details
     let create_request = CreateUserReqDto {
@@ -81,13 +84,8 @@ pub async fn join_invite(state: &AppState, invitation_code: String, user_data: C
         access_restriction_policy_id: invite_details.access_restriction_policy_id,
     };
 
-    // TODO: Generate anti-phishing secret for the user (Encrypted)
-    // let anti_phishing_secret = generate_anti_phishing_secret();
-    // use crate::security::encryption;
-    // let encrypted_anti_phishing_secret = encryption::encrypt(&anti_phishing_secret);
-
-    // Create the user using the constructed request
-    create_user(&state, invite_details.organization_id, &create_request).await?;
+    // Create the user using the constructed request (No need to use the returned anti-phishing secret)
+    create_user(&state, invite_details.organization_id, &org_info.organization_name, &create_request).await?;
 
     // Once created, delete the invite to prevent reuse
     repository::delete_invitation(&state.pg_pool, invite_details.organization_id, invite_details.invitation_id).await?;

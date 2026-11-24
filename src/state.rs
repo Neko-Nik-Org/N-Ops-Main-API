@@ -1,5 +1,5 @@
-use crate::utils::initial::{ApiSettings, AppSettings, RmqSettings, CfTurnstileSettings, SmtpSettings, OtpSettings, OrgInviteSettings};
-use crate::cache::moka_cache::{AppCache, moka_builder};
+use crate::utils::initial::{ApiSettings, AppSettings, RmqSettings, CfTurnstileSettings, SmtpSettings, OtpSettings, OrgInviteSettings, InMemCacheSettings};
+use crate::cache::moka_cache::{MokaCache, build_ttl_cache, build_idle_policy_cache};
 use crate::database::pool::{init_pg_pool, warm_pool};
 use crate::cache::redis_cache::init_redis;
 use crate::tasks::start_background_jobs;
@@ -19,8 +19,8 @@ pub struct AppState {
 
 
 pub struct InMemCache {
-    pub string_based: AppCache<String>,
-    pub number_based: AppCache<u64>,
+    pub org_encryption_keys: MokaCache<String>,
+    pub number_based: MokaCache<u64>,
 }
 
 
@@ -54,13 +54,17 @@ pub static CLOUDFLARE_TURNSTILE_SETTINGS: LazyLock<CfTurnstileSettings> = LazyLo
 });
 
 
-fn init_in_mem_cache(cache_size: u64, expiration_time: Duration) -> InMemCache {
-    // Build the in-memory cache (Moka)
-    // Note: You can configure each type of cache separately if needed,
-    // this shown below is only an example
+/// Build the in-memory cache (Moka)
+fn init_in_mem_cache(in_mem_cache_settings: InMemCacheSettings) -> InMemCache {
     InMemCache {
-        string_based: moka_builder(cache_size, expiration_time),
-        number_based: moka_builder(cache_size, expiration_time),
+        org_encryption_keys: build_idle_policy_cache(
+            in_mem_cache_settings.org_encryption_keys.cache_size,
+            in_mem_cache_settings.org_encryption_keys.idle_time
+        ),
+        number_based: build_ttl_cache(
+            in_mem_cache_settings.number_based.cache_size,
+            in_mem_cache_settings.number_based.expiration_time
+        ),
     }
 }
 
@@ -92,7 +96,7 @@ pub async fn initialize() -> webData<AppState> {
     warm_pool(&pg_pool, &app_settings.pg_settings).await;
 
     // Initialize the in-memory cache (Moka)    [You can configure for each type of cache separately also, this is just an example]
-    let in_mem_cache = init_in_mem_cache(app_settings.cache_settings.cache_size, app_settings.cache_settings.expiration_time);
+    let in_mem_cache = init_in_mem_cache(app_settings.in_mem_cache_settings);
 
     // Initialize the Redis cache
     let redis_cache = init_redis(&app_settings.redis_url).await;

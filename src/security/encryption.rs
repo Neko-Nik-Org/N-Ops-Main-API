@@ -75,3 +75,11 @@ pub fn generate_encryption_key() -> String {
     let key = Aes256Gcm::generate_key(&mut OsRng);
     general_purpose::STANDARD.encode(key)
 }
+
+
+/// Convert a base64-encoded encryption key to raw bytes
+pub fn decode_encryption_key(encoded: &str) -> Vec<u8> {
+    general_purpose::STANDARD
+        .decode(encoded)
+        .expect("invalid base64")
+}

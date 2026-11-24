@@ -90,6 +90,9 @@ pub async fn send_verification_email(session_user: web::ReqData<SessionUser>, st
         return Ok(HttpResponse::Conflict().body("Email is already verified"));
     }
 
+    // Fetch the anti-phishing code for the session user
+    let anti_phishing_code = users::fetch_anti_phishing_code(&state, session_user.organization_id, session_user.user_id).await?;
+
     // Generate a verification code for the session user
     let verification_code = otp::generate_otp(7)?;
 
@@ -106,7 +109,7 @@ pub async fn send_verification_email(session_user: web::ReqData<SessionUser>, st
     set_redis_cache(&state.redis_cache, &otp_cache_key, &otp_hash, 5 * 60).await?;
 
     // Send the verification email to the user's email address
-    messaging::email::send_verification_email(&session_user, &verification_code).await?;
+    messaging::email::send_verification_email(&session_user, &verification_code, &anti_phishing_code).await?;
 
     Ok(HttpResponse::Created().finish())
 }
@@ -264,10 +267,7 @@ pub async fn create_user(session_user: web::ReqData<SessionUser>, body: web::Jso
     // So, make sure granting this permission is done carefully and only to trusted users!
 
     // Create the user in the database
-    users::create_user(&state, session_user.organization_id, &create_request).await?;
-
-    // Send welcome email to the newly created user
-    messaging::email::send_welcome_email(&create_request.display_name, &create_request.primary_email).await?;
+    users::create_user(&state, session_user.organization_id, &session_user.organization_name, &create_request).await?;
 
     Ok(HttpResponse::Ok().body("User created successfully and a welcome email sent"))
 }

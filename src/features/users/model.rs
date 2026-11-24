@@ -26,7 +26,6 @@ pub struct SessionUser {
 
     // Security and access information
     pub encryption_key: String,
-    // pub anti_phishing_secret: String,    // TODO: Implement anti-phishing secret management
     pub allow_refresh: bool,    // Indicates if the session can be refreshed
 
     pub allowed_linux_users: Vec<String>,
@@ -83,7 +82,6 @@ pub struct UserProfileInfo {
     // Contact information (Use only if it is verified)
     pub primary_email: String,
     pub is_email_verified: bool,
-    // pub anti_phishing_secret: String,
     pub is_user_active: bool,
     pub is_organization_active: bool,
 
@@ -109,7 +107,6 @@ pub struct UserProfileListing {
     // Contact information (Use only if it is verified)
     pub primary_email: String,
     pub is_email_verified: bool,
-    // pub anti_phishing_secret: String,
     pub is_active: bool,
 
     // Security and access control

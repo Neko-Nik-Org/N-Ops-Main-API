@@ -520,7 +520,7 @@ pub async fn fetch_user_by_id_listing(db_pool: &PgPool, organization_id: uuid::U
 }
 
 
-pub async fn create_user(db_pool: &PgPool, organization_id: uuid::Uuid, password_hash: &str, create_request: &CreateUserReqDto) -> PgResult<u64> {
+pub async fn create_user(db_pool: &PgPool, organization_id: uuid::Uuid, password_hash: &str, anti_phishing_secret: &str, create_request: &CreateUserReqDto) -> PgResult<u64> {
     let mut client = db_pool.get().await?;
 
     // Start transaction
@@ -602,6 +602,7 @@ pub async fn create_user(db_pool: &PgPool, organization_id: uuid::Uuid, password
                 organization_id,
                 user_name,
                 password_hash,
+                anti_phishing_secret,
                 display_name,
                 primary_email,
                 user_details,
@@ -613,18 +614,19 @@ pub async fn create_user(db_pool: &PgPool, organization_id: uuid::Uuid, password
             SELECT
                 $1, $2, $3, $4, $5, $6,
                 '{}'::jsonb,
-                $7, $8, $9
+                $7, $8, $9, $10
             WHERE EXISTS (
                 SELECT 1
                 FROM user_role
                 WHERE organization_id = $1
-                  AND role_id = $8
+                  AND role_id = $9
             )
             "#,
             &[
                 &organization_id,
                 &create_request.user_name,
                 &password_hash,
+                &anti_phishing_secret,
                 &create_request.display_name,
                 &create_request.primary_email,
                 &create_request.user_details,
@@ -707,4 +709,24 @@ pub async fn update_access_restriction_policy_to_user(db_pool: &PgPool, organiza
         .await?;
 
     Ok(result)
+}
+
+
+pub async fn fetch_anti_phishing_code(db_pool: &PgPool, organization_id: uuid::Uuid, user_id: i64) -> PgResult<String> {
+    let client = db_pool.get().await?;
+
+    let row = client
+        .query_one(
+            r#"
+            SELECT anti_phishing_code
+            FROM app_user
+            WHERE organization_id = $1
+              AND user_id = $2
+            "#,
+            &[&organization_id, &user_id],
+        )
+        .await?;
+
+    let anti_phishing_code: String = row.get("anti_phishing_code");
+    Ok(anti_phishing_code)
 }
