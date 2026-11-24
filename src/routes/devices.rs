@@ -24,36 +24,16 @@ use crate::features::devices::{
 // }
 
 
-// #[put("/update")]
-// pub async fn update_tag(session_user: web::ReqData<SessionUser>, data: web::Json<EditResourceTagDto>, state: web::Data<AppState>) -> ApiResponse {
-//     let session_user = session_user.into_inner();
-//     let new_tag_data = data.into_inner(); 
+#[delete("/delete/{session_id}")]
+pub async fn revoke_user_device(session_user: web::ReqData<SessionUser>, path: web::Path<i64>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let session_id = path.into_inner();
 
-//     // Validate that the session user has the required permissions
-//     session_user.has_all_permissions(&["tag:edit"])?;
-//     session_user.has_tag_permission(new_tag_data.tag_id)?;
+    // Revoke the user's device using the provided data and the session user's context
+    devices::delete_device(&state.pg_pool, session_user.user_id, session_id).await?;
 
-//     // Update the tag using the provided data and the session user's context
-//     tags::update_tag_data(&state, &session_user, &new_tag_data).await?;
-
-//     Ok(HttpResponse::Created().finish())
-// }
-
-
-// #[delete("/delete/{tag_id}")]
-// pub async fn delete_tag(session_user: web::ReqData<SessionUser>, path: web::Path<i64>, state: web::Data<AppState>) -> ApiResponse {
-//     let session_user = session_user.into_inner();
-//     let tag_id = path.into_inner();
-
-//     // Validate that the session user has the required permissions
-//     session_user.has_all_permissions(&["tag:delete"])?;
-//     session_user.has_tag_permission(tag_id)?;
-
-//     // Delete the tag using the provided data and the session user's context
-//     tags::delete_tag(&state, &session_user, tag_id).await?;
-
-//     Ok(HttpResponse::Ok().finish())
-// }
+    Ok(HttpResponse::Ok().finish())
+}
 
 
 #[get("/get/{session_id}")]
