@@ -1,5 +1,5 @@
 use crate::features::users::{SessionUser, LoginReqDto, DeviceRefreshReqDto, create_user_session, refresh_user_session, update_last_login_at, create_device_session};
-use crate::features::devices::{DeviceLoginReqDto, create_device_refresh_token};
+use crate::features::devices::{DeviceLoginReqDto, create_device_refresh_token, delete_device};
 use crate::cache::redis_cache::{set_redis_cache, delete_redis_cache};
 use actix_web::{delete, get, post, web, HttpResponse, HttpRequest};
 use crate::security::cf_turnstile::verify_turnstile_response;
@@ -74,7 +74,7 @@ pub async fn user_login(request: HttpRequest, login_request: web::Json<LoginReqD
     update_last_login_at(&state.pg_pool, auth_info.user_id).await?;
 
     // Generate a Session struct
-    let user_session = SessionUser::new(auth_info, login_request.remember_me);
+    let user_session = SessionUser::new(auth_info, login_request.remember_me, None);
     let session_key = format!("session:{}", user_session.session_id);
 
     // Store the user session in Redis with a 3-hour TTL
@@ -175,6 +175,30 @@ pub async fn verify_session(session_user: web::ReqData<SessionUser>) -> ApiRespo
 #[delete("/logout")]
 pub async fn user_logout(session_user: web::ReqData<SessionUser>, state: web::Data<AppState>) -> ApiResponse {
     let session_user = session_user.into_inner();
+
+    // Delete the user session from Redis
+    let session_key = format!("session:{}", session_user.session_id);
+    delete_redis_cache(&state.redis_cache, &session_key).await?;
+
+    Ok(HttpResponse::NoContent().finish())
+}
+
+
+#[delete("/device/logout")]
+pub async fn device_logout(session_user: web::ReqData<SessionUser>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+
+    // Check if the session has an associated refresh token
+    if session_user.device_session_id.is_none() {
+        return Err(ServiceError::BadRequest("No active device session found".into()));
+    }
+    let device_session_id = session_user.device_session_id.unwrap();
+
+    // Delete the device session from the database
+    let result = delete_device(&state.pg_pool, session_user.user_id, device_session_id).await?;
+    if result == 0 {
+        return Err(ServiceError::BadRequest("Failed to delete device session from the database".into()));
+    }
 
     // Delete the user session from Redis
     let session_key = format!("session:{}", session_user.session_id);

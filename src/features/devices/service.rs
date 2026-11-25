@@ -108,7 +108,7 @@ pub async fn create_device_refresh_token(state: &AppState, device_login_req: Dev
 
 
 /// Get the username associated with a given device refresh token
-pub async fn get_user_name_from_device_session(state: &AppState, user_id: i64, device_identifier: &str, refresh_token: &str) -> ServiceResult<String> {
+pub async fn get_user_name_from_device_session(state: &AppState, user_id: i64, device_identifier: &str, refresh_token: &str) -> ServiceResult<(String, i64)> {
     // First fetch the session by the device identifier and user ID
     let device_session = repository::get_device_session(&state.pg_pool, user_id, device_identifier).await?;
     if device_session.is_none() {
@@ -125,5 +125,5 @@ pub async fn get_user_name_from_device_session(state: &AppState, user_id: i64, d
         return Err(ServiceError::Unauthorized("Invalid refresh token".into()));
     }
 
-    Ok(device_session.user_name)
+    Ok((device_session.user_name, device_session.device_session_id))
 }

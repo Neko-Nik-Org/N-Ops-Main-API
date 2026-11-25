@@ -18,6 +18,7 @@ pub struct DeviceLoginReqDto {
 
 #[derive(RowFrom)]
 pub struct DeviceSessionDto {
+    pub device_session_id: i64,
     pub user_name: String,
     pub session_token_hash: String,
 }

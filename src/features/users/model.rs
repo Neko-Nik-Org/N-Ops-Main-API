@@ -14,6 +14,7 @@ pub struct SessionUser {
     pub session_id: Uuid,
     pub user_id: i64,
     pub organization_id: Uuid,
+    pub device_session_id: Option<i64>, // Optional ID if the session is associated with a device
 
     // Basic user information
     pub user_name: String,
@@ -132,7 +133,7 @@ pub struct UserProfileListing {
 
 impl SessionUser {
     /// Creates a new `SessionUser` with a unique session ID
-    pub fn new(auth_info: AuthInfoDbDto, allow_refresh: bool) -> Self {
+    pub fn new(auth_info: AuthInfoDbDto, allow_refresh: bool, device_session_id: Option<i64>) -> Self {
         SessionUser {
             session_id: Uuid::new_v4(),
             user_id: auth_info.user_id,
@@ -141,6 +142,7 @@ impl SessionUser {
             allow_refresh,
             allow_device_logins: auth_info.allow_device_logins,
             encryption_key: auth_info.encryption_key,
+            device_session_id,
 
             allowed_linux_users: auth_info.allowed_linux_users,
             permissions: auth_info.permissions,

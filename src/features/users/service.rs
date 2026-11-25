@@ -123,7 +123,7 @@ pub async fn refresh_user_session(state: &AppState, session_user: &SessionUser) 
     }
 
     // Create a new session user with the refreshed authentication information
-    let session_user = SessionUser::new(auth_info.unwrap(), true);
+    let session_user = SessionUser::new(auth_info.unwrap(), true, None);
 
     let new_session_key = format!("session:{}", session_user.session_id);
 
@@ -295,7 +295,7 @@ pub async fn update_anti_phishing_code(state: &AppState, organization_id: Uuid, 
 /// Create a new device session for the given user
 pub async fn create_device_session(state: &AppState, device_refresh_request: &DeviceRefreshReqDto) -> ServiceResult<SessionUser> {
     // Fetch the username associated with the provided refresh token
-    let user_name = get_user_name_from_device_session(
+    let (user_name, device_session_id) = get_user_name_from_device_session(
         &state,
         device_refresh_request.user_id,
         &device_refresh_request.device_identifier,
@@ -314,7 +314,7 @@ pub async fn create_device_session(state: &AppState, device_refresh_request: &De
     }
 
     // Create a new session user with the refreshed authentication information
-    let session_user = SessionUser::new(auth_info.unwrap(), true);
+    let session_user = SessionUser::new(auth_info.unwrap(), false, Some(device_session_id));
 
     let new_session_key = format!("session:{}", session_user.session_id);
     let current_session_cache_key = format!("session:{}", device_refresh_request.current_session_key);

@@ -110,6 +110,7 @@ pub async fn get_device_session(db_pool: &PgPool, user_id: i64, device_identifie
         .query_opt(
             r#"
             SELECT
+                ds.session_id AS device_session_id,
                 u.user_name,
                 ds.session_token_hash
             FROM device_session ds

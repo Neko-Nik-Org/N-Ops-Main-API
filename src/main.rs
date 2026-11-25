@@ -69,7 +69,7 @@ async fn main() -> std::io::Result<()> {
                     .wrap(from_fn(middleware::user_session::auth_check))
                     .service(auth::refresh_session)
                     .service(auth::verify_session)
-                    // .service(auth::device_logout)  // Logout from a device session
+                    .service(auth::device_logout)
                     .service(auth::get_session)
                     .service(auth::user_logout)
                 )
