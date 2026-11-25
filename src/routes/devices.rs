@@ -1,4 +1,4 @@
-use actix_web::{HttpResponse, delete, get, post, put, web};
+use actix_web::{HttpResponse, delete, get, post, web};
 use crate::features::users::SessionUser;
 use crate::errors::ApiResponse;
 use crate::features::devices;

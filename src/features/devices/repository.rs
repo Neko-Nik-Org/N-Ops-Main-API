@@ -136,7 +136,55 @@ pub async fn get_device_session(db_pool: &PgPool, user_id: i64, device_identifie
 }
 
 
+pub async fn update_fcm_token(db_pool: &PgPool, user_id: i64, session_id: i64, fcm_token: &str) -> PgResult<u64> {
+    let client = db_pool.get().await?;
 
-// TODO: Implement the function to update device tokens
-// pub async fn update_device_tokens
-// pub async fn update_last_accessed_at
+    let result = client
+        .execute(
+            r#"
+            UPDATE device_session
+            SET fcm_token = $1
+            WHERE user_id = $2 AND session_id = $3
+            "#,
+            &[&fcm_token, &user_id, &session_id],
+        )
+        .await?;
+
+    Ok(result)
+}
+
+
+pub async fn update_apns_token(db_pool: &PgPool, user_id: i64, session_id: i64, apns_token: &str) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            UPDATE device_session
+            SET apns_token = $1
+            WHERE user_id = $2 AND session_id = $3
+            "#,
+            &[&apns_token, &user_id, &session_id],
+        )
+        .await?;
+
+    Ok(result)
+}
+
+
+pub async fn update_last_accessed_at(db_pool: &PgPool, user_id: i64, session_id: i64) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            UPDATE device_session
+            SET last_accessed_at = NOW()
+            WHERE user_id = $1 AND session_id = $2
+            "#,
+            &[&user_id, &session_id],
+        )
+        .await?;
+
+    Ok(result)
+}
