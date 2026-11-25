@@ -2,6 +2,7 @@ use crate::security::auth_tools::{verify_password_hash, check_ip_range_allowed, 
 use super::dto::{LoginReqDto, AuthInfoDbDto, UpdateProfileReqDto, CreateUserReqDto, UpdateProfileAdminReqDto};
 use crate::features::organization::{decrypt_with_org_key, encrypt_with_org_key};
 use crate::cache::redis_cache::{set_redis_cache, delete_redis_cache};
+use crate::features::devices::get_user_name_from_refresh_token;
 use crate::errors::{ServiceError, ServiceResult};
 use crate::state::{AppState, API_SETTINGS};
 use rand::{TryRng, rngs::SysRng};
@@ -288,4 +289,39 @@ pub async fn update_anti_phishing_code(state: &AppState, organization_id: Uuid, 
     }
 
     Ok(())
+}
+
+
+/// Create a new device session for the given user
+pub async fn create_device_session(state: &AppState, refresh_token: &str, current_session_key: &str) -> ServiceResult<SessionUser> {
+    // Fetch the username associated with the provided refresh token
+    let user_name = get_user_name_from_refresh_token(&state, refresh_token).await?;
+    if user_name.is_none() {
+        return Err(ServiceError::Unauthorized("Invalid refresh token or is expired or service is inactive".into()));
+    }
+    let user_name = user_name.unwrap();
+
+    // Re-Fetch the user authentication info from the database
+    let auth_info = repository::get_user_auth_info(
+        &state.pg_pool,
+        &user_name
+    ).await?;
+
+    // If the authentication info is not found, the session is invalid or the User/Org is deleted or disabled
+    if auth_info.is_none() {
+        return Err(ServiceError::Unauthorized("Invalid session".into()));
+    }
+
+    // Create a new session user with the refreshed authentication information
+    let session_user = SessionUser::new(auth_info.unwrap(), true);
+
+    let new_session_key = format!("session:{}", session_user.session_id);
+
+    // Store the refreshed session in Redis with a 3-hour TTL
+    set_redis_cache(&state.redis_cache, &new_session_key, &session_user, 3 * 60 * 60).await?;
+
+    // Delete the old session from Redis
+    delete_redis_cache(&state.redis_cache, &current_session_key).await?;
+
+    Ok(session_user)
 }

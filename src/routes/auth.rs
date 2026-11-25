@@ -1,4 +1,4 @@
-use crate::features::users::{SessionUser, LoginReqDto, create_user_session, refresh_user_session, update_last_login_at};
+use crate::features::users::{SessionUser, LoginReqDto, DeviceRefreshReqDto, create_user_session, refresh_user_session, update_last_login_at, create_device_session};
 use crate::features::devices::{DeviceLoginReqDto, create_device_refresh_token};
 use crate::cache::redis_cache::{set_redis_cache, delete_redis_cache};
 use actix_web::{delete, get, post, web, HttpResponse, HttpRequest};
@@ -104,8 +104,8 @@ pub async fn user_login(request: HttpRequest, login_request: web::Json<LoginReqD
 
 
 #[post("/device/login")]
-pub async fn device_login(device_login_req: web::Json<DeviceLoginReqDto>, state: web::Data<AppState>) -> ApiResponse {
-    let device_login_request = device_login_req.into_inner();
+pub async fn device_login(body: web::Json<DeviceLoginReqDto>, state: web::Data<AppState>) -> ApiResponse {
+    let device_login_request = body.into_inner();
 
     // Create a new device refresh token for the login request
     let refresh_token = create_device_refresh_token(&state, device_login_request).await?;
@@ -114,6 +114,36 @@ pub async fn device_login(device_login_req: web::Json<DeviceLoginReqDto>, state:
     Ok(HttpResponse::Ok().json(serde_json::json!({
         "message": "Refresh token created successfully",
         "refresh_token": refresh_token
+    })))
+}
+
+
+#[post("/device/refresh")]
+pub async fn device_refresh(body: web::Json<DeviceRefreshReqDto>, state: web::Data<AppState>) -> ApiResponse {
+    let device_refresh_request = body.into_inner();
+
+    // Create a new device session using the provided refresh token (It will be same as the normal login session)
+    let user_session = create_device_session(
+        &state,
+        &device_refresh_request.refresh_token,
+        &device_refresh_request.current_session_key
+    ).await?;
+
+    // Return the session creation response
+    Ok(HttpResponse::Ok().json(serde_json::json!({
+        "message": "Session created successfully",
+        "session_id": user_session.session_id,
+        "data": {
+            "user_id": user_session.user_id,
+            "organization_id": user_session.organization_id,
+            "permissions": user_session.permissions,
+            "tags": user_session.tags,
+            "user_name": user_session.user_name,
+            "display_name": user_session.display_name,
+            "organization_name": user_session.organization_name,
+            "primary_email": user_session.primary_email,
+            "is_email_verified": user_session.is_email_verified
+        }
     })))
 }
 

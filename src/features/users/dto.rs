@@ -56,6 +56,13 @@ pub struct LoginReqDto {
 
 
 #[derive(Deserialize)]
+pub struct DeviceRefreshReqDto {
+    pub refresh_token: String,
+    pub current_session_key: String,
+}
+
+
+#[derive(Deserialize)]
 pub struct UpdateProfileReqDto {
     pub display_name: String,
     pub primary_email: Option<String>,  // If given, the new primary email for the user

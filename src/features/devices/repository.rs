@@ -103,5 +103,34 @@ pub async fn list_all_devices(db_pool: &PgPool, user_id: i64) -> PgResult<Vec<De
 }
 
 
+pub async fn get_user_name_from_refresh_token(db_pool: &PgPool, refresh_token_hash: &str) -> PgResult<Option<String>> {
+    let client = db_pool.get().await?;
+
+    let row = client
+        .query_opt(
+            r#"
+            SELECT u.user_name
+            FROM device_session ds
+            INNER JOIN app_user u
+                ON u.user_id = ds.user_id
+            INNER JOIN organization o
+                ON o.organization_id = u.organization_id
+            LEFT JOIN access_restriction_policy p
+                ON p.policy_id = u.access_restriction_policy_id
+            WHERE ds.session_token_hash = $1
+                AND u.is_active = TRUE
+                AND o.is_active = TRUE
+                AND COALESCE(p.allow_device_logins, TRUE) = TRUE
+            "#,
+            &[&refresh_token_hash],
+        )
+        .await?;
+
+    Ok(row.map(|r| r.get("user_name")))
+}
+
+
+
+// TODO: Implement the function to update device tokens
 // pub async fn update_device_tokens
 // pub async fn update_last_accessed_at

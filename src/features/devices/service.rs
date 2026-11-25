@@ -106,3 +106,15 @@ pub async fn create_device_refresh_token(state: &AppState, device_login_req: Dev
 
     Ok(refresh_token)
 }
+
+
+/// Get the username associated with a given device refresh token
+pub async fn get_user_name_from_refresh_token(state: &AppState, refresh_token: &str) -> ServiceResult<Option<String>> {
+    // Hash the provided refresh token to match against the stored hash in the repository
+    let refresh_token_hash = hash_device_token(refresh_token);
+
+    // Fetch the username associated with the hashed refresh token from the repository
+    let user_name = repository::get_user_name_from_refresh_token(&state.pg_pool, &refresh_token_hash).await?;
+
+    Ok(user_name)
+}
