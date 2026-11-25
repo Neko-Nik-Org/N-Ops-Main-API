@@ -102,6 +102,25 @@ pub async fn user_login(request: HttpRequest, login_request: web::Json<LoginReqD
 }
 
 
+#[get("/session")]
+pub async fn get_session(session_user: web::ReqData<SessionUser>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+
+    // Return the current session information for the user,
+    // including permissions and session capabilities
+
+    Ok(HttpResponse::Ok().json(serde_json::json!({
+        "allow_refresh": session_user.allow_refresh,
+        "allow_device_logins": session_user.allow_device_logins,
+        "allowed_linux_users": session_user.allowed_linux_users,
+        "permissions": session_user.permissions,
+        "tags": session_user.tags,
+        "can_approve_approvals": session_user.can_approve_approvals,
+        "can_bypass_approvals": session_user.can_bypass_approvals
+    })))
+}
+
+
 #[get("/verify")]
 pub async fn verify_session(session_user: web::ReqData<SessionUser>) -> ApiResponse {
     let _ = session_user.into_inner();

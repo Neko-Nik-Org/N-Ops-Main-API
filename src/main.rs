@@ -70,6 +70,7 @@ async fn main() -> std::io::Result<()> {
                     .service(auth::refresh_session)
                     .service(auth::verify_session)
                     // .service(auth::device_logout)  // Logout from a device session
+                    .service(auth::get_session)
                     .service(auth::user_logout)
                 )
             )
