@@ -1,4 +1,5 @@
 use crate::features::users::{SessionUser, LoginReqDto, create_user_session, refresh_user_session, update_last_login_at};
+use crate::features::devices::{DeviceLoginReqDto, create_device_refresh_token};
 use crate::cache::redis_cache::{set_redis_cache, delete_redis_cache};
 use actix_web::{delete, get, post, web, HttpResponse, HttpRequest};
 use crate::security::cf_turnstile::verify_turnstile_response;
@@ -98,6 +99,21 @@ pub async fn user_login(request: HttpRequest, login_request: web::Json<LoginReqD
             "enforce_email_2fa": enforce_email_2fa,
             "enforce_totp_2fa": enforce_totp_2fa
         }
+    })))
+}
+
+
+#[post("/device/login")]
+pub async fn device_login(device_login_req: web::Json<DeviceLoginReqDto>, state: web::Data<AppState>) -> ApiResponse {
+    let device_login_request = device_login_req.into_inner();
+
+    // Create a new device refresh token for the login request
+    let refresh_token = create_device_refresh_token(&state, device_login_request).await?;
+
+    // Return the session creation response
+    Ok(HttpResponse::Ok().json(serde_json::json!({
+        "message": "Refresh token created successfully",
+        "refresh_token": refresh_token
     })))
 }
 

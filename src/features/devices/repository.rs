@@ -1,11 +1,11 @@
-use super::dto::CreateDeviceSessionDto;
 use deadpool_postgres::Pool as PgPool;
+use super::dto::DeviceLoginReqDto;
 use super::model::DeviceSession;
 use crate::errors::PgResult;
 
 
 
-pub async fn create_new_device_session(db_pool: &PgPool, user_id: i64, session_data: &CreateDeviceSessionDto) -> PgResult<u64> {
+pub async fn create_new_device_session(db_pool: &PgPool, login_req: &DeviceLoginReqDto, session_token_hash: &str) -> PgResult<u64> {
     let client = db_pool.get().await?;
 
     let result = client
@@ -17,21 +17,17 @@ pub async fn create_new_device_session(db_pool: &PgPool, user_id: i64, session_d
                 device_type,
                 device_identifier,
                 device_details,
-                session_token_hash,
-                fcm_token,
-                apns_token
+                session_token_hash
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            VALUES ($1, $2, $3, $4, $5, $6)
             "#,
             &[
-                &user_id,
-                &session_data.device_name,
-                &session_data.device_type,
-                &session_data.device_identifier,
-                &session_data.device_details,
-                &session_data.session_token_hash,
-                &session_data.fcm_token,
-                &session_data.apns_token,
+                &login_req.user_id,
+                &login_req.device_name,
+                &login_req.device_type,
+                &login_req.device_identifier,
+                &login_req.device_details,
+                &session_token_hash,
             ],
         )
         .await?;

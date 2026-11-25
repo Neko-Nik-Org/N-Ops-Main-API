@@ -58,7 +58,7 @@ async fn main() -> std::io::Result<()> {
             .service(
                 actix_scope("/auth")
                 // .service(auth::device_refresh)    // Refresh a device session using a refresh token (Generates a short-lived 3 Hrs session token)
-                // .service(auth::device_login)    // Login using a device token [Generates a refresh token]
+                .service(auth::device_login)
                 .service(auth::user_login)
                 // .service(auth::forgot_password)  // Send an email with a link to reset password
                 // .service(auth::reset_password)  // Reset password using a token sent via email

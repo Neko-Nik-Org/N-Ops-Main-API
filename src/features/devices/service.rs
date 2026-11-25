@@ -2,7 +2,9 @@ use crate::cache::redis_cache::{delete_redis_cache, get_redis_cache, set_redis_c
 use crate::errors::{ServiceError, ServiceResult};
 use crate::features::users::SessionUser;
 use crate::security::otp::hash_otp;
+use super::dto::DeviceLoginReqDto;
 use crate::state::AppState;
+use super::repository;
 
 
 
@@ -64,4 +66,43 @@ pub async fn check_device_token(state: &AppState, user_id: i64) -> ServiceResult
     let device_token: Option<String> = get_redis_cache(&state.redis_cache, &device_token_key).await?;
 
     Ok(device_token.is_some())
+}
+
+
+/// Validate a device token, given the user ID and the device token
+async fn validate_device_token(state: &AppState, user_id: i64, device_token: &str) -> ServiceResult<bool> {
+    // Generate the key for the device token in the Redis-cache
+    let device_token_key = format!("device_token:{}", user_id);
+
+    // Fetch the hashed device token from the Redis-cache
+    let device_token_hashed: Option<String> = get_redis_cache(&state.redis_cache, &device_token_key).await?;
+
+    
+    // Validate the device token
+    if let Some(stored_hash) = device_token_hashed {
+        // Make sure to delete the device token from the Redis-cache after validation (Even if it is failed)
+        delete_redis_cache(&state.redis_cache, &device_token_key).await?;
+
+        Ok(stored_hash == hash_otp(device_token))
+    } else {
+        Ok(false)
+    }
+}
+
+
+/// Create a new device refresh token for the given login request and return the session user information
+pub async fn create_device_refresh_token(state: &AppState, device_login_req: DeviceLoginReqDto) -> ServiceResult<String> {
+    // Check if the device login request is valid for the given user
+    if !validate_device_token(&state, device_login_req.user_id, &device_login_req.device_token).await? {
+        return Err(ServiceError::BadRequest("Invalid device token, regenerate a new one and try again".into()));
+    }
+
+    // Create a new device session for the given device details (Refresh Token)
+    let refresh_token = uuid::Uuid::new_v4().to_string();
+    let refresh_token_hash = hash_otp(&refresh_token);
+
+    // Create a new device session in the repository
+    repository::create_new_device_session(&state.pg_pool, &device_login_req, &refresh_token_hash).await?;
+
+    Ok(refresh_token)
 }
