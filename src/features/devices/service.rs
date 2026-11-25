@@ -1,10 +1,8 @@
-use crate::cache::redis_cache::{delete_redis_cache, get_redis_cache};
+use crate::cache::redis_cache::{delete_redis_cache, get_redis_cache, set_redis_cache};
 use crate::errors::{ServiceError, ServiceResult};
 use crate::features::users::SessionUser;
-use super::dto::CreateDeviceSessionDto;
-use super::model::DeviceSession;
+use crate::security::otp::hash_otp;
 use crate::state::AppState;
-use super::repository;
 
 
 
@@ -17,15 +15,26 @@ pub async fn generate_device_token(state: &AppState, session_user: SessionUser) 
 
     // 2. Check if there are any existing generated device tokens for the user
     // If so, dont allow generating a new token until the existing token is revoked or expired
+    if check_device_token(state, session_user.user_id).await? {
+        return Err(ServiceError::Forbidden("An active device token already exists for your account".into()));
+    }
 
     // 3. Generate a new device token for the user
+    let device_token = uuid::Uuid::new_v4().to_string();
+    let device_token_hashed = hash_otp(&device_token);
 
     // 4. Store the generated device token (Hashed) in the Redis-cache (Max 5 Minutes TTL)
+    let device_token_key = format!("device_token:{}", session_user.user_id);
 
-    // 5. Return the generated device token to the caller
-    todo!("Generate and return the device token");
+    // 5. Save it in the Redis-cache
+    set_redis_cache(
+        &state.redis_cache,
+        &device_token_key,
+        &device_token_hashed,
+        300
+    ).await?;
 
-    Ok("TODO".into())
+    Ok(device_token)
 }
 
 
@@ -47,9 +56,9 @@ pub async fn revoke_device_token(state: &AppState, session_user: SessionUser) ->
 
 
 /// Check if a device token is valid for the session user
-pub async fn check_device_token(state: &AppState, session_user: SessionUser) -> ServiceResult<bool> {
+pub async fn check_device_token(state: &AppState, user_id: i64) -> ServiceResult<bool> {
     // Generate the key for the device token in the Redis-cache
-    let device_token_key = format!("device_token:{}", session_user.user_id);
+    let device_token_key = format!("device_token:{}", user_id);
 
     // Check if the device token exists in the Redis-cache
     let device_token: Option<String> = get_redis_cache(&state.redis_cache, &device_token_key).await?;

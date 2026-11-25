@@ -45,7 +45,7 @@ pub async fn check_device_token(session_user: web::ReqData<SessionUser>, state: 
     let session_user = session_user.into_inner();
 
     // Check if the device token is valid for the session user
-    let still_exists = devices::check_device_token(&state, session_user).await?;
+    let still_exists = devices::check_device_token(&state, session_user.user_id).await?;
 
     Ok(HttpResponse::Ok().json(still_exists))
 }
