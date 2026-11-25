@@ -69,3 +69,16 @@ pub fn hash_device_token(device_token: &str) -> String {
 
     hex::encode(mac.finalize().into_bytes())
 }
+
+
+/// Generates a refresh token hash from a given device token string
+pub fn generate_refresh_token_hash(refresh_token: &str) -> String {
+    // Generate the password hash using bcrypt
+    bcrypt::hash(refresh_token, bcrypt::DEFAULT_COST).unwrap()
+}
+
+
+/// Verifies a device token against a given refresh token hash
+pub fn verify_refresh_token_hash(refresh_token: &str, hash: &str) -> bool {
+    bcrypt::verify(refresh_token, hash).unwrap_or(false)
+}

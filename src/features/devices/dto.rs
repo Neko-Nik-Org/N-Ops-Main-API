@@ -1,3 +1,4 @@
+use pg_row_derive::RowFrom;
 use serde::Deserialize;
 
 
@@ -12,4 +13,11 @@ pub struct DeviceLoginReqDto {
     pub device_identifier: String,
 
     pub device_details: serde_json::Value,
+}
+
+
+#[derive(RowFrom)]
+pub struct DeviceSessionDto {
+    pub user_name: String,
+    pub session_token_hash: String,
 }

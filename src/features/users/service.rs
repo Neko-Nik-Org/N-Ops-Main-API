@@ -1,8 +1,8 @@
 use crate::security::auth_tools::{verify_password_hash, check_ip_range_allowed, validate_base64_password, generate_password_hash, validate_username};
-use super::dto::{LoginReqDto, AuthInfoDbDto, UpdateProfileReqDto, CreateUserReqDto, UpdateProfileAdminReqDto};
+use super::dto::{LoginReqDto, AuthInfoDbDto, UpdateProfileReqDto, CreateUserReqDto, UpdateProfileAdminReqDto, DeviceRefreshReqDto};
 use crate::features::organization::{decrypt_with_org_key, encrypt_with_org_key};
 use crate::cache::redis_cache::{set_redis_cache, delete_redis_cache};
-use crate::features::devices::get_user_name_from_refresh_token;
+use crate::features::devices::get_user_name_from_device_session;
 use crate::errors::{ServiceError, ServiceResult};
 use crate::state::{AppState, API_SETTINGS};
 use rand::{TryRng, rngs::SysRng};
@@ -293,13 +293,14 @@ pub async fn update_anti_phishing_code(state: &AppState, organization_id: Uuid, 
 
 
 /// Create a new device session for the given user
-pub async fn create_device_session(state: &AppState, refresh_token: &str, current_session_key: &str) -> ServiceResult<SessionUser> {
+pub async fn create_device_session(state: &AppState, device_refresh_request: &DeviceRefreshReqDto) -> ServiceResult<SessionUser> {
     // Fetch the username associated with the provided refresh token
-    let user_name = get_user_name_from_refresh_token(&state, refresh_token).await?;
-    if user_name.is_none() {
-        return Err(ServiceError::Unauthorized("Invalid refresh token or is expired or service is inactive".into()));
-    }
-    let user_name = user_name.unwrap();
+    let user_name = get_user_name_from_device_session(
+        &state,
+        device_refresh_request.user_id,
+        &device_refresh_request.device_identifier,
+        &device_refresh_request.refresh_token
+    ).await?;
 
     // Re-Fetch the user authentication info from the database
     let auth_info = repository::get_user_auth_info(
@@ -316,12 +317,13 @@ pub async fn create_device_session(state: &AppState, refresh_token: &str, curren
     let session_user = SessionUser::new(auth_info.unwrap(), true);
 
     let new_session_key = format!("session:{}", session_user.session_id);
+    let current_session_cache_key = format!("session:{}", device_refresh_request.current_session_key);
 
     // Store the refreshed session in Redis with a 3-hour TTL
     set_redis_cache(&state.redis_cache, &new_session_key, &session_user, 3 * 60 * 60).await?;
 
     // Delete the old session from Redis
-    delete_redis_cache(&state.redis_cache, &current_session_key).await?;
+    delete_redis_cache(&state.redis_cache, &current_session_cache_key).await?;
 
     Ok(session_user)
 }

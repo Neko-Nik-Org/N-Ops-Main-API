@@ -1,5 +1,5 @@
+use crate::security::device_token::{build_device_token, hash_device_token, generate_refresh_token_hash, verify_refresh_token_hash};
 use crate::cache::redis_cache::{delete_redis_cache, get_redis_cache, set_redis_cache};
-use crate::security::device_token::{build_device_token, hash_device_token};
 use crate::errors::{ServiceError, ServiceResult};
 use crate::features::users::SessionUser;
 use super::dto::DeviceLoginReqDto;
@@ -77,7 +77,6 @@ async fn validate_device_token(state: &AppState, user_id: i64, device_token: &st
     // Fetch the hashed device token from the Redis-cache
     let device_token_hashed: Option<String> = get_redis_cache(&state.redis_cache, &device_token_key).await?;
 
-    
     // Validate the device token
     if let Some(stored_hash) = device_token_hashed {
         // Make sure to delete the device token from the Redis-cache after validation (Even if it is failed)
@@ -99,7 +98,7 @@ pub async fn create_device_refresh_token(state: &AppState, device_login_req: Dev
 
     // Create a new device session for the given device details (Refresh Token)
     let refresh_token = uuid::Uuid::new_v4().to_string();
-    let refresh_token_hash = hash_device_token(&refresh_token);
+    let refresh_token_hash = generate_refresh_token_hash(&refresh_token);
 
     // Create a new device session in the repository
     repository::create_new_device_session(&state.pg_pool, &device_login_req, &refresh_token_hash).await?;
@@ -109,12 +108,22 @@ pub async fn create_device_refresh_token(state: &AppState, device_login_req: Dev
 
 
 /// Get the username associated with a given device refresh token
-pub async fn get_user_name_from_refresh_token(state: &AppState, refresh_token: &str) -> ServiceResult<Option<String>> {
-    // Hash the provided refresh token to match against the stored hash in the repository
-    let refresh_token_hash = hash_device_token(refresh_token);
+pub async fn get_user_name_from_device_session(state: &AppState, user_id: i64, device_identifier: &str, refresh_token: &str) -> ServiceResult<String> {
+    // First fetch the session by the device identifier and user ID
+    let device_session = repository::get_device_session(&state.pg_pool, user_id, device_identifier).await?;
+    if device_session.is_none() {
+        return Err(ServiceError::NotFound("Device session not found, maybe expired or deleted".into()));
+    }
+    let device_session = device_session.unwrap();
 
-    // Fetch the username associated with the hashed refresh token from the repository
-    let user_name = repository::get_user_name_from_refresh_token(&state.pg_pool, &refresh_token_hash).await?;
+    // Check if the provided refresh token matches the stored hash
+    let refresh_token_valid = verify_refresh_token_hash(
+        &refresh_token,
+        &device_session.session_token_hash
+    );
+    if !refresh_token_valid {
+        return Err(ServiceError::Unauthorized("Invalid refresh token".into()));
+    }
 
-    Ok(user_name)
+    Ok(device_session.user_name)
 }

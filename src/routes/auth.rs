@@ -123,11 +123,7 @@ pub async fn device_refresh(body: web::Json<DeviceRefreshReqDto>, state: web::Da
     let device_refresh_request = body.into_inner();
 
     // Create a new device session using the provided refresh token (It will be same as the normal login session)
-    let user_session = create_device_session(
-        &state,
-        &device_refresh_request.refresh_token,
-        &device_refresh_request.current_session_key
-    ).await?;
+    let user_session = create_device_session(&state, &device_refresh_request).await?;
 
     // Return the session creation response
     Ok(HttpResponse::Ok().json(serde_json::json!({

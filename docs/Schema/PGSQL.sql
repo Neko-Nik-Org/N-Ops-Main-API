@@ -179,7 +179,7 @@ CREATE TABLE device_session (
     device_details JSONB NOT NULL,  -- Additional details about the device (e.g., OS version, app version)
 
     -- Refresh token hash for the session
-    session_token_hash CHAR(64) UNIQUE NOT NULL,  -- HMAC-SHA-256 hash of the session token
+    session_token_hash TEXT NOT NULL,    -- Bcrypt hash of the session token
 
     -- FCM (Firebase Cloud Messaging) token for push notifications
     fcm_token TEXT,
@@ -188,7 +188,9 @@ CREATE TABLE device_session (
     apns_token TEXT,
 
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    last_accessed_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL -- If inactive for 7 days, delete the session
+    last_accessed_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL, -- If inactive for 7 days, delete the session
+
+    UNIQUE (user_id, device_identifier)  -- Ensure a user cannot have multiple sessions for the same device
 );
 
 

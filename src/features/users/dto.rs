@@ -57,6 +57,8 @@ pub struct LoginReqDto {
 
 #[derive(Deserialize)]
 pub struct DeviceRefreshReqDto {
+    pub user_id: i64,
+    pub device_identifier: String,
     pub refresh_token: String,
     pub current_session_key: String,
 }
