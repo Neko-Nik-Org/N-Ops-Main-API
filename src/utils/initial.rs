@@ -100,6 +100,13 @@ pub struct OtpSettings {
 }
 
 
+pub struct DeviceTokenSettings {
+    pub chars: Vec<char>,
+    pub chars_len: u32,
+    pub hash_secret: String,
+}
+
+
 pub struct OrgInviteSettings {
     pub base_url: String,
     pub secret_chars: Vec<char>,
@@ -431,6 +438,30 @@ impl OrgInviteSettings {
             secret_chars,
             secret_chars_len,
             invite_code_length: INVITE_CODE_LENGTH,
+            hash_secret,
+        }
+    }
+}
+
+
+impl DeviceTokenSettings {
+    pub fn from_env() -> Self {
+        let charset = env_var("DEVICE_TOKEN_CHARSET").expect("DEVICE_TOKEN_CHARSET must be set");
+
+        // Collect the characters from the allowed character set into a vector
+        let chars: Vec<char> = charset.chars().collect();
+        let chars_len = chars.len() as u32;
+
+        // It can not be less than 32 characters long
+        if chars_len < 32 {
+            panic!("DEVICE_TOKEN_CHARSET must contain at least 32 characters");
+        }
+
+        let hash_secret = env_var("DEVICE_TOKEN_HASH_SECRET").expect("DEVICE_TOKEN_HASH_SECRET must be set, generate using 'openssl rand -hex 32'");
+
+        DeviceTokenSettings {
+            chars,
+            chars_len,
             hash_secret,
         }
     }

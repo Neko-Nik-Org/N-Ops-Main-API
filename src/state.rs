@@ -1,4 +1,4 @@
-use crate::utils::initial::{ApiSettings, AppSettings, RmqSettings, CfTurnstileSettings, SmtpSettings, OtpSettings, OrgInviteSettings, InMemCacheSettings};
+use crate::utils::initial::{ApiSettings, AppSettings, RmqSettings, CfTurnstileSettings, SmtpSettings, OtpSettings, OrgInviteSettings, InMemCacheSettings, DeviceTokenSettings};
 use crate::cache::moka_cache::{MokaCache, build_ttl_cache, build_idle_policy_cache};
 use crate::database::pool::{init_pg_pool, warm_pool};
 use crate::cache::redis_cache::init_redis;
@@ -6,7 +6,6 @@ use crate::tasks::start_background_jobs;
 use redis::aio::MultiplexedConnection;
 use deadpool_postgres::Pool as PgPool;
 use actix_web::web::Data as webData;
-use std::time::Duration;
 use std::sync::LazyLock;
 
 
@@ -41,6 +40,11 @@ pub static SMTP_SETTINGS: LazyLock<SmtpSettings> = LazyLock::new(|| {
 
 pub static OTP_SETTINGS: LazyLock<OtpSettings> = LazyLock::new(|| {
     OtpSettings::from_env()
+});
+
+
+pub static DEVICE_TOKEN_SETTINGS: LazyLock<DeviceTokenSettings> = LazyLock::new(|| {
+    DeviceTokenSettings::from_env()
 });
 
 

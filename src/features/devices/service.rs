@@ -1,7 +1,7 @@
 use crate::cache::redis_cache::{delete_redis_cache, get_redis_cache, set_redis_cache};
+use crate::security::device_token::{build_device_token, hash_device_token};
 use crate::errors::{ServiceError, ServiceResult};
 use crate::features::users::SessionUser;
-use crate::security::otp::hash_otp;
 use super::dto::DeviceLoginReqDto;
 use crate::state::AppState;
 use super::repository;
@@ -22,8 +22,8 @@ pub async fn generate_device_token(state: &AppState, session_user: SessionUser) 
     }
 
     // 3. Generate a new device token for the user
-    let device_token = uuid::Uuid::new_v4().to_string();
-    let device_token_hashed = hash_otp(&device_token);
+    let device_token = build_device_token(32)?; // Generate a 32-character device token
+    let device_token_hashed = hash_device_token(&device_token);
 
     // 4. Store the generated device token (Hashed) in the Redis-cache (Max 5 Minutes TTL)
     let device_token_key = format!("device_token:{}", session_user.user_id);
@@ -83,7 +83,7 @@ async fn validate_device_token(state: &AppState, user_id: i64, device_token: &st
         // Make sure to delete the device token from the Redis-cache after validation (Even if it is failed)
         delete_redis_cache(&state.redis_cache, &device_token_key).await?;
 
-        Ok(stored_hash == hash_otp(device_token))
+        Ok(stored_hash == hash_device_token(device_token))
     } else {
         Ok(false)
     }
@@ -99,7 +99,7 @@ pub async fn create_device_refresh_token(state: &AppState, device_login_req: Dev
 
     // Create a new device session for the given device details (Refresh Token)
     let refresh_token = uuid::Uuid::new_v4().to_string();
-    let refresh_token_hash = hash_otp(&refresh_token);
+    let refresh_token_hash = hash_device_token(&refresh_token);
 
     // Create a new device session in the repository
     repository::create_new_device_session(&state.pg_pool, &device_login_req, &refresh_token_hash).await?;
