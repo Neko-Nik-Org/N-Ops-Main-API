@@ -1,3 +1,4 @@
+use crate::features::devices::delete_expired_device_sessions;
 use crate::features::api_keys::clean_expired_api_keys;
 use crate::features::user_invite::delete_old_invites;
 use deadpool_postgres::Pool as PgPool;
@@ -7,6 +8,7 @@ use std::time::Duration;
 
 const API_KEYS_CLEANUP_INTERVAL: u64 = 3 * 60 * 60;
 const DELETE_OLD_INVITES_INTERVAL: u64 = 2 * 60 * 60;
+const DELETE_EXPIRED_DEVICE_SESSIONS_INTERVAL: u64 = 6 * 60 * 60;
 
 
 async fn run_every<F, Fut, E>(seconds: u64, mut job: F)
@@ -42,6 +44,16 @@ pub async fn delete_old_invites_job(pg_pool: PgPool) {
 
     run_every(DELETE_OLD_INVITES_INTERVAL, || {
         delete_old_invites(&pg_pool)
+    })
+    .await;
+}
+
+
+pub async fn delete_expired_device_sessions_job(pg_pool: PgPool) {
+    tracing::info!("Starting delete_expired_device_sessions job");
+
+    run_every(DELETE_EXPIRED_DEVICE_SESSIONS_INTERVAL, || {
+        delete_expired_device_sessions(&pg_pool)
     })
     .await;
 }

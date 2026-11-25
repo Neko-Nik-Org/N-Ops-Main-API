@@ -188,3 +188,22 @@ pub async fn update_last_accessed_at(db_pool: &PgPool, user_id: i64, session_id:
 
     Ok(result)
 }
+
+
+pub async fn delete_expired_device_sessions(db_pool: &PgPool) -> PgResult<()> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            DELETE FROM device_session
+            WHERE last_accessed_at < NOW() - INTERVAL '7 days'
+            "#,
+            &[],
+        )
+        .await?;
+
+    tracing::info!("Deleted {} expired device sessions", result);
+
+    Ok(())
+}
