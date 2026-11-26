@@ -229,14 +229,14 @@ pub async fn quota_update(db_pool: &PgPool, organization_id: Uuid, new_quota: &U
                 organization_id = $1
 
                 -- All quota values must be at least 1
-                AND $2 >= 1
-                AND $3 >= 1
-                AND $4 >= 1
-                AND $5 >= 1
-                AND $6 >= 1
-                AND $7 >= 1
-                AND $8 >= 1
-                AND $9 >= 1
+                -- AND $2 >= 1
+                -- AND $3 >= 1
+                -- AND $4 >= 1
+                -- AND $5 >= 1
+                -- AND $6 >= 1
+                -- AND $7 >= 1
+                -- AND $8 >= 1
+                -- AND $9 >= 1
 
                 -- AI credits cannot go below utilized credits
                 AND $2 >= utilized_ai_credit
@@ -275,7 +275,6 @@ pub async fn quota_update(db_pool: &PgPool, organization_id: Uuid, new_quota: &U
             ],
         )
         .await?;
-
 
     Ok(result)
 }
