@@ -289,7 +289,7 @@ CREATE TABLE vault_secret_keys (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     -- Unique secret name per project and resource tag combination
-    UNIQUE (secret_name, project_id, resource_tag)
+    UNIQUE (project_id, resource_tag, secret_name)
 );
 
 
