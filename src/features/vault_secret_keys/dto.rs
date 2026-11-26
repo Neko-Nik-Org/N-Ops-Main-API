@@ -17,8 +17,36 @@ pub struct SkNewDto {
 }
 
 
+#[derive(Deserialize)]
+pub struct SkVersionDto {
+    pub project_id: i64,
+    pub secret_id: i64,
+    pub tag_id: i64,
+
+    pub secret_value: String,
+
+    pub hide_from_ui: bool, // Determines if the secret should be hidden and accessible only through the API
+    pub details: JsonValue, // Basic metadata or additional information about the secret (e.g., description, UI icons, etc.)
+}
+
+
 // ------- Implementations ------- //
 
+
+/// Validate secret value for all secret key DTOs
+fn validate_secret_value(secret_value: &str) -> ServiceResult<()> {
+    // Secret value cannot be empty
+    if secret_value.trim().is_empty() {
+        return Err(ServiceError::Unprocessable("Secret value cannot be empty".into()));
+    }
+
+    // Maximum length check (e.g., 255 characters)
+    if secret_value.len() > 255 {
+        return Err(ServiceError::Unprocessable("Secret value cannot exceed 255 characters".into()));
+    }
+
+    Ok(())
+}
 
 impl SkNewDto {
     fn validate_secret_name(&self) -> ServiceResult<()> {
@@ -40,24 +68,22 @@ impl SkNewDto {
         Ok(())
     }
 
-    fn validate_secret_value(&self) -> ServiceResult<()> {
-        // Secret value cannot be empty
-        if self.secret_value.trim().is_empty() {
-            return Err(ServiceError::Unprocessable("Secret value cannot be empty".into()));
-        }
-
-        // Maximum length check (e.g., 255 characters)
-        if self.secret_value.len() > 255 {
-            return Err(ServiceError::Unprocessable("Secret value cannot exceed 255 characters".into()));
-        }
-
-        Ok(())
-    }
-
+    /// Validate the secret key data for creating a new secret key
     pub fn validate(&self) -> ServiceResult<()> {
         // Validate secret name and value
         self.validate_secret_name()?;
-        self.validate_secret_value()?;
+        validate_secret_value(&self.secret_value)?;
+
+        Ok(())
+    }
+}
+
+
+impl SkVersionDto {
+    /// Validate the secret key data for creating a new secret key version
+    pub fn validate(&self) -> ServiceResult<()> {
+        // Validate secret value
+        validate_secret_value(&self.secret_value)?;
 
         Ok(())
     }

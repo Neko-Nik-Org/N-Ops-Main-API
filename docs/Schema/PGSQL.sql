@@ -297,6 +297,7 @@ CREATE TABLE vault_secret_keys (
 CREATE TABLE vault_secret_key_versions (
     secret_id BIGINT NOT NULL REFERENCES vault_secret_keys(secret_id) ON DELETE CASCADE,
     version_number BIGINT NOT NULL,  -- Version number of the secret key
+    -- TODO: Version number is not BigInt. That is too much for normal usage, using SMALLINT instead
 
     -- Indicates if the secret value is hidden from the UI or logs
     is_hidden BOOLEAN NOT NULL DEFAULT FALSE,

@@ -194,7 +194,7 @@ async fn main() -> std::io::Result<()> {
                 actix_scope("/vault/secret/keys")
                 .wrap(from_fn(middleware::user_session::auth_check))
                 .service(vault_secret_keys::create_secret_key)
-                // .service(vault_secret_keys::update_env_key) // Create new version of the environment key
+                .service(vault_secret_keys::update_secret_key)
                 // .service(vault_secret_keys::delete_env_key) // Delete the environment key along with all its versions
                 // .service(vault_secret_keys::set_key_version) // Set the active current_version of the environment key
                 // .service(vault_secret_keys::get_env_key) // Get the environment key along with its max version count

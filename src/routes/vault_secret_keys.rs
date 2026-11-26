@@ -1,4 +1,4 @@
-use crate::features::vault_secret_keys::{self, SkNewDto};
+use crate::features::vault_secret_keys::{self, SkNewDto, SkVersionDto};
 use actix_web::{HttpResponse, delete, get, post, put, web};
 use crate::features::users::SessionUser;
 use crate::errors::ApiResponse;
@@ -17,6 +17,22 @@ pub async fn create_secret_key(session_user: web::ReqData<SessionUser>, data: we
 
     // Create the new secret key using the provided data and the session user's context
     vault_secret_keys::create_new_sk(&state, &session_user, &new_sk_data).await?;
+
+    Ok(HttpResponse::Created().finish())
+}
+
+
+#[put("/update")]
+pub async fn update_secret_key(session_user: web::ReqData<SessionUser>, data: web::Json<SkVersionDto>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let new_sk_version_data = data.into_inner(); 
+
+    // Validate that the session user has the required permissions
+    session_user.has_all_permissions(&["vault:keys:view", "vault:keys:edit"])?;
+    session_user.has_tag_permission(new_sk_version_data.tag_id)?;
+
+    // Create the new secret key using the provided data and the session user's context
+    vault_secret_keys::make_new_sk_version(&state, &session_user, &new_sk_version_data).await?;
 
     Ok(HttpResponse::Created().finish())
 }

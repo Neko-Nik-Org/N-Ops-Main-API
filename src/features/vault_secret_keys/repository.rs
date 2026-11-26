@@ -1,5 +1,5 @@
 use crate::errors::{PgError, PgPool, PgResult};
-use super::dto::SkNewDto;
+use super::dto::{SkNewDto, SkVersionDto};
 use uuid::Uuid;
 
 
@@ -157,4 +157,126 @@ pub async fn create_new_secret_key(db_pool: &PgPool, organization_id: Uuid, secr
 
     // 8. Return the total number of affected rows
     Ok(result)
+}
+
+
+pub async fn create_new_sk_version(db_pool: &PgPool, organization_id: Uuid, secret_kv_data: &SkVersionDto, encrypted_secret_value: &str) -> PgResult<u64> {
+    let mut client = db_pool.get().await?;
+    let transaction = client.transaction().await?;
+
+    // Validate secret key belongs to the project and has the given tag only
+
+    // Then update the secret key with the new version (Increment the count to +1)
+
+    // Update the current_version to new one too
+
+    // 1. Validate project ownership.
+    let project = transaction
+        .query_opt(
+            r#"
+            SELECT project_id
+            FROM vault_project
+            WHERE project_id = $1
+              AND organization_id = $2
+            "#,
+            &[
+                &secret_kv_data.project_id,
+                &organization_id,
+            ],
+        )
+        .await?;
+
+    if project.is_none() {
+        return Err(PgError::Custom(
+            "Project not found or does not belong to this organization".into(),
+        ));
+    }
+
+    // 2. Validate secret key ownership and lock the row.
+    let secret = transaction
+        .query_opt(
+            r#"
+            SELECT secret_id
+            FROM vault_secret_keys
+            WHERE secret_id = $1
+              AND project_id = $2
+              AND resource_tag = $3
+            FOR UPDATE
+            "#,
+            &[
+                &secret_kv_data.secret_id,
+                &secret_kv_data.project_id,
+                &secret_kv_data.tag_id,
+            ],
+        )
+        .await?;
+
+    if secret.is_none() {
+        return Err(PgError::Custom(
+            "Secret key not found or does not belong to the specified project and resource tag".into(),
+        ));
+    }
+
+    // 3. Fetch the latest available version.
+    let latest_version = transaction
+        .query_one(
+            r#"
+            SELECT COALESCE(MAX(version_number), 0) AS latest_version
+            FROM vault_secret_key_versions
+            WHERE secret_id = $1
+            "#,
+            &[&secret_kv_data.secret_id],
+        )
+        .await?;
+
+    let latest_version: i64 = latest_version.get("latest_version");
+
+    // 4. Calculate the next version.
+    let new_version = latest_version.checked_add(1).ok_or_else(|| {
+        PgError::Custom("Secret version limit reached".into())
+    })?;
+
+    // 5. Insert the new secret version.
+    transaction
+        .execute(
+            r#"
+            INSERT INTO vault_secret_key_versions (
+                secret_id,
+                version_number,
+                is_hidden,
+                secret_value,
+                details
+            )
+            VALUES ($1, $2, $3, $4, $5)
+            "#,
+            &[
+                &secret_kv_data.secret_id,
+                &new_version,
+                &secret_kv_data.hide_from_ui,
+                &encrypted_secret_value,
+                &secret_kv_data.details,
+            ],
+        )
+        .await?;
+
+    // 6. Update current version.
+    let updated = transaction
+        .execute(
+            r#"
+            UPDATE vault_secret_keys
+            SET current_version = $1,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE secret_id = $2
+            "#,
+            &[
+                &new_version,
+                &secret_kv_data.secret_id,
+            ],
+        )
+        .await?;
+
+    // 7. Commit transaction.
+    transaction.commit().await?;
+
+    Ok(updated)
 }
