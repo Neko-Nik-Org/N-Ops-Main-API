@@ -41,6 +41,17 @@ pub struct SkListingDto {
 
 
 #[derive(Deserialize)]
+pub struct SkListVersionsDto {
+    pub project_id: i64,
+    pub secret_id: i64,
+    pub tag_id: i64,
+
+    pub limit: i64,
+    pub offset: i64,
+}
+
+
+#[derive(Deserialize)]
 pub struct SkDeleteDto {
     pub project_id: i64,
     pub tag_id: i64,

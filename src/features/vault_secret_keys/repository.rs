@@ -1,6 +1,6 @@
+use super::model::{VaultKeysListing, VaultKeyVersionsListing};
+use super::dto::{SkNewDto, SkVersionDto, SkListVersionsDto};
 use crate::errors::{PgError, PgPool, PgResult};
-use super::dto::{SkNewDto, SkVersionDto};
-use super::model::VaultKeysListing;
 use uuid::Uuid;
 
 
@@ -42,7 +42,7 @@ pub async fn create_new_secret_key(db_pool: &PgPool, organization_id: Uuid, secr
             SELECT project_id
             FROM vault_project
             WHERE project_id = $1
-              AND organization_id = $2
+                AND organization_id = $2
             FOR UPDATE
             "#,
             &[
@@ -150,7 +150,7 @@ pub async fn create_new_sk_version(db_pool: &PgPool, organization_id: Uuid, secr
             SELECT project_id
             FROM vault_project
             WHERE project_id = $1
-              AND organization_id = $2
+                AND organization_id = $2
             "#,
             &[
                 &secret_kv_data.project_id,
@@ -172,8 +172,8 @@ pub async fn create_new_sk_version(db_pool: &PgPool, organization_id: Uuid, secr
             SELECT secret_id
             FROM vault_secret_keys
             WHERE secret_id = $1
-              AND project_id = $2
-              AND resource_tag = $3
+                AND project_id = $2
+                AND resource_tag = $3
             FOR UPDATE
             "#,
             &[
@@ -255,7 +255,7 @@ pub async fn create_new_sk_version(db_pool: &PgPool, organization_id: Uuid, secr
 }
 
 
-pub async fn list_secret_keys(db_pool: &PgPool, organization_id: Uuid, project_id: i64, tag_id: i64, limit: i64, offset: i64) -> PgResult<Vec<VaultKeysListing>> {
+pub async fn list_secret_keys(db_pool: &PgPool, organization_id: Uuid, project_id: i64, tag_id: i64, limit: i64, offset: i64) -> PgResult<(i64, Vec<VaultKeysListing>)> {
     let client = db_pool.get().await?;
 
     let total_count = client
@@ -266,8 +266,8 @@ pub async fn list_secret_keys(db_pool: &PgPool, organization_id: Uuid, project_i
             INNER JOIN vault_project vp
                 ON vp.project_id = sk.project_id
             WHERE sk.project_id = $1
-            AND sk.resource_tag = $2
-            AND vp.organization_id = $3
+                AND sk.resource_tag = $2
+                AND vp.organization_id = $3
             "#,
             &[
                 &project_id,
@@ -279,7 +279,7 @@ pub async fn list_secret_keys(db_pool: &PgPool, organization_id: Uuid, project_i
 
     let total_count: i64 = total_count.get("total_count");
     if total_count == 0 {
-        return Ok(vec![]);
+        return Ok((0, vec![]));
     }
 
     // Fetch secret keys with pagination
@@ -296,9 +296,9 @@ pub async fn list_secret_keys(db_pool: &PgPool, organization_id: Uuid, project_i
             FROM vault_secret_keys sk
             INNER JOIN vault_secret_key_versions skv
                 ON skv.secret_id = sk.secret_id
-            AND skv.version_number = sk.current_version
+                AND skv.version_number = sk.current_version
             WHERE sk.project_id = $1
-            AND sk.resource_tag = $2
+                AND sk.resource_tag = $2
             ORDER BY sk.secret_name
             LIMIT $3
             OFFSET $4
@@ -312,7 +312,7 @@ pub async fn list_secret_keys(db_pool: &PgPool, organization_id: Uuid, project_i
         )
         .await?;
 
-    Ok(VaultKeysListing::from_rows(rows))
+    Ok((total_count, VaultKeysListing::from_rows(rows)))
 }
 
 
@@ -341,4 +341,74 @@ pub async fn delete_secret_key_and_versions(db_pool: &PgPool, organization_id: U
         .await?;
 
     Ok(deleted)
+}
+
+
+pub async fn list_key_versions(db_pool: &PgPool, organization_id: Uuid, sk_query_params: &SkListVersionsDto) -> PgResult<(i64, Vec<VaultKeyVersionsListing>)> {
+    let client = db_pool.get().await?;
+
+    // 1. Count total versions.
+    let total_count = client
+        .query_one(
+            r#"
+            SELECT COUNT(*) AS total_count
+            FROM vault_secret_keys sk
+            INNER JOIN vault_project vp
+                ON vp.project_id = sk.project_id
+                AND vp.organization_id = $4
+            INNER JOIN vault_secret_key_versions skv
+                ON skv.secret_id = sk.secret_id
+            WHERE sk.project_id = $1
+                AND sk.resource_tag = $2
+                AND sk.secret_id = $3
+            "#,
+            &[
+                &sk_query_params.project_id,
+                &sk_query_params.tag_id,
+                &sk_query_params.secret_id,
+                &organization_id,
+            ],
+        )
+        .await?;
+
+    let total_count: i64 = total_count.get("total_count");
+
+    if total_count == 0 {
+        return Ok((0, vec![]));
+    }
+
+    // 2. Fetch secret key versions with pagination.
+    let rows = client
+        .query(
+            r#"
+            SELECT
+                skv.version_number,
+                skv.is_hidden,
+                skv.details,
+                skv.created_at
+            FROM vault_secret_keys sk
+            INNER JOIN vault_project vp
+                ON vp.project_id = sk.project_id
+                AND vp.organization_id = $5
+            INNER JOIN vault_secret_key_versions skv
+                ON skv.secret_id = sk.secret_id
+            WHERE sk.project_id = $1
+                AND sk.resource_tag = $2
+                AND sk.secret_id = $3
+            ORDER BY skv.version_number DESC
+            LIMIT $4
+            OFFSET $6
+            "#,
+            &[
+                &sk_query_params.project_id,
+                &sk_query_params.tag_id,
+                &sk_query_params.secret_id,
+                &sk_query_params.limit,
+                &organization_id,
+                &sk_query_params.offset,
+            ],
+        )
+        .await?;
+
+    Ok((total_count, VaultKeyVersionsListing::from_rows(rows)))
 }

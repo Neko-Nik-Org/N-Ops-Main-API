@@ -1,4 +1,4 @@
-use crate::features::vault_secret_keys::{self, SkNewDto, SkVersionDto, SkListingDto, SkDeleteDto};
+use crate::features::vault_secret_keys::{self, SkNewDto, SkVersionDto, SkListingDto, SkDeleteDto, SkListVersionsDto};
 use actix_web::{HttpResponse, delete, get, post, put, web};
 use crate::features::users::SessionUser;
 use crate::errors::ApiResponse;
@@ -49,7 +49,7 @@ pub async fn list_secret_keys(session_user: web::ReqData<SessionUser>, query: we
 
     
     // Create the new secret key using the provided data and the session user's context
-    let secret_keys = vault_secret_keys::list_secret_keys(
+    let (total_count, secret_keys) = vault_secret_keys::list_secret_keys(
         &state.pg_pool,
         session_user.organization_id,
         sk_query_params.project_id,
@@ -58,7 +58,10 @@ pub async fn list_secret_keys(session_user: web::ReqData<SessionUser>, query: we
         sk_query_params.offset
     ).await?;
 
-    Ok(HttpResponse::Ok().json(secret_keys))
+    Ok(HttpResponse::Ok().json(serde_json::json!({
+        "total_count": total_count,
+        "data": secret_keys
+    })))
 }
 
 
@@ -84,4 +87,28 @@ pub async fn delete_secret_key(session_user: web::ReqData<SessionUser>, query: w
     }
 
     Ok(HttpResponse::NoContent().finish())
+}
+
+
+#[get("/list-versions")]
+pub async fn list_key_versions(session_user: web::ReqData<SessionUser>, query: web::Query<SkListVersionsDto>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let sk_query_params = query.into_inner();
+
+    // Validate that the session user has the required permissions
+    session_user.has_all_permissions(&["vault:keys:view", "vault:keys:edit"])?;
+    session_user.has_tag_permission(&state, sk_query_params.tag_id).await?;
+
+    
+    // Create the new secret key using the provided data and the session user's context
+    let (total_count, secret_keys) = vault_secret_keys::list_key_versions(
+        &state.pg_pool,
+        session_user.organization_id,
+        &sk_query_params
+    ).await?;
+
+    Ok(HttpResponse::Ok().json(serde_json::json!({
+        "total_count": total_count,
+        "data": secret_keys
+    })))
 }
