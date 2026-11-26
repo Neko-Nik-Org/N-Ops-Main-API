@@ -1,4 +1,4 @@
-use routes::{health, auth, users, tags, user_roles, vault_project, organization, ar_policy, invites, devices};
+use routes::{health, auth, users, tags, user_roles, vault_project, organization, ar_policy, invites, devices, vault_secret_keys};
 use actix_web::web::scope as actix_scope;
 use actix_web::middleware::from_fn;
 use actix_web::{App, HttpServer};
@@ -190,18 +190,18 @@ async fn main() -> std::io::Result<()> {
                 .service(vault_project::list_projects)
                 .service(vault_project::get_project)
             )
-            // .service(
-            //     actix_scope("/vault/secret/keys")
-            //     .wrap(from_fn(middleware::user_session::auth_check))
-            //     .service(vault_secret_keys::create_env_key)
-            //     .service(vault_secret_keys::update_env_key) // Create new version of the environment key
-            //     .service(vault_secret_keys::delete_env_key) // Delete the environment key along with all its versions
-            //     .service(vault_secret_keys::set_key_version) // Set the active current_version of the environment key
-            //     .service(vault_secret_keys::get_env_key) // Get the environment key along with its max version count
-            //     .service(vault_secret_keys::list_env_keys) // List all environment keys along with their max version count
-            //     .service(vault_secret_keys::get_key_version) // Get a specific version of the environment key (with bool decode_and_fetch)
-            //     .service(vault_secret_keys::list_key_versions) // List all versions of the environment key
-            // )
+            .service(
+                actix_scope("/vault/secret/keys")
+                .wrap(from_fn(middleware::user_session::auth_check))
+                .service(vault_secret_keys::create_secret_key)
+                // .service(vault_secret_keys::update_env_key) // Create new version of the environment key
+                // .service(vault_secret_keys::delete_env_key) // Delete the environment key along with all its versions
+                // .service(vault_secret_keys::set_key_version) // Set the active current_version of the environment key
+                // .service(vault_secret_keys::get_env_key) // Get the environment key along with its max version count
+                // .service(vault_secret_keys::list_env_keys) // List all environment keys along with their max version count
+                // .service(vault_secret_keys::get_key_version) // Get a specific version of the environment key (with bool decode_and_fetch)
+                // .service(vault_secret_keys::list_key_versions) // List all versions of the environment key
+            )
     })
     .bind(("0.0.0.0", 8686))?
     .workers(env_var("API_WORKERS_COUNT").unwrap_or("4".to_string()).parse().unwrap())

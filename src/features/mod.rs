@@ -1,3 +1,4 @@
+pub mod vault_secret_keys;
 pub mod vault_projects;
 pub mod organization;
 pub mod user_invite;

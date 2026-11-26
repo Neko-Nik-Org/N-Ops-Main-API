@@ -8,3 +8,4 @@ pub mod ar_policy;
 pub mod user_roles;
 pub mod organization;
 pub mod vault_project;
+pub mod vault_secret_keys;

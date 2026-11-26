@@ -298,13 +298,10 @@ CREATE TABLE vault_secret_key_versions (
     secret_id BIGINT NOT NULL REFERENCES vault_secret_keys(secret_id) ON DELETE CASCADE,
     version_number BIGINT NOT NULL,  -- Version number of the secret key
 
-    -- Indicates if the secret value is encrypted
-    is_encrypted BOOLEAN NOT NULL DEFAULT TRUE,
-
     -- Indicates if the secret value is hidden from the UI or logs
     is_hidden BOOLEAN NOT NULL DEFAULT FALSE,
 
-    secret_value TEXT NOT NULL,  -- Encrypted AES-256-GCM secret value or plain text if not encrypted
+    secret_value TEXT NOT NULL,  -- Encrypted AES-256-GCM secret value
 
     details JSONB NOT NULL,  -- Additional details like created_by, reason for change, etc.
 

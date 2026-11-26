@@ -6,7 +6,7 @@ use std::time::Duration;
 
 
 
-pub const ALL_AVAILABLE_PERMISSIONS: [&str; 22] = [
+pub const ALL_AVAILABLE_PERMISSIONS: [&str; 26] = [
     // Resource Tag's
     "tag:create",
     "tag:edit",
@@ -39,7 +39,13 @@ pub const ALL_AVAILABLE_PERMISSIONS: [&str; 22] = [
     // User Organization Invitations
     "user:invite:view",
     "user:invite:create",
-    "user:invite:delete"
+    "user:invite:delete",
+
+    // Vault - Secret Keys
+    "vault:keys:view",
+    "vault:keys:create",
+    "vault:keys:edit",
+    "vault:keys:delete"
 ];
 
 

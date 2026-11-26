@@ -93,3 +93,15 @@ User invitation permissions are related to managing and accessing organization i
 | user:invite:view | Allows viewing of organization invitations |
 | user:invite:create | Allows sending/re-sending new organization invitations |
 | user:invite:delete | Allows deletion of organization invitations |
+
+
+## Vault - Secret Keys
+
+Vault secret key permissions are related to managing and accessing secret keys within the vault.
+
+| Permission | Description |
+|------------|-------------|
+| vault:keys:view | Allows viewing of vault secret keys |
+| vault:keys:create | Allows creation of new vault secret keys |
+| vault:keys:edit   | Allows editing of existing vault secret keys |
+| vault:keys:delete | Allows deletion of vault secret keys |
