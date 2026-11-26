@@ -310,7 +310,7 @@ pub async fn delete_user(session_user: web::ReqData<SessionUser>, path: web::Pat
     let session_user = session_user.into_inner();
     let user_id = path.into_inner();
 
-    session_user.has_all_permissions(&["user:view", "user:edit"])?;
+    session_user.has_all_permissions(&["user:view", "user:delete"])?;
 
     // This will permanently delete the user and its related data from the organization, so use with caution.
     // Including Shared Notes, Private Notes, and any other user-specific data
