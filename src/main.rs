@@ -172,15 +172,6 @@ async fn main() -> std::io::Result<()> {
                 .service(ar_policy::check_policy_association)
                 .service(ar_policy::update_policy_enforcement)
             )
-            // .service(
-            //     actix_scope("/api-keys")
-            //     .wrap(from_fn(middleware::user_session::auth_check))
-            //     .service(api_keys::create_api_key)    // Create Any API Key (by user tag permission)
-            //     .service(api_keys::update_api_key)    // Update Any API Key's Properties (by user tag permission)
-            //     .service(api_keys::delete_api_key)    // Delete Any API Key (by user tag permission)
-            //     .service(api_keys::list_api_keys) // List All API Keys (by user tag permission)
-            //     .service(api_keys::get_api_key) // Get Any API Key info (by user tag permission)
-            // )
             .service(
                 actix_scope("/vault/project")
                 .wrap(from_fn(middleware::user_session::auth_check))

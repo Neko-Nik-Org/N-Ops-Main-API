@@ -216,7 +216,7 @@ CREATE TABLE organization_invitation (
 );
 
 
----------------- API Keys ----------------
+---------------- API Keys (TODO) ----------------
 
 
 -- API keys for an organization
@@ -315,7 +315,7 @@ CREATE TABLE vault_secret_key_versions (
 -- TODO: vault_config_files, vault_config_file_versions
 
 
--- Vault Secure Notes
+-- TODO: Vault Secure Notes
 CREATE TABLE vault_secure_notes (
     note_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     project_id BIGINT NOT NULL REFERENCES vault_project(project_id) ON DELETE CASCADE,
@@ -335,7 +335,7 @@ CREATE TABLE vault_secure_notes (
 );
 
 
--- Share Vault Secure Notes with other users (Internal sharing)
+-- TODO: Share Vault Secure Notes with other users (Internal sharing)
 CREATE TABLE vault_secure_note_internal_shares (
     note_id BIGINT NOT NULL REFERENCES vault_secure_notes(note_id) ON DELETE CASCADE,
     shared_with_user_id BIGINT NOT NULL REFERENCES app_user(user_id) ON DELETE CASCADE,
@@ -349,7 +349,7 @@ CREATE TABLE vault_secure_note_internal_shares (
 );
 
 
--- Share Vault Secure Notes with public (External sharing) [by link]
+-- TODO: Share Vault Secure Notes with public (External sharing) [by link]
 CREATE TABLE vault_secure_note_external_shares (
     public_share_id VARCHAR(50) PRIMARY KEY,
     note_id BIGINT NOT NULL REFERENCES vault_secure_notes(note_id) ON DELETE CASCADE,
@@ -361,7 +361,7 @@ CREATE TABLE vault_secure_note_external_shares (
 );
 
 
----------------- Approval System ----------------
+---------------- Approval System (TODO) ----------------
 
 
 -- TODO: This is not finalized, may need adjustments based on approval workflow requirements
@@ -439,4 +439,20 @@ CREATE TABLE approval_interaction_users (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY (approval_id, user_id)
+);
+
+
+---------------- Servers (TODO) ----------------
+
+
+-- Servers
+CREATE TABLE server (
+    server_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    organization_id UUID NOT NULL REFERENCES organization(organization_id) ON DELETE CASCADE,
+    resource_tag BIGINT NOT NULL REFERENCES resource_tag(tag_id) ON DELETE CASCADE,
+
+    server_name VARCHAR(255) NOT NULL,  -- Human-readable name for the server
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
