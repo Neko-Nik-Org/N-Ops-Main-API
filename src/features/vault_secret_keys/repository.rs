@@ -412,3 +412,43 @@ pub async fn list_key_versions(db_pool: &PgPool, organization_id: Uuid, sk_query
 
     Ok((total_count, VaultKeyVersionsListing::from_rows(rows)))
 }
+
+
+pub async fn read_secret_key_by_version(db_pool: &PgPool, organization_id: Uuid, secret_id: i64, version_number: i64) -> PgResult<Option<SkVersionDto>> {
+    let client = db_pool.get().await?;
+
+    let row = client
+        .query_opt(
+            r#"
+            SELECT
+                sk.project_id,
+                sk.secret_id,
+                sk.resource_tag AS tag_id,
+
+                skv.secret_value,
+                skv.is_hidden AS hide_from_ui,
+                skv.details
+
+            FROM vault_secret_key_versions skv
+
+            INNER JOIN vault_secret_keys sk
+                ON sk.secret_id = skv.secret_id
+
+            INNER JOIN vault_project vp
+                ON vp.project_id = sk.project_id
+                AND vp.organization_id = $3
+
+            WHERE
+                sk.secret_id = $1
+                AND skv.version_number = $2
+            "#,
+            &[
+                &secret_id,
+                &version_number,
+                &organization_id,
+            ],
+        )
+        .await?;
+
+    Ok(row.map(SkVersionDto::from))
+}

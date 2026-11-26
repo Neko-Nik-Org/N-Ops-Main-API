@@ -44,7 +44,7 @@ pub async fn list_secret_keys(session_user: web::ReqData<SessionUser>, query: we
     let sk_query_params = query.into_inner();
 
     // Validate that the session user has the required permissions
-    session_user.has_all_permissions(&["vault:keys:view", "vault:keys:edit"])?;
+    session_user.has_all_permissions(&["vault:keys:view"])?;
     session_user.has_tag_permission(&state, sk_query_params.tag_id).await?;
 
     
@@ -96,7 +96,7 @@ pub async fn list_key_versions(session_user: web::ReqData<SessionUser>, query: w
     let sk_query_params = query.into_inner();
 
     // Validate that the session user has the required permissions
-    session_user.has_all_permissions(&["vault:keys:view", "vault:keys:edit"])?;
+    session_user.has_all_permissions(&["vault:keys:view"])?;
     session_user.has_tag_permission(&state, sk_query_params.tag_id).await?;
 
     
@@ -111,4 +111,24 @@ pub async fn list_key_versions(session_user: web::ReqData<SessionUser>, query: w
         "total_count": total_count,
         "data": secret_keys
     })))
+}
+
+
+#[get("/read/{secret_id}/{version_number}")]
+pub async fn read_secret_key(session_user: web::ReqData<SessionUser>, path: web::Path<(i64, i64)>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let (secret_id, version_number) = path.into_inner();
+
+    // Validate that the session user has the required permissions
+    session_user.has_all_permissions(&["vault:keys:view"])?;
+
+    // Read the secret key using the provided data and the session user's context
+    let secret_key = vault_secret_keys::read_secret_key_by_version(
+        &state,
+        &session_user,
+        secret_id,
+        version_number,
+    ).await?;
+
+    Ok(HttpResponse::Ok().json(secret_key))
 }

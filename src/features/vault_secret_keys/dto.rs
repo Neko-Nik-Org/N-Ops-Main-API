@@ -1,6 +1,7 @@
 use crate::errors::{ServiceResult, ServiceError};
+use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
-use serde::Deserialize;
+use pg_row_derive::RowFrom;
 
 
 
@@ -17,7 +18,7 @@ pub struct SkNewDto {
 }
 
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize, RowFrom)]
 pub struct SkVersionDto {
     pub project_id: i64,
     pub secret_id: i64,
@@ -115,5 +116,11 @@ impl SkVersionDto {
         validate_secret_value(&self.secret_value)?;
 
         Ok(())
+    }
+
+    /// Replace the secret value with its decrypted version
+    pub fn with_decrypted_value(mut self, decrypted_value: String) -> Self {
+        self.secret_value = decrypted_value;
+        self
     }
 }

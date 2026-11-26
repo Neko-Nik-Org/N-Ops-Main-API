@@ -198,8 +198,8 @@ async fn main() -> std::io::Result<()> {
                 .service(vault_secret_keys::delete_secret_key)
                 .service(vault_secret_keys::list_key_versions)
                 .service(vault_secret_keys::list_secret_keys)
+                .service(vault_secret_keys::read_secret_key)
                 // .service(vault_secret_keys::set_key_version) // Set the active current_version of the environment key
-                // .service(vault_secret_keys::get_key_version) // Get a specific version of the environment key (with bool decode_and_fetch)
             )
     })
     .bind(("0.0.0.0", 8686))?
