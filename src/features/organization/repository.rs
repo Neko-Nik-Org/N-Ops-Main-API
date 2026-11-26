@@ -239,14 +239,14 @@ pub async fn quota_update(db_pool: &PgPool, organization_id: Uuid, new_quota: &U
                 AND $3 >= utilized_storage_bytes
 
                 -- User limit cannot go below existing users
-                AND $4 >= (
+                AND $4::BIGINT >= (
                     SELECT COUNT(*)
                     FROM app_user
                     WHERE organization_id = $1
                 )
 
                 -- Project limit cannot go below existing projects
-                AND $7 >= (
+                AND $7::BIGINT >= (
                     SELECT COUNT(*)
                     FROM vault_project
                     WHERE organization_id = $1
