@@ -342,3 +342,31 @@ pub async fn list_secret_keys(db_pool: &PgPool, organization_id: Uuid, project_i
 
     Ok(VaultKeysListing::from_rows(rows))
 }
+
+
+pub async fn delete_secret_key_and_versions(db_pool: &PgPool, organization_id: Uuid, project_id: i64, tag_id: i64, secret_id: i64) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let deleted = client
+        .execute(
+            r#"
+            DELETE FROM vault_secret_keys sk
+            USING vault_project vp
+            WHERE
+                sk.secret_id = $1
+                AND sk.project_id = $2
+                AND sk.resource_tag = $3
+                AND vp.project_id = sk.project_id
+                AND vp.organization_id = $4
+            "#,
+            &[
+                &secret_id,
+                &project_id,
+                &tag_id,
+                &organization_id,
+            ],
+        )
+        .await?;
+
+    Ok(deleted)
+}

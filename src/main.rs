@@ -195,8 +195,8 @@ async fn main() -> std::io::Result<()> {
                 .wrap(from_fn(middleware::user_session::auth_check))
                 .service(vault_secret_keys::create_secret_key)
                 .service(vault_secret_keys::update_secret_key)
+                .service(vault_secret_keys::delete_secret_key)
                 .service(vault_secret_keys::list_secret_keys)
-                // .service(vault_secret_keys::delete_env_key) // Delete the environment key along with all its versions
                 // .service(vault_secret_keys::set_key_version) // Set the active current_version of the environment key
                 // .service(vault_secret_keys::get_env_key) // Get the environment key along with its max version count
                 // .service(vault_secret_keys::get_key_version) // Get a specific version of the environment key (with bool decode_and_fetch)
