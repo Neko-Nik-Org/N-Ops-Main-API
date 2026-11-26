@@ -30,6 +30,16 @@ pub struct SkVersionDto {
 }
 
 
+#[derive(Deserialize)]
+pub struct SkListingDto {
+    pub project_id: i64,
+    pub tag_id: i64,
+
+    pub limit: i64,
+    pub offset: i64,
+}
+
+
 // ------- Implementations ------- //
 
 

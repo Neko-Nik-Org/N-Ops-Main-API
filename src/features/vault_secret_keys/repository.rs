@@ -1,5 +1,6 @@
 use crate::errors::{PgError, PgPool, PgResult};
 use super::dto::{SkNewDto, SkVersionDto};
+use super::model::VaultKeysListing;
 use uuid::Uuid;
 
 
@@ -279,4 +280,65 @@ pub async fn create_new_sk_version(db_pool: &PgPool, organization_id: Uuid, secr
     transaction.commit().await?;
 
     Ok(updated)
+}
+
+
+pub async fn list_secret_keys(db_pool: &PgPool, organization_id: Uuid, project_id: i64, tag_id: i64, limit: i64, offset: i64) -> PgResult<Vec<VaultKeysListing>> {
+    let client = db_pool.get().await?;
+
+    let total_count = client
+        .query_one(
+            r#"
+            SELECT COUNT(*) AS total_count
+            FROM vault_secret_keys sk
+            INNER JOIN vault_project vp
+                ON vp.project_id = sk.project_id
+            WHERE sk.project_id = $1
+            AND sk.resource_tag = $2
+            AND vp.organization_id = $3
+            "#,
+            &[
+                &project_id,
+                &tag_id,
+                &organization_id,
+            ],
+        )
+        .await?;
+
+    let total_count: i64 = total_count.get("total_count");
+    if total_count == 0 {
+        return Ok(vec![]);
+    }
+
+    // Fetch secret keys with pagination
+    let rows = client
+        .query(
+            r#"
+            SELECT
+                sk.secret_id,
+                sk.secret_name,
+                sk.current_version,
+                sk.created_at,
+                sk.updated_at,
+                skv.is_hidden
+            FROM vault_secret_keys sk
+            INNER JOIN vault_secret_key_versions skv
+                ON skv.secret_id = sk.secret_id
+            AND skv.version_number = sk.current_version
+            WHERE sk.project_id = $1
+            AND sk.resource_tag = $2
+            ORDER BY sk.secret_name
+            LIMIT $3
+            OFFSET $4
+            "#,
+            &[
+                &project_id,
+                &tag_id,
+                &limit,
+                &offset,
+            ],
+        )
+        .await?;
+
+    Ok(VaultKeysListing::from_rows(rows))
 }
