@@ -1,5 +1,5 @@
 use crate::features::vault_secret_keys::{self, SkNewDto, SkVersionDto, SkListingDto, SkDeleteDto, SkListVersionsDto};
-use actix_web::{HttpResponse, delete, get, post, put, web};
+use actix_web::{HttpResponse, delete, get, post, put, patch, web};
 use crate::features::users::SessionUser;
 use crate::errors::ApiResponse;
 use crate::state::AppState;
@@ -80,7 +80,7 @@ pub async fn delete_secret_key(session_user: web::ReqData<SessionUser>, query: w
         session_user.organization_id,
         sk_query_params.project_id,
         sk_query_params.tag_id,
-        sk_query_params.secret_id,
+        sk_query_params.secret_id
     ).await?;
     if result == 0 {
         return Ok(HttpResponse::BadRequest().body("Secret key not found, or not accessible to the user"));
@@ -127,8 +127,28 @@ pub async fn read_secret_key(session_user: web::ReqData<SessionUser>, path: web:
         &state,
         &session_user,
         secret_id,
-        version_number,
+        version_number
     ).await?;
 
     Ok(HttpResponse::Ok().json(secret_key))
+}
+
+
+#[patch("/rollback/{secret_id}/{version_number}")]
+pub async fn rollback_key(session_user: web::ReqData<SessionUser>, path: web::Path<(i64, i64)>, state: web::Data<AppState>) -> ApiResponse {
+    let session_user = session_user.into_inner();
+    let (secret_id, version_number) = path.into_inner();
+
+    // Validate that the session user has the required permissions
+    session_user.has_all_permissions(&["vault:keys:edit"])?;
+
+    // Rollback the secret key to the specified version using the provided data and the session user's context
+    vault_secret_keys::rollback_key_to_version(
+        &state,
+        &session_user,
+        secret_id,
+        version_number
+    ).await?;
+
+    Ok(HttpResponse::Ok().finish())
 }

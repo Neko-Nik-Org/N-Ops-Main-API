@@ -94,3 +94,36 @@ pub async fn read_secret_key_by_version(state: &AppState, session_user: &Session
 
     Ok(secret_key.with_decrypted_value(decrypted_secret_value))
 }
+
+
+/// Rollback a vault project secret key to a specific version
+pub async fn rollback_key_to_version(state: &AppState, session_user: &SessionUser, secret_id: i64, version_number: i64) -> ServiceResult<()> {
+    // Fetch the secret key by its version from the repository
+    let secret_key = repository::read_secret_key_by_version(
+        &state.pg_pool,
+        session_user.organization_id,
+        secret_id,
+        version_number,
+    ).await?;
+    if secret_key.is_none() {
+        return Err(ServiceError::NotFound("Secret key not found, or not accessible to the user".into()));
+    }
+    let secret_key = secret_key.unwrap();
+
+    // Check if the user can access the secret key based on the tag
+    session_user.has_tag_permission(state, secret_key.tag_id).await?;
+
+    // With this, its validated that the user has permission to access the secret key and can perform the rollback operation
+
+    // Perform the rollback operation in the repository
+    let result = repository::set_current_version(
+        &state.pg_pool,
+        secret_id,
+        version_number
+    ).await?;
+    if result == 0 {
+        return Err(ServiceError::Unprocessable("Failed to rollback secret key".into()));
+    }
+
+    Ok(())
+}

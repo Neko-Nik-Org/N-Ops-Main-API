@@ -452,3 +452,24 @@ pub async fn read_secret_key_by_version(db_pool: &PgPool, organization_id: Uuid,
 
     Ok(row.map(SkVersionDto::from))
 }
+
+
+pub async fn set_current_version(db_pool: &PgPool, secret_id: i64, version_number: i64) -> PgResult<u64> {
+    let client = db_pool.get().await?;
+
+    let result = client
+        .execute(
+            r#"
+            UPDATE vault_secret_keys
+            SET current_version = $2, updated_at = NOW()
+            WHERE secret_id = $1
+            "#,
+            &[
+                &secret_id,
+                &version_number,
+            ],
+        )
+        .await?;
+
+    Ok(result)
+}
