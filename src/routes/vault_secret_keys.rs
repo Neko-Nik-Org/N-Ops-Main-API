@@ -13,7 +13,7 @@ pub async fn create_secret_key(session_user: web::ReqData<SessionUser>, data: we
 
     // Validate that the session user has the required permissions
     session_user.has_all_permissions(&["vault:keys:view", "vault:keys:create"])?;
-    session_user.has_tag_permission(new_sk_data.tag_id)?;
+    session_user.has_tag_permission(&state, new_sk_data.tag_id).await?;
 
     // Create the new secret key using the provided data and the session user's context
     vault_secret_keys::create_new_sk(&state, &session_user, &new_sk_data).await?;
@@ -29,7 +29,7 @@ pub async fn update_secret_key(session_user: web::ReqData<SessionUser>, data: we
 
     // Validate that the session user has the required permissions
     session_user.has_all_permissions(&["vault:keys:view", "vault:keys:edit"])?;
-    session_user.has_tag_permission(new_sk_version_data.tag_id)?;
+    session_user.has_tag_permission(&state, new_sk_version_data.tag_id).await?;
 
     // Create the new secret key using the provided data and the session user's context
     vault_secret_keys::make_new_sk_version(&state, &session_user, &new_sk_version_data).await?;
@@ -45,7 +45,7 @@ pub async fn list_secret_keys(session_user: web::ReqData<SessionUser>, query: we
 
     // Validate that the session user has the required permissions
     session_user.has_all_permissions(&["vault:keys:view", "vault:keys:edit"])?;
-    session_user.has_tag_permission(sk_query_params.tag_id)?;
+    session_user.has_tag_permission(&state, sk_query_params.tag_id).await?;
 
     
     // Create the new secret key using the provided data and the session user's context
@@ -69,7 +69,7 @@ pub async fn delete_secret_key(session_user: web::ReqData<SessionUser>, query: w
 
     // Validate that the session user has the required permissions
     session_user.has_all_permissions(&["vault:keys:view", "vault:keys:delete"])?;
-    session_user.has_tag_permission(sk_query_params.tag_id)?;
+    session_user.has_tag_permission(&state, sk_query_params.tag_id).await?;
 
     // Delete the secret key using the provided data and the session user's context
     let result = vault_secret_keys::delete_secret_key_and_versions(

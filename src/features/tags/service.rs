@@ -4,6 +4,7 @@ use crate::features::users::SessionUser;
 use super::model::ResourceTag;
 use crate::state::AppState;
 use super::repository;
+use std::sync::Arc;
 
 
 
@@ -18,6 +19,14 @@ pub async fn create_new_tag(state: &AppState, session_user: &SessionUser, tag_da
     if result == 0 {
         return Err(ServiceError::Unprocessable("Failed to create new tag".into()));
     }
+
+    // Delete the cached tags for the organization since a new tag was added
+    let cache_key = session_user.organization_id.to_string();
+    state
+        .in_mem_cache
+        .org_tags
+        .invalidate(cache_key.as_str())
+        .await;
 
     Ok(())
 }
@@ -51,6 +60,14 @@ pub async fn delete_tag(state: &AppState, session_user: &SessionUser, tag_id: i6
         return Err(ServiceError::Unprocessable("Failed to delete tag".into()));
     }
 
+    // Delete the cached tags for the organization since a tag was deleted
+    let cache_key = session_user.organization_id.to_string();
+    state
+        .in_mem_cache
+        .org_tags
+        .invalidate(cache_key.as_str())
+        .await;
+
     Ok(())
 }
 
@@ -75,6 +92,37 @@ pub async fn list_all_tags(state: &AppState, session_user: &SessionUser) -> Serv
         &state.pg_pool,
         session_user.organization_id
     ).await?;
+
+    Ok(tags)
+}
+
+
+/// Fetch all tags for the session user's organization from the in-memory cache
+pub async fn fetch_org_tag_ids(state: &AppState, organization_id: uuid::Uuid) -> ServiceResult<Vec<i64>> {
+    let cache_key = organization_id.to_string();
+    let org_tags = state
+        .in_mem_cache
+        .org_tags
+        .get(cache_key.as_str())
+        .await;
+
+    // Return the cached tag IDs for the organization
+    if let Some(tags) = org_tags {
+        return Ok(tags.to_vec());
+    }
+
+    // If the tags are not found in the cache, fetch them from the database
+    let tags = repository::list_all_org_tag_ids(&state.pg_pool, organization_id).await?;
+
+    // Cache the fetched tag IDs for the organization
+    state
+        .in_mem_cache
+        .org_tags
+        .insert(
+            cache_key.into(),
+            Arc::new(tags.clone())
+        )
+        .await;
 
     Ok(tags)
 }

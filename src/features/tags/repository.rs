@@ -91,3 +91,21 @@ pub async fn list_all_tags(db_pool: &PgPool, organization_id: uuid::Uuid) -> PgR
 
     Ok(ResourceTag::from_rows(rows))
 }
+
+
+pub async fn list_all_org_tag_ids(db_pool: &PgPool, organization_id: uuid::Uuid) -> PgResult<Vec<i64>> {
+    let client = db_pool.get().await?;
+
+    let rows = client
+        .query(
+            r#"
+            SELECT tag_id
+            FROM resource_tag
+            WHERE organization_id = $1
+            "#,
+            &[&organization_id],
+        )
+        .await?;
+
+    Ok(rows.iter().map(|row| row.get(0)).collect())
+}

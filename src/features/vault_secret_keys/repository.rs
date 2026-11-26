@@ -7,6 +7,7 @@ use uuid::Uuid;
 
 pub async fn create_new_secret_key(db_pool: &PgPool, organization_id: Uuid, secret_key_data: &SkNewDto, encrypted_secret_value: &str) -> PgResult<u64> {
     let mut client = db_pool.get().await?;
+
     let transaction = client.transaction().await?;
 
     // 1. Lock organization and retrieve secret-key quota
@@ -57,30 +58,7 @@ pub async fn create_new_secret_key(db_pool: &PgPool, organization_id: Uuid, secr
         ));
     }
 
-    // 3. Validate resource tag ownership.
-    let tag = transaction
-        .query_opt(
-            r#"
-            SELECT tag_id
-            FROM resource_tag
-            WHERE tag_id = $1
-              AND organization_id = $2
-            FOR KEY SHARE
-            "#,
-            &[
-                &secret_key_data.tag_id,
-                &organization_id,
-            ],
-        )
-        .await?;
-
-    if tag.is_none() {
-        return Err(PgError::Custom(
-            "Resource tag not found or does not belong to this organization".into(),
-        ));
-    }
-
-    // 4. Count existing secret keys in the project.
+    // 3. Count existing secret keys in the project.
     let current_keys: i64 = transaction
         .query_one(
             r#"
@@ -93,14 +71,14 @@ pub async fn create_new_secret_key(db_pool: &PgPool, organization_id: Uuid, secr
         .await?
         .get(0);
 
-    // 5. Enforce project secret-key quota.
+    // 4. Enforce project secret-key quota.
     if current_keys >= i64::from(keys_limit) {
         return Err(PgError::Custom(
             "Project secret-key limit reached".into(),
         ));
     }
 
-    // 6. Insert secret-key entry.
+    // 5. Insert secret-key entry.
     let secret = transaction
         .query_opt(
             r#"
@@ -131,7 +109,7 @@ pub async fn create_new_secret_key(db_pool: &PgPool, organization_id: Uuid, secr
 
     let secret_id: i64 = secret.get("secret_id");
 
-    // 7. Insert initial secret-key version.
+    // 6. Insert initial secret-key version.
     let result = transaction
         .execute(
             r#"
@@ -153,23 +131,17 @@ pub async fn create_new_secret_key(db_pool: &PgPool, organization_id: Uuid, secr
         )
         .await?;
 
-    // 9. Commit transaction.
+    // 7. Commit transaction.
     transaction.commit().await?;
 
-    // 8. Return the total number of affected rows
     Ok(result)
 }
 
 
 pub async fn create_new_sk_version(db_pool: &PgPool, organization_id: Uuid, secret_kv_data: &SkVersionDto, encrypted_secret_value: &str) -> PgResult<u64> {
     let mut client = db_pool.get().await?;
+
     let transaction = client.transaction().await?;
-
-    // Validate secret key belongs to the project and has the given tag only
-
-    // Then update the secret key with the new version (Increment the count to +1)
-
-    // Update the current_version to new one too
 
     // 1. Validate project ownership.
     let project = transaction

@@ -1,8 +1,10 @@
 use crate::errors::{ServiceError, ServiceResult};
+use crate::features::tags::fetch_org_tag_ids;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use super::dto::AuthInfoDbDto;
 use pg_row_derive::RowFrom;
+use crate::state::AppState;
 use uuid::Uuid;
 
 type ChronoUtc = chrono::DateTime<chrono::Utc>;
@@ -170,10 +172,24 @@ impl SessionUser {
     }
 
     /// Check if the session has tag with the specified ID
-    pub fn has_tag_permission(&self, tag_id: i64) -> ServiceResult<()> {
+    pub async fn has_tag_permission(&self, state: &AppState, tag_id: i64) -> ServiceResult<()> {
         // If there are no tags then all tags are considered accessible
         if self.tags.is_empty() {
-            return Ok(());
+            // So, fetch all the tags of the organization from the cache or database
+            let org_tags = fetch_org_tag_ids(state, self.organization_id).await?;
+
+            // if org_tags are also empty, it means there are no tags in the organization
+            if org_tags.is_empty() {
+                return Ok(());
+            }
+
+            // If there are organization tags, but the user has no specific tags, consider all org tags accessible
+            // Check if the requested tag is part of the organization tags
+            if org_tags.contains(&tag_id) {
+                return Ok(());
+            } else {
+                return Err(ServiceError::Forbidden("E222: Insufficient tag access".into()));
+            }
         }
 
         // Check if the tag is present in the user's accessible tags

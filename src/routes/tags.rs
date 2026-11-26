@@ -32,7 +32,7 @@ pub async fn update_tag(session_user: web::ReqData<SessionUser>, data: web::Json
 
     // Validate that the session user has the required permissions
     session_user.has_all_permissions(&["tag:edit"])?;
-    session_user.has_tag_permission(new_tag_data.tag_id)?;
+    session_user.has_tag_permission(&state, new_tag_data.tag_id).await?;
 
     // Update the tag using the provided data and the session user's context
     tags::update_tag_data(&state, &session_user, &new_tag_data).await?;
@@ -48,7 +48,7 @@ pub async fn delete_tag(session_user: web::ReqData<SessionUser>, path: web::Path
 
     // Validate that the session user has the required permissions
     session_user.has_all_permissions(&["tag:delete"])?;
-    session_user.has_tag_permission(tag_id)?;
+    session_user.has_tag_permission(&state, tag_id).await?;
 
     // Delete the tag using the provided data and the session user's context
     tags::delete_tag(&state, &session_user, tag_id).await?;
@@ -63,7 +63,7 @@ pub async fn get_tag(session_user: web::ReqData<SessionUser>, path: web::Path<i6
     let tag_id = path.into_inner();
 
     // Validate that the session user has the required permissions
-    session_user.has_tag_permission(tag_id)?;
+    session_user.has_tag_permission(&state, tag_id).await?;
 
     // Get the tag using the provided data and the session user's context
     let tag = tags::get_tag(&state, &session_user, tag_id).await?;

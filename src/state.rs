@@ -19,6 +19,7 @@ pub struct AppState {
 
 pub struct InMemCache {
     pub org_encryption_keys: MokaCache<String>,
+    pub org_tags: MokaCache<Vec<i64>>,
     pub number_based: MokaCache<u64>,
 }
 
@@ -64,6 +65,10 @@ fn init_in_mem_cache(in_mem_cache_settings: InMemCacheSettings) -> InMemCache {
         org_encryption_keys: build_idle_policy_cache(
             in_mem_cache_settings.org_encryption_keys.cache_size,
             in_mem_cache_settings.org_encryption_keys.idle_time
+        ),
+        org_tags: build_idle_policy_cache(
+            in_mem_cache_settings.org_tags.cache_size,
+            in_mem_cache_settings.org_tags.idle_time
         ),
         number_based: build_ttl_cache(
             in_mem_cache_settings.number_based.cache_size,

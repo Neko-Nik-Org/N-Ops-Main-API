@@ -78,6 +78,7 @@ pub struct MokaIdleSettings {
 
 pub struct InMemCacheSettings {
     pub org_encryption_keys: MokaIdleSettings,
+    pub org_tags: MokaIdleSettings,
     pub number_based: MokaExpSettings,
 }
 
@@ -271,6 +272,7 @@ impl InMemCacheSettings {
     fn from_env() -> Self {
         InMemCacheSettings {
             org_encryption_keys: MokaIdleSettings::from_env("ORG_ENCRYPTION_KEYS"),
+            org_tags: MokaIdleSettings::from_env("ORG_TAGS"),
             number_based: MokaExpSettings::from_env("NUMBER_BASED"),
         }
     }
