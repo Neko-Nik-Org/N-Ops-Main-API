@@ -228,15 +228,9 @@ pub async fn quota_update(db_pool: &PgPool, organization_id: Uuid, new_quota: &U
             WHERE
                 organization_id = $1
 
-                -- All quota values must be at least 1
-                -- AND $2 >= 1
-                -- AND $3 >= 1
-                -- AND $4 >= 1
-                -- AND $5 >= 1
-                -- AND $6 >= 1
-                -- AND $7 >= 1
-                -- AND $8 >= 1
-                -- AND $9 >= 1
+                -- TODO: Set similar checks for server_limit, workflow_limit,
+                -- ss_keys_limit, and ss_notes_limit to ensure
+                -- they do not go below existing usage
 
                 -- AI credits cannot go below utilized credits
                 AND $2 >= utilized_ai_credit
@@ -257,10 +251,6 @@ pub async fn quota_update(db_pool: &PgPool, organization_id: Uuid, new_quota: &U
                     FROM vault_project
                     WHERE organization_id = $1
                 )
-
-                -- TODO: Set similar checks for server_limit, workflow_limit,
-                -- ss_keys_limit, and ss_notes_limit to ensure
-                -- they do not go below existing usage
             "#,
             &[
                 &organization_id,

@@ -28,8 +28,6 @@ pub async fn admin_auth_check<B>(req: ServiceRequest, next: Next<B>) -> Result<S
 
     // See if API key is valid
     if api_key.is_none() || api_key.unwrap() != *API_SETTINGS.self_super_admin_key {
-        tracing::warn!("Admin API key check failed for request {} {}", req.method(), req.path());
-
         // Short-circuit and return 401 Unauthorized
         let resp = HttpResponse::Unauthorized()
             .append_header(("content-type", "text/plain; charset=utf-8"))
