@@ -57,8 +57,6 @@ pub async fn auth_check<B>(req: ServiceRequest, next: Next<B>) -> Result<Service
 {
     // See if session is valid
     if !session_check(&req).await {
-        tracing::warn!("Session check failed for request {} {}", req.method(), req.path());
-
         // Short-circuit and return 401 Unauthorized
         let resp = HttpResponse::Unauthorized()
             .append_header(("content-type", "text/plain; charset=utf-8"))
