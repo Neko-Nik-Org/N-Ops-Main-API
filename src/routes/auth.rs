@@ -225,8 +225,30 @@ pub async fn refresh_session(session_user: web::ReqData<SessionUser>, state: web
 
 
 #[post("/reset/password")]
-pub async fn forgot_password(body: web::Json<String>, state: web::Data<AppState>) -> ApiResponse {
+pub async fn forgot_password(request: HttpRequest, body: web::Json<String>, state: web::Data<AppState>) -> ApiResponse {
     let user_email = body.into_inner();
+
+    // Extract the CloudFlare Turnstile token from the request headers
+    let turnstile_token = request
+        .headers()
+        .get("cf-turnstile-token")
+        .and_then(|value| value.to_str().ok())
+        .unwrap_or_default();
+
+    // Extract the client's IP address from the request headers
+    let client_ip = request
+        .headers()
+        .get("x-real-ip")
+        .and_then(|value| value.to_str().ok())
+        .unwrap_or_default();
+
+    // Validate everything
+    if turnstile_token.is_empty() || user_email.is_empty() || client_ip.is_empty() {
+        return Err(ServiceError::BadRequest("Missing required fields".into()));
+    }
+
+    // Check if the CloudFlare Turnstile token is valid
+    verify_turnstile_response(turnstile_token).await?;
 
     // Send a password reset OTP to the user's email
     send_password_reset_otp(&state, &user_email).await?;

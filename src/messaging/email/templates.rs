@@ -19,5 +19,10 @@ pub const INVITE_EMAIL_TEXT: &str = include_str!("../../../templates/invite_emai
 
 
 // Forgot password email - sent to users for password reset
-pub const FORGOT_PASSWORD_EMAIL_HTML: &str = include_str!("../../../templates/forgot_password/otp_email.html");
-pub const FORGOT_PASSWORD_EMAIL_TEXT: &str = include_str!("../../../templates/forgot_password/otp_email.txt");
+pub const FORGOT_PASSWORD_EMAIL_HTML: &str = include_str!("../../../templates/password_reset/email_otp.html");
+pub const FORGOT_PASSWORD_EMAIL_TEXT: &str = include_str!("../../../templates/password_reset/email_otp.txt");
+
+
+// Password reset success email - confirms the password has been successfully reset
+pub const PASSWORD_RESET_SUCCESS_HTML: &str = include_str!("../../../templates/password_reset/email_success.html");
+pub const PASSWORD_RESET_SUCCESS_TEXT: &str = include_str!("../../../templates/password_reset/email_success.txt");
