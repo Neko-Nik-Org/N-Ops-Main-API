@@ -5,6 +5,20 @@ use std::env::var as env_var;
 use std::time::Duration;
 
 
+pub const PASSWORD_CHANGE_SELF_SERVICE: &str =
+    "Your password was changed from an authenticated session.\n\n\
+    This change was initiated by you while signed in to your N-Ops account.";
+
+
+pub const PASSWORD_CHANGE_ADMIN: &str =
+    "Your password was changed by an administrator of your organisation.\n\n\
+    If you were not expecting this change, contact your N-Ops administrator immediately to verify the action and secure your account.";
+
+
+pub const PASSWORD_CHANGE_EMAIL_OTP: &str =
+    "Your password was successfully reset using the email verification process.\n\n\
+    If you did not initiate this password reset, contact your N-Ops administrator immediately to secure your account.";
+
 
 pub const ALL_AVAILABLE_PERMISSIONS: [&str; 26] = [
     // Resource Tag's

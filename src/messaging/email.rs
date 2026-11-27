@@ -163,3 +163,36 @@ pub async fn send_forgot_password_email(
     // Send the email using the basic email sending function
     email_message.send().await
 }
+
+
+/// Sends a password change notification email to the user. This email is sent when the user changes their password.
+pub async fn send_password_change_notification(
+    organization_name: &str,
+    display_name: &str,
+    primary_email: &str,
+    change_type: &str,
+    anti_phishing_secret: &str
+) -> ServiceResult<()> {
+    // Build the recipient mailbox for the email
+    let send_to_email = Mailbox::new(
+        Some(display_name.to_string()),
+        primary_email.parse()?
+    );
+
+    // Build the email message
+    let email_message = EmailMessage::new(
+        send_to_email,
+        format!("N-Ops: Password Changed Successfully for Your {} Account", organization_name),
+        templates::PASSWORD_RESET_SUCCESS_TEXT,
+        templates::PASSWORD_RESET_SUCCESS_HTML,
+        &[
+            ("{{ORG_NAME}}", organization_name),
+            ("{{DISPLAY_NAME}}", display_name),
+            ("{{PASSWORD_CHANGE_MESSAGE}}", change_type),
+            ("{{ANTI_PHISHING_SECRET}}", anti_phishing_secret),
+        ]
+    );
+
+    // Send the email using the basic email sending function
+    email_message.send().await
+}

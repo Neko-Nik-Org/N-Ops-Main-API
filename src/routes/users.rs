@@ -1,5 +1,6 @@
 use crate::features::users::{self, SessionUser, UpdateProfileReqDto, ListUsersReqDto, CreateUserReqDto, AssignArPolicyReqDto, UpdateProfileAdminReqDto};
 use crate::cache::redis_cache::{get_redis_cache, set_redis_cache, delete_redis_cache};
+use crate::utils::initial::{PASSWORD_CHANGE_SELF_SERVICE, PASSWORD_CHANGE_ADMIN};
 use actix_web::{get, post, put, patch, delete, web, HttpResponse};
 use crate::errors::{ApiResponse, ServiceError};
 use crate::state::AppState;
@@ -181,6 +182,19 @@ pub async fn self_password(session_user: web::ReqData<SessionUser>, body: web::J
 
     // Update the user's password in the database
     users::update_user_password(&state, session_user.organization_id, session_user.user_id, &new_password_base64).await?;
+
+    // Send a notification to the user about the password change
+    if session_user.is_email_verified {
+        let anti_phishing_code = users::fetch_anti_phishing_code(&state, session_user.organization_id, session_user.user_id).await?;
+
+        messaging::email::send_password_change_notification(
+            &session_user.organization_name,
+            &session_user.display_name,
+            &session_user.primary_email,
+            PASSWORD_CHANGE_SELF_SERVICE,
+            &anti_phishing_code
+        ).await?;
+    }
 
     Ok(HttpResponse::Ok().body("Password changed successfully"))
 }
