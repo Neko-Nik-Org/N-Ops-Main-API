@@ -116,3 +116,11 @@ pub struct PasswordResetUserDto {
     pub user_id: i64,
     pub display_name: String,
 }
+
+
+#[derive(Deserialize)]
+pub struct ResetPasswordDto {
+    pub otp: String,
+    pub user_email: String,
+    pub new_password: String,  // Base64 encoded new password
+}

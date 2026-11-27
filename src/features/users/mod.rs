@@ -4,13 +4,14 @@ mod model;
 mod dto;
 
 
-pub use dto::{LoginReqDto, UpdateProfileReqDto, ListUsersReqDto, CreateUserReqDto, AssignArPolicyReqDto, UpdateProfileAdminReqDto, DeviceRefreshReqDto};
+pub use dto::{LoginReqDto, UpdateProfileReqDto, ListUsersReqDto, CreateUserReqDto, AssignArPolicyReqDto, UpdateProfileAdminReqDto, DeviceRefreshReqDto, ResetPasswordDto};
 pub use model::SessionUser;
 pub use service::{
     update_user_profile_admin,
     update_anti_phishing_code,
     fetch_anti_phishing_code,
     send_password_reset_otp,
+    forgot_password_reset,
     create_device_session,
     refresh_user_session,
     update_user_password,

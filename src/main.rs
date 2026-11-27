@@ -58,10 +58,10 @@ async fn main() -> std::io::Result<()> {
             .service(
                 actix_scope("/auth")
                 .service(auth::forgot_password)
+                .service(auth::reset_password)
                 .service(auth::device_refresh)
                 .service(auth::device_login)
                 .service(auth::user_login)
-                // .service(auth::reset_password)  // Reset password using a token sent via email
                 // .service(mfa::resend_otp)
                 // .service(mfa::verify_otp)
                 .service(

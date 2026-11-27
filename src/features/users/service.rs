@@ -1,8 +1,9 @@
 use crate::security::auth_tools::{verify_password_hash, check_ip_range_allowed, validate_base64_password, generate_password_hash, validate_username};
-use super::dto::{LoginReqDto, AuthInfoDbDto, UpdateProfileReqDto, CreateUserReqDto, UpdateProfileAdminReqDto, DeviceRefreshReqDto};
+use super::dto::{LoginReqDto, AuthInfoDbDto, UpdateProfileReqDto, CreateUserReqDto, UpdateProfileAdminReqDto, DeviceRefreshReqDto, ResetPasswordDto};
 use crate::cache::redis_cache::{set_redis_cache, delete_redis_cache, get_redis_cache};
 use crate::features::organization::{decrypt_with_org_key, encrypt_with_org_key};
 use crate::features::devices::get_user_name_from_device_session;
+use crate::utils::initial::PASSWORD_CHANGE_EMAIL_OTP;
 use crate::errors::{ServiceError, ServiceResult};
 use crate::state::{AppState, API_SETTINGS};
 use rand::{TryRng, rngs::SysRng};
@@ -349,8 +350,8 @@ pub async fn send_password_reset_otp(state: &AppState, user_email: &str) -> Serv
     }
 
     // Generate a random OTP
-    let otp = otp::generate_otp(7)?;
-    let otp_hash = otp::hash_otp(&otp);
+    let otp_code = otp::generate_otp(7)?;
+    let otp_hash = otp::hash_otp(&otp_code);
 
     // Get the anti-phishing secret for the user
     let anti_phishing_secret = fetch_anti_phishing_code(&state, password_reset_user.organization_id, password_reset_user.user_id).await?;
@@ -364,7 +365,64 @@ pub async fn send_password_reset_otp(state: &AppState, user_email: &str) -> Serv
         &password_reset_user.display_name,
         &user_email,
         &anti_phishing_secret,
-        &otp
+        &otp_code
+    ).await?;
+
+    Ok(())
+}
+
+
+/// Reset the user's password using the OTP sent to their email
+pub async fn forgot_password_reset(state: &AppState, reset_password_dto: &ResetPasswordDto) -> ServiceResult<()> {
+    // Fetch the OTP hash from the Redis cache for the given user email
+    let password_reset_cache_key = format!("password_reset:{}", reset_password_dto.user_email);
+    let password_reset_otp_hash: Option<String> = get_redis_cache(&state.redis_cache, &password_reset_cache_key).await?;
+    if password_reset_otp_hash.is_none() {
+        return Err(ServiceError::BadRequest("No ongoing password reset request found, or it has expired".into()));
+    }
+    let password_reset_otp_hash = password_reset_otp_hash.unwrap();
+
+    // Generate a random OTP
+    let otp_hash = otp::hash_otp(&reset_password_dto.otp);
+
+    // Compare the OTP hash from the Redis cache with the hash of the provided OTP
+    if otp_hash != password_reset_otp_hash {
+        // Delete the OTP from Redis to prevent further attempts
+        delete_redis_cache(&state.redis_cache, &password_reset_cache_key).await?;
+
+        return Err(ServiceError::BadRequest("Invalid OTP, re-initiate the password reset process".into()));
+    }
+
+    // At this point, the OTP has been successfully validated, and the user can proceed to reset their password
+
+    // Fetch the user details for the password reset process (This should not fail if the OTP is valid)
+    let password_reset_user = repository::get_password_reset_user(&state.pg_pool, &reset_password_dto.user_email).await?;
+    if password_reset_user.is_none() {
+        return Err(ServiceError::BadRequest("Email not verified or user/organization does not exist or is not active!".into()));
+    }
+    let password_reset_user = password_reset_user.unwrap();
+
+    // Update the user's password in the database
+    update_user_password(
+        &state,
+        password_reset_user.organization_id,
+        password_reset_user.user_id,
+        &reset_password_dto.new_password
+    ).await?;
+
+    // Delete the OTP from Redis as it has been successfully validated and updated
+    delete_redis_cache(&state.redis_cache, &password_reset_cache_key).await?;
+    
+    // Get the anti-phishing secret for the user
+    let anti_phishing_secret = fetch_anti_phishing_code(&state, password_reset_user.organization_id, password_reset_user.user_id).await?;
+
+    // Send the password reset confirmation email to the user with the anti-phishing secret
+    messaging::email::send_password_change_notification(
+        &password_reset_user.organization_name,
+        &password_reset_user.display_name,
+        &reset_password_dto.user_email,
+        PASSWORD_CHANGE_EMAIL_OTP,
+        &anti_phishing_secret
     ).await?;
 
     Ok(())
