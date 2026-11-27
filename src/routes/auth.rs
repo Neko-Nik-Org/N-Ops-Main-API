@@ -1,4 +1,4 @@
-use crate::features::users::{SessionUser, LoginReqDto, DeviceRefreshReqDto, create_user_session, refresh_user_session, update_last_login_at, create_device_session};
+use crate::features::users::{SessionUser, LoginReqDto, DeviceRefreshReqDto, create_user_session, refresh_user_session, update_last_login_at, create_device_session, send_password_reset_otp};
 use crate::features::devices::{DeviceLoginReqDto, create_device_refresh_token, delete_device};
 use crate::cache::redis_cache::{set_redis_cache, delete_redis_cache};
 use actix_web::{delete, get, post, web, HttpResponse, HttpRequest};
@@ -221,4 +221,15 @@ pub async fn refresh_session(session_user: web::ReqData<SessionUser>, state: web
         "message": "Session refreshed successfully",
         "session_id": new_session_user.session_id
     })))
+}
+
+
+#[post("/reset/password")]
+pub async fn forgot_password(body: web::Json<String>, state: web::Data<AppState>) -> ApiResponse {
+    let user_email = body.into_inner();
+
+    // Send a password reset OTP to the user's email
+    send_password_reset_otp(&state, &user_email).await?;
+
+    Ok(HttpResponse::Created().finish())
 }

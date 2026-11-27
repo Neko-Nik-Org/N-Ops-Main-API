@@ -16,3 +16,8 @@ pub const WELCOME_EMAIL_TEXT: &str = include_str!("../../../templates/initial_em
 // Invite email - sent to users with an invitation code
 pub const INVITE_EMAIL_HTML: &str = include_str!("../../../templates/invite_email/invite_email.html");
 pub const INVITE_EMAIL_TEXT: &str = include_str!("../../../templates/invite_email/invite_email.txt");
+
+
+// Forgot password email - sent to users for password reset
+pub const FORGOT_PASSWORD_EMAIL_HTML: &str = include_str!("../../../templates/forgot_password/otp_email.html");
+pub const FORGOT_PASSWORD_EMAIL_TEXT: &str = include_str!("../../../templates/forgot_password/otp_email.txt");

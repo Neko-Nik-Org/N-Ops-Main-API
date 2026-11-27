@@ -1,12 +1,13 @@
 use crate::security::auth_tools::{verify_password_hash, check_ip_range_allowed, validate_base64_password, generate_password_hash, validate_username};
 use super::dto::{LoginReqDto, AuthInfoDbDto, UpdateProfileReqDto, CreateUserReqDto, UpdateProfileAdminReqDto, DeviceRefreshReqDto};
+use crate::cache::redis_cache::{set_redis_cache, delete_redis_cache, get_redis_cache};
 use crate::features::organization::{decrypt_with_org_key, encrypt_with_org_key};
-use crate::cache::redis_cache::{set_redis_cache, delete_redis_cache};
 use crate::features::devices::get_user_name_from_device_session;
 use crate::errors::{ServiceError, ServiceResult};
 use crate::state::{AppState, API_SETTINGS};
 use rand::{TryRng, rngs::SysRng};
 use super::model::SessionUser;
+use crate::security::otp;
 use super::repository;
 use crate::messaging;
 use uuid::Uuid;
@@ -326,4 +327,45 @@ pub async fn create_device_session(state: &AppState, device_refresh_request: &De
     delete_redis_cache(&state.redis_cache, &current_session_cache_key).await?;
 
     Ok(session_user)
+}
+
+
+/// Send an OTP to the user's email for password reset
+pub async fn send_password_reset_otp(state: &AppState, user_email: &str) -> ServiceResult<()> {
+    // Check the email is verified and the user exists and the associated organization is active
+    let password_reset_user = repository::get_password_reset_user(&state.pg_pool, user_email).await?;
+    if password_reset_user.is_none() {
+        return Err(ServiceError::BadRequest("Email not verified or user/organization does not exist or is not active".into()));
+    }
+    let password_reset_user = password_reset_user.unwrap();
+
+    // Check if there is any ongoing password reset request for this user
+    // If there is an ongoing password reset request, return an error to prevent spamming
+    let password_reset_cache_key = format!("password_reset:{}", user_email);
+    let password_reset_otp_hash: Option<String> = get_redis_cache(&state.redis_cache, &password_reset_cache_key).await?;
+
+    if password_reset_otp_hash.is_some() {
+        return Err(ServiceError::BadRequest("A password reset request is already in progress".into()));
+    }
+
+    // Generate a random OTP
+    let otp = otp::generate_otp(7)?;
+    let otp_hash = otp::hash_otp(&otp);
+
+    // Get the anti-phishing secret for the user
+    let anti_phishing_secret = fetch_anti_phishing_code(&state, password_reset_user.organization_id, password_reset_user.user_id).await?;
+
+    // Save the OTP in Redis with an expiration time of 5 minutes (Hash only)
+    set_redis_cache(&state.redis_cache, &password_reset_cache_key, &otp_hash, 5 * 60).await?;
+
+    // Once all are successfully done, send the password reset email to the user with the OTP
+    messaging::email::send_forgot_password_email(
+        &password_reset_user.organization_name,
+        &password_reset_user.display_name,
+        &user_email,
+        &anti_phishing_secret,
+        &otp
+    ).await?;
+
+    Ok(())
 }

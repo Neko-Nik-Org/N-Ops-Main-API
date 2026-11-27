@@ -1,4 +1,4 @@
-use super::dto::{AuthInfoDbDto, ListUsersReqDto, CreateUserReqDto};
+use super::dto::{AuthInfoDbDto, ListUsersReqDto, CreateUserReqDto, PasswordResetUserDto};
 use super::model::{OrgInfo, UserProfileInfo, UserProfileListing};
 use crate::errors::{PgResult, PgError, PgPool};
 use serde_json::Value as JsonValue;
@@ -750,4 +750,32 @@ pub async fn update_anti_phishing_code(db_pool: &PgPool, organization_id: uuid::
         .await?;
 
     Ok(result)
+}
+
+
+pub async fn get_password_reset_user(db_pool: &PgPool, user_email: &str) -> PgResult<Option<PasswordResetUserDto>> {
+    let client = db_pool.get().await?;
+
+    let row = client
+        .query_opt(
+            r#"
+            SELECT
+                org.organization_id,
+                org.organization_name,
+                au.user_id,
+                au.display_name
+            FROM app_user au
+            INNER JOIN organization org
+                ON org.organization_id = au.organization_id
+            WHERE au.primary_email = $1
+                AND au.is_email_verified = TRUE
+                AND au.is_active = TRUE
+                AND org.is_active = TRUE
+            LIMIT 1
+            "#,
+            &[&user_email],
+        )
+        .await?;
+
+    Ok(row.map(PasswordResetUserDto::from))
 }

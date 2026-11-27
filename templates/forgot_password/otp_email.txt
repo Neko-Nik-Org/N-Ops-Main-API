@@ -1,0 +1,33 @@
+Reset your password
+
+Hi {{DISPLAY_NAME}},
+
+We received a request to reset the password for your N-Ops account in {{ORG_NAME}}. Use the code below to continue. It expires in {{OTP_VALIDITY}}.
+
+    {{OTP}}
+
+Don't share this code with anyone. If you didn't ask to reset your password, you can ignore this email. Your password stays the same unless this code is used.
+
+Best regards,
+The N-Ops team
+
+This is an automated message, please do not reply.
+
+------------------------------------------------------------
+Anti-phishing code: {{ANTI_PHISHING_SECRET}}
+To stay secure, check this code in every email from N-Ops.
+
+Disclaimer: N-Ops will never ask for your password, verification
+codes, SSH keys or Vault secrets by email, phone or chat. Never
+share them with anyone, including people who say they are from
+N-Ops. This email is intended only for the person it was sent to.
+If you received it by mistake, please delete it.
+
+Kindly note: Be careful of phishing sites. Before you enter your
+password or a verification code, make sure you are on your
+organisation's official N-Ops address.
+
+You have received this email as a registered user of N-Ops.
+Built by Neko Nik (https://nekonik.org/) and Powered by YSPL (https://www.yukthi.com/).
+
+© {{COPYRIGHT_YEARS}} Neko Nik. All rights reserved.

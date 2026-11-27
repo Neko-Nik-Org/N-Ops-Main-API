@@ -107,3 +107,12 @@ pub struct CreateUserReqDto {
 pub struct AssignArPolicyReqDto {
     pub access_restriction_policy_id: Option<i64>,
 }
+
+
+#[derive(RowFrom)]
+pub struct PasswordResetUserDto {
+    pub organization_id: Uuid,
+    pub organization_name: String,
+    pub user_id: i64,
+    pub display_name: String,
+}

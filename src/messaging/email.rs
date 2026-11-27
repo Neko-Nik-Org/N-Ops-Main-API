@@ -129,3 +129,37 @@ pub async fn send_invite_email(
     // Send the email using the basic email sending function
     email_message.send().await
 }
+
+
+/// Sends a password reset email to the user (Forgot Password)
+pub async fn send_forgot_password_email(
+    organization_name: &str,
+    display_name: &str,
+    primary_email: &str,
+    anti_phishing_secret: &str,
+    otp: &str
+) -> ServiceResult<()> {
+    // Build the recipient mailbox for the email
+    let send_to_email = Mailbox::new(
+        Some(display_name.to_string()),
+        primary_email.parse()?
+    );
+
+    // Build the email message
+    let email_message = EmailMessage::new(
+        send_to_email,
+        format!("N-Ops: Reset Your {} Account Password", organization_name),
+        templates::FORGOT_PASSWORD_EMAIL_TEXT,
+        templates::FORGOT_PASSWORD_EMAIL_HTML,
+        &[
+            ("{{ORG_NAME}}", organization_name),
+            ("{{DISPLAY_NAME}}", display_name),
+            ("{{ANTI_PHISHING_SECRET}}", anti_phishing_secret),
+            ("{{OTP_VALIDITY}}", "5 minutes"),
+            ("{{OTP}}", otp),
+        ]
+    );
+
+    // Send the email using the basic email sending function
+    email_message.send().await
+}

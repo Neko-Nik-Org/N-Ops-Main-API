@@ -10,6 +10,7 @@ pub use service::{
     update_user_profile_admin,
     update_anti_phishing_code,
     fetch_anti_phishing_code,
+    send_password_reset_otp,
     create_device_session,
     refresh_user_session,
     update_user_password,
