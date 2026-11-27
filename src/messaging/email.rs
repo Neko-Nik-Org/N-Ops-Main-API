@@ -22,7 +22,7 @@ pub async fn send_verification_email(session_user: &SessionUser, otp: &str, anti
     // Build the email message
     let email_message = EmailMessage::new(
         send_to_email,
-        format!("N-Ops: Verify Your Email from {}", session_user.organization_name),
+        format!("Verify Your Email from {}", session_user.organization_name),
         templates::VERIFY_EMAIL_TEXT,
         templates::VERIFY_EMAIL_HTML,
         &[
@@ -49,7 +49,7 @@ pub async fn send_welcome_email(org_name: &str, display_name: &str, primary_emai
     // Build the email message
     let email_message = EmailMessage::new(
         send_to_email,
-        format!("N-Ops: Welcome to {}", org_name),
+        format!("Welcome to {}", org_name),
         templates::WELCOME_EMAIL_TEXT,
         templates::WELCOME_EMAIL_HTML,
         &[
@@ -114,7 +114,7 @@ pub async fn send_invite_email(
     // Build the email message
     let email_message = EmailMessage::new(
         send_to_email,
-        format!("N-Ops: You're Invited to Join {}", org_name),
+        format!("You're Invited to Join {}", org_name),
         &invite_email_text,
         &invite_email_html,
         &[
@@ -148,7 +148,7 @@ pub async fn send_forgot_password_email(
     // Build the email message
     let email_message = EmailMessage::new(
         send_to_email,
-        format!("N-Ops: Reset Your {} Account Password", organization_name),
+        format!("Reset Your {} Account Password", organization_name),
         templates::FORGOT_PASSWORD_EMAIL_TEXT,
         templates::FORGOT_PASSWORD_EMAIL_HTML,
         &[
@@ -182,7 +182,7 @@ pub async fn send_password_change_notification(
     // Build the email message
     let email_message = EmailMessage::new(
         send_to_email,
-        format!("N-Ops: Password Changed Successfully for Your {} Account", organization_name),
+        format!("Password Changed Successfully for Your {} Account", organization_name),
         templates::PASSWORD_RESET_SUCCESS_TEXT,
         templates::PASSWORD_RESET_SUCCESS_HTML,
         &[

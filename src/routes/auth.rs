@@ -1,7 +1,7 @@
 use crate::features::users::{SessionUser, LoginReqDto, DeviceRefreshReqDto, create_user_session, refresh_user_session, update_last_login_at, create_device_session, send_password_reset_otp};
 use crate::features::devices::{DeviceLoginReqDto, create_device_refresh_token, delete_device};
+use actix_web::{delete, get, post, put, web, HttpResponse, HttpRequest};
 use crate::cache::redis_cache::{set_redis_cache, delete_redis_cache};
-use actix_web::{delete, get, post, web, HttpResponse, HttpRequest};
 use crate::security::cf_turnstile::verify_turnstile_response;
 use crate::errors::{ApiResponse, ServiceError};
 use crate::state::AppState;
@@ -246,6 +246,10 @@ pub async fn forgot_password(request: HttpRequest, body: web::Json<String>, stat
     if turnstile_token.is_empty() || user_email.is_empty() || client_ip.is_empty() {
         return Err(ServiceError::BadRequest("Missing required fields".into()));
     }
+
+    // TODO: Send one token from UI, where we will store the token temporarily
+    // On password reset, we will verify the token sent from the UI before allowing the password change
+    // It ensures that only the user who initiated the password reset can complete it
 
     // Check if the CloudFlare Turnstile token is valid
     verify_turnstile_response(turnstile_token).await?;
