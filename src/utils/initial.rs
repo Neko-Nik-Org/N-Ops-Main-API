@@ -10,7 +10,7 @@ pub const PASSWORD_CHANGE_SELF_SERVICE: &str =
     This change was initiated by you while signed in to your N-Ops account.";
 
 
-pub const PASSWORD_CHANGE_ADMIN: &str =
+pub const PASSWORD_CHANGE_ADMIN_RESET: &str =
     "Your password was changed by an administrator of your organisation.\n\n\
     If you were not expecting this change, contact your N-Ops administrator immediately to verify the action and secure your account.";
 

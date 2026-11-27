@@ -1,6 +1,6 @@
 use crate::features::users::{self, SessionUser, UpdateProfileReqDto, ListUsersReqDto, CreateUserReqDto, AssignArPolicyReqDto, UpdateProfileAdminReqDto};
+use crate::utils::initial::{PASSWORD_CHANGE_SELF_SERVICE, PASSWORD_CHANGE_ADMIN_RESET};
 use crate::cache::redis_cache::{get_redis_cache, set_redis_cache, delete_redis_cache};
-use crate::utils::initial::{PASSWORD_CHANGE_SELF_SERVICE, PASSWORD_CHANGE_ADMIN};
 use actix_web::{get, post, put, patch, delete, web, HttpResponse};
 use crate::errors::{ApiResponse, ServiceError};
 use crate::state::AppState;
@@ -312,8 +312,33 @@ pub async fn reset_password(session_user: web::ReqData<SessionUser>, path: web::
 
     session_user.has_all_permissions(&["user:view", "user:edit"])?;
 
+    // Check if the user is active and exists in the organization before resetting the password
+    let user_details = users::fetch_user_by_id_listing(&state.pg_pool, session_user.organization_id, user_id).await?;
+    if user_details.is_none() {
+        return Ok(HttpResponse::NotFound().body("User not found in the organization"));
+    }
+    let user_details = user_details.unwrap();
+
+    // Skip password reset for inactive users
+    if !user_details.is_active {
+        return Ok(HttpResponse::BadRequest().body("Cannot reset password for an inactive user"));
+    }
+
     // Admin reset - Update the user's password in the database
     users::update_user_password(&state, session_user.organization_id, user_id, &new_password).await?;
+
+    // Check if the user has verified their email and send a password change notification email if necessary
+    if user_details.is_email_verified {
+        let anti_phishing_code = users::fetch_anti_phishing_code(&state, session_user.organization_id, user_id).await?;
+
+        messaging::email::send_password_change_notification(
+            &session_user.organization_name,
+            &user_details.display_name,
+            &user_details.primary_email,
+            PASSWORD_CHANGE_ADMIN_RESET,
+            &anti_phishing_code
+        ).await?;
+    }
 
     Ok(HttpResponse::NoContent().finish())
 }
